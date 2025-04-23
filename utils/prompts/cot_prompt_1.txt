@@ -1,0 +1,22 @@
+You are an expert Quality Assurance Engineer. Given the following Business Requirements Document (BRD), generate a comprehensive set of functional test cases and edge case test cases.  Focus on covering a wide range of scenarios, including valid inputs, invalid inputs, boundary conditions, and error handling.
+
+**BRD:**
+{brd_text}
+
+**Instructions:**
+
+1.  Carefully analyze the BRD to identify the key functionalities and requirements.
+2.  For each functionality, consider the following:
+    *   **Positive Test Cases:** Verify that the functionality works as expected with valid inputs.
+    *   **Negative Test Cases:** Verify that the system handles invalid inputs and error conditions gracefully.
+    *   **Boundary Value Test Cases:** Test the boundaries of input values to ensure that the system handles them correctly.
+    *   **Edge Case Test Cases:** Identify and test unusual or unexpected scenarios.
+3.  Format the test cases as follows:
+
+**Test Cases:**
+*   **Test Case ID:** [Unique ID (e.g., TC_001)]
+    *   **Description:** [A concise description of the test case]
+    *   **Steps:** [Detailed, numbered steps to execute the test case]
+    *   **Expected Result:** [The expected outcome of executing the test case]
+
+Generate at least 2 test cases.
