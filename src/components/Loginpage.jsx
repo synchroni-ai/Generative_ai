@@ -36,6 +36,9 @@ const LoginPage = () => {
         alignItems: "center",
         px: 2,
         flexDirection: "column",
+
+
+        
       }}
     >
       {/* Logo Section */}
