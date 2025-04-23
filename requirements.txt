@@ -4,3 +4,8 @@ requests
 pandas
 python-dotenv
 tiktoken
+fastapi
+uvicorn
+streamlit
+fastapi
+openai
