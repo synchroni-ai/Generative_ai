@@ -1,4 +1,3 @@
-import pandas as pd
 import re
 
 
@@ -25,7 +24,7 @@ def generate_test_cases(brd_text, llm_function, prompt_file_path):
         return None
 
 
-def store_test_cases_to_txt(test_cases_text, output_path="test_cases.txt"):
+def store_test_cases_to_text_file(test_cases_text, output_path="test_cases.txt"):
     """
     Stores the generated test cases to a text file.
 
@@ -37,9 +36,9 @@ def store_test_cases_to_txt(test_cases_text, output_path="test_cases.txt"):
         The path to the output text file, or None if an error occurs.
     """
     try:
-        with open(output_path, "w", encoding="utf-8") as f:  # Specify encoding
-            f.write(test_cases_text)
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(test_cases_text)  # Simply write the entire text to the file
         return output_path
     except Exception as e:
-        print(f"Error writing to file: {e}")
+        print(f"Error writing to text file: {e}")
         return None

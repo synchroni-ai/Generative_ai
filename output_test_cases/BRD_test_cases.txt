@@ -1,0 +1,159 @@
+**Test Cases:**
+
+**TC_001: Store Owner/Admin - Create New Product**
+
+*   **Description:** Verify that a store owner/admin can create a new product successfully.
+*   **Steps:**
+    1. Log in as a store owner/admin.
+    2. Click on the "Add New Product" button.
+    3. Fill in the product details (name, description, price, etc.).
+    4. Upload a product image.
+    5. Click the "Create Product" button.
+*   **Expected Result:** The new product is successfully created and displayed in the product catalog.
+
+**TC_002: Customer - Search for Product by Category**
+
+*   **Description:** Verify that a customer can search for products by category successfully.
+*   **Steps:**
+    1. Log in as a customer.
+    2. Click on the "Search" button.
+    3. Select a category from the dropdown list.
+    4. Click the "Search" button.
+*   **Expected Result:** The search results display a list of products within the selected category.
+**Test Cases:**
+
+**TC_001: User Registration**
+
+*   **Description:** Verify that a user can successfully register on the Alphaura website with valid inputs.
+*   **Steps:**
+    1. Navigate to the Alphaura website and click on the "Register" button.
+    2. Enter valid email address, password, and confirm password.
+    3. Fill in the required personal information (name, phone number, etc.).
+    4. Click on the "Register" button.
+*   **Expected Result:** The user should be successfully registered and receive a confirmation email.
+
+**TC_002: Invalid Email Address**
+
+*   **Description:** Verify that the Alphaura website handles invalid email addresses during user registration.
+*   **Steps:**
+    1. Navigate to the Alphaura website and click on the "Register" button.
+    2. Enter an invalid email address (e.g., "invalidemail").
+    3. Fill in the required personal information (name, phone number, etc.).
+    4. Click on the "Register" button.
+*   **Expected Result:** The system should display an error message indicating that the email address is invalid, and the user should not be registered.
+**Test Cases:**
+
+**TC_001: Stockroom.lk - Product Browsing**
+
+*   **Description:** Verify that the product browsing functionality works correctly.
+*   **Steps:**
+    1. Log in to the website as a registered user.
+    2. Navigate to the product catalog page.
+    3. Select a random product category (e.g., electronics).
+    4. Verify that the product list page displays the correct number of products.
+    5. Click on a product to view its details page.
+    6. Verify that the product details page displays the correct product information (name, description, price, etc.).
+*   **Expected Result:** The product browsing functionality should display the correct number of products, and the product details page should display the correct product information.
+
+**TC_002: Incarnage.com - Limited Edition Releases**
+
+*   **Description:** Verify that the limited edition releases functionality works correctly.
+*   **Steps:**
+    1. Log in to the website as a registered user.
+    2. Navigate to the limited edition releases page.
+    3. Verify that the page displays the correct number of limited edition releases.
+    4. Click on a limited edition release to view its details page.
+    5. Verify that the release details page displays the correct information (release date, availability, etc.).
+    6. Attempt to purchase the limited edition release.
+    7. Verify that the purchase process is successful and the release is added to the user's cart.
+*   **Expected Result:** The limited edition releases functionality should display the correct number of releases, and the purchase process should be successful.
+**Test Cases:**
+
+**TC_001: Valid Login with Account Creation**
+
+*   **Description:** Verify that a user can successfully create an account and log in to the website.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Click on the "Create Account" button.
+    3. Fill in the required account information (username, email, password, etc.).
+    4. Click on the "Create Account" button.
+    5. Fill in the login credentials (username and password) and click on the "Login" button.
+*   **Expected Result:** The user is successfully logged in and redirected to their account dashboard.
+
+**TC_002: Invalid Login with Incorrect Password**
+
+*   **Description:** Verify that the system handles an incorrect login attempt with an invalid password.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Fill in the required login credentials (username) and an incorrect password.
+    3. Click on the "Login" button.
+*   **Expected Result:** The system displays an error message indicating that the password is incorrect, and the user is not logged in.
+**Test Cases:**
+
+**TC_001: Size Recommender - Valid Input**
+
+*   Description: Verify that the size recommender provides accurate results for a valid set of body measurements.
+*   Steps:
+    1. Log in to the website as a registered user.
+    2. Navigate to the Size Recommender page.
+    3. Enter valid body measurements (e.g., height, weight, bust, waist, hips).
+    4. Click the "Get Recommended Size" button.
+    5. Verify that the recommended size is displayed correctly.
+*   Expected Result: The recommended size is displayed accurately based on the entered body measurements.
+
+**TC_002: Size Recommender - Invalid Input**
+
+*   Description: Verify that the size recommender handles invalid input values gracefully.
+*   Steps:
+    1. Log in to the website as a registered user.
+    2. Navigate to the Size Recommender page.
+    3. Enter invalid body measurements (e.g., negative height, zero weight, non-numeric values).
+    4. Click the "Get Recommended Size" button.
+    5. Verify that an error message is displayed indicating invalid input.
+*   Expected Result: An error message is displayed, and the recommended size is not displayed.
+**Test Cases:**
+
+**TC_001: User Management - Create Account**
+
+*   **Description:** Verify that a user can create an account with valid information.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Click on the "Create Account" button.
+    3. Enter valid information (name, contact number, email address).
+    4. Click on the "Create Account" button.
+*   **Expected Result:** The account is created successfully, and the user is logged in.
+
+**TC_002: Product Management - Add Product**
+
+*   **Description:** Verify that an admin can add a product with valid information.
+*   **Steps:**
+    1. Log in as an admin.
+    2. Navigate to the product management page.
+    3. Click on the "Add Product" button.
+    4. Enter valid information (product name, description, price, stock level).
+    5. Click on the "Add Product" button.
+*   **Expected Result:** The product is added successfully, and the product list is updated.
+**Test Cases:**
+
+**TC_001: Typography Test Case**
+
+*   **Description:** Verify that the web application uses readable fonts that complement the design and ensure ease of reading.
+*   **Steps:**
+    1. Launch the web application.
+    2. Inspect the font used for the main content area.
+    3. Verify that the font is readable and easy to read.
+    4. Inspect the font used for headings and titles.
+    5. Verify that the font is clear and distinguishable from the main content area font.
+*   **Expected Result:** The web application uses readable fonts that complement the design and ensure ease of reading.
+
+**TC_002: Agreement Statement Test Case**
+
+*   **Description:** Verify that the agreement statement is displayed correctly and allows users to acknowledge the requirements.
+*   **Steps:**
+    1. Launch the web application.
+    2. Verify that the agreement statement is displayed on the login or registration page.
+    3. Click on the "I agree" checkbox.
+    4. Verify that the checkbox is checked and the agreement statement is acknowledged.
+    5. Attempt to proceed without agreeing to the terms.
+    6. Verify that the system prevents further action until the agreement statement is acknowledged.
+*   **Expected Result:** The agreement statement is displayed correctly, and users can acknowledge the requirements by checking the "I agree" checkbox.

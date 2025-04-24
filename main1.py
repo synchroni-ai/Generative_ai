@@ -1,6 +1,7 @@
 import os
 from utils import data_ingestion, test_case_utils
 from utils.llms import together_ai, openai
+from convert_to_csv import parse_test_cases, write_to_csv
 from dotenv import load_dotenv
 import re
 
@@ -9,10 +10,11 @@ load_dotenv()
 # Configuration
 PDF_FILE_PATH = os.getenv("PDF_FILE_PATH")
 PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
-OUTPUT_FILE_PATH = "test_cases.txt"  # Path to the output text file
+# OUTPUT_FILE_PATH = "test_cases_brd.txt"  # Path to the output text file
+# output_file_CSV = "test_cases.csv"  # Path to the output CSV file
 
 
-def split_text_into_chunks(text, chunk_size=6000):
+def split_text_into_chunks(text, chunk_size=7000):
     """Splits a long text into chunks based on sentences and paragraphs where possible"""
     chunks = []
     current_chunk = ""
@@ -49,7 +51,7 @@ if __name__ == "__main__":
         # 4. Generate Test Cases for the current chunk
         test_cases_text = test_case_utils.generate_test_cases(
             chunk,
-            openai.generate_with_openai,
+            together_ai.generate_with_together,
             PROMPT_FILE_PATH,  # Same prompt for all chunks
         )
 
@@ -61,11 +63,4 @@ if __name__ == "__main__":
     # 5. Combine all test cases (JSON format now)
     combined_test_cases = "\n".join(all_test_cases)
 
-    # 6. Store the combined output to a text file
-    output_file_path = test_case_utils.store_test_cases_to_txt(
-        combined_test_cases, OUTPUT_FILE_PATH
-    )
-    if output_file_path:
-        print(f"\nTest cases saved to: {output_file_path}")
-    else:
-        print("Failed to save test cases to text file.")
+    print(combined_test_cases)

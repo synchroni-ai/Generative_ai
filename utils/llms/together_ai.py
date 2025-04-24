@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 
 
-def generate_with_together(prompt, temperature=0.3, max_tokens=800, top_p=0.9):
+def generate_with_together(prompt, temperature=0.3, max_tokens=500):
     """
     Calls the Together AI API to generate text based on a prompt.
     Reads API key from environment variables.
@@ -37,7 +37,6 @@ def generate_with_together(prompt, temperature=0.3, max_tokens=800, top_p=0.9):
         "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
-        "top_p": top_p,
     }
 
     response = requests.post(

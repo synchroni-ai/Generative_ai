@@ -19,4 +19,4 @@ You are an expert Quality Assurance Engineer. Given the following Business Requi
     *   **Steps:** [Detailed, numbered steps to execute the test case]
     *   **Expected Result:** [The expected outcome of executing the test case]
 
-Generate at least 2 test cases.
+Generate 2 test cases. Only return the test cases in output and not any other text.

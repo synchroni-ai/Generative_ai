@@ -1,0 +1,45 @@
+**Test Cases:**
+
+**TC_001: U1.1F1 - View Registration Page of Patient**
+
+*   **Description:** Verify that the system displays the registration page for patients.
+*   **Steps:**
+    1. Launch the application and navigate to the login page.
+    2. Click on the "Register" button.
+    3. Verify that the registration page is displayed with the required fields (e.g., name, email, password).
+*   **Expected Result:** The system displays the registration page with the required fields.
+
+**TC_002: U2.2F2 - Book Appointment Online with Diagnostic Center**
+
+*   **Description:** Verify that the system allows patients to book an appointment with a diagnostic center.
+*   **Steps:**
+    1. Launch the application and navigate to the login page.
+    2. Login as a patient.
+    3. Click on the "Book Appointment" button.
+    4. Select a diagnostic center and a doctor.
+    5. Verify that the system displays the available time slots.
+    6. Select a diagnostic center and a doctor, and a time slot.
+    7. Verify that the system handles the booking successfully.
+*   **Expected Result:** The system allows patients to book an appointment with a diagnostic center and displays the available time slots.
+**Test Cases:**
+
+**TC_001: Scalability - Valid Input**
+
+*   **Description:** Verify that the system can be scaled to support business growth with valid inputs.
+*   **Steps:**
+    1. Launch the system on a desktop computer.
+    2. Enter valid user credentials.
+    3. Perform a series of tests to simulate increased user traffic and data processing.
+    4. Verify that the system handles the increased load without errors or performance degradation.
+*   **Expected Result:** The system should be able to handle increased user traffic and data processing without errors or performance degradation.
+
+**TC_002: Interoperability - Android and iOS Compatibility**
+
+*   **Description:** Verify that the application is available on both Android and iOS platforms and functions correctly.
+*   **Steps:**
+    1. Launch the application on an Android device.
+    2. Verify that the application functions correctly and performs all expected actions.
+    3. Launch the application on an iOS device.
+    4. Verify that the application functions correctly and performs all expected actions.
+    5. Verify that data security is maintained and patient data is hidden under their account.
+*   **Expected Result:** The application should be available on both Android and iOS platforms and function correctly, with maintained data security.
