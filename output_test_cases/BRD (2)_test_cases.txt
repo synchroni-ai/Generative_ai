@@ -1,0 +1,145 @@
+**Test Cases:**
+
+**TC_001: Store Owner/Admin - Product Addition**
+
+*   **Description:** Verify that a store owner/admin can add a new product to the website.
+*   **Steps:**
+    1. Log in to the website as a store owner/admin.
+    2. Click on the "Add Product" button.
+    3. Fill in the required product information (name, description, price, etc.).
+    4. Upload a product image.
+    5. Click the "Add Product" button.
+*   **Expected Result:** The product is successfully added to the website, and the product information is displayed correctly.
+
+**TC_002: Customer (Fashion Designer) - Product Search**
+
+*   **Description:** Verify that a customer (fashion designer) can search for products on the website.
+*   **Steps:**
+    1. Log in to the website as a customer (fashion designer).
+    2. Click on the "Search Products" button.
+    3. Enter a valid product name or keyword in the search bar.
+    4. Click the "Search" button.
+    5. Verify that the search results are displayed correctly.
+*   **Expected Result:** The search results are displayed, and the customer can filter the results by price, brand, etc.
+**Test Cases:**
+
+**TC_001: Valid User Registration**
+
+*   **Description:** Verify that a user can register successfully with valid input.
+*   **Steps:**
+    1. Open the Alphaura e-commerce website.
+    2. Click on the "Register" button.
+    3. Fill in the registration form with valid input (e.g., unique email, password, name, and address).
+    4. Submit the registration form.
+*   **Expected Result:** The user should be successfully registered, and a confirmation message should be displayed.
+
+**TC_002: Invalid Email Address**
+
+*   **Description:** Verify that the system handles an invalid email address during registration.
+*   **Steps:**
+    1. Open the Alphaura e-commerce website.
+    2. Click on the "Register" button.
+    3. Fill in the registration form with an invalid email address (e.g., missing "@", extra characters).
+    4. Submit the registration form.
+*   **Expected Result:** An error message should be displayed indicating that the email address is invalid, and the registration should not be successful.
+**Test Cases:**
+
+**TC_001: Stockroom.lk - Product Browsing**
+
+*   **Description:** Verify that the product browsing feature works as expected with valid inputs.
+*   **Steps:**
+    1. Log in to the Stockroom.lk website.
+    2. Click on the "Fashion" category.
+    3. Browse through the product list and click on a random product.
+    4. Verify that the product details page is displayed correctly.
+*   **Expected Result:** The product details page should be displayed with the correct product information, images, and prices.
+
+**TC_002: Incarnage.com - Limited Edition Release**
+
+*   **Description:** Verify that the limited edition release feature works as expected with valid inputs.
+*   **Steps:**
+    1. Log in to the Incarnage.com website.
+    2. Click on the "Limited Edition" tab.
+    3. Browse through the limited edition product list and click on a random product.
+    4. Verify that the product details page is displayed correctly and the product is marked as "Limited Edition".
+*   **Expected Result:** The product details page should be displayed with the correct product information, images, and prices, and the product should be marked as "Limited Edition".
+**Test Cases:**
+
+**TC_001: Valid Login Test Case**
+
+*   **Description:** Verify that a valid login attempt is successful.
+*   **Steps:**
+    1. Open the website and navigate to the login page.
+    2. Enter a valid username and password.
+    3. Click the login button.
+*   **Expected Result:** The user is successfully logged in and redirected to their account dashboard.
+
+**TC_002: Invalid Login Test Case**
+
+*   **Description:** Verify that an invalid login attempt is handled correctly.
+*   **Steps:**
+    1. Open the website and navigate to the login page.
+    2. Enter an invalid username or password.
+    3. Click the login button.
+*   **Expected Result:** The system displays an error message indicating that the login attempt was unsuccessful.
+**Test Cases:**
+
+**TC_001: Size Recommender - Valid Input**
+
+*   **Description:** Verify that the size recommender function works correctly with valid body measurements, past purchases, and brand-specific size charts.
+*   **Steps:**
+    1. Log in to the website with a valid user account.
+    2. Navigate to the size recommender page.
+    3. Enter valid body measurements (e.g., height, weight, waist size).
+    4. Select a past purchase from the dropdown list.
+    5. Choose a brand-specific size chart from the dropdown list.
+    6. Click the "Get Recommended Size" button.
+*   **Expected Result:** The system displays a recommended size based on the input values.
+
+**TC_002: Fashion Events Calendar - Invalid Input**
+
+*   **Description:** Verify that the fashion events calendar handles invalid input dates and times.
+*   **Steps:**
+    1. Log in to the website with a valid user account.
+    2. Navigate to the fashion events calendar page.
+    3. Enter an invalid date (e.g., February 30th) in the search bar.
+    4. Click the "Search" button.
+*   **Expected Result:** The system displays an error message indicating that the input date is invalid.
+**Test Cases:**
+
+**TC_001: User Management - Positive Test Case**
+
+*   **Description:** Verify that a user can create an account with valid information.
+*   **Steps:**
+    1. Open the website and navigate to the registration page.
+    2. Enter valid information (name, contact number, email address) in the required fields.
+    3. Click the "Create Account" button.
+    4. Verify that the account is created successfully and the user is logged in.
+*   **Expected Result:** The user should be able to create an account with valid information and log in successfully.
+
+**TC_002: Order Management - Negative Test Case**
+
+*   **Description:** Verify that the system handles an invalid order status.
+*   **Steps:**
+    1. Log in as an admin and navigate to the order management page.
+    2. Select an order with an invalid status (e.g., " cancelled" instead of "pending").
+    3. Attempt to update the order status.
+    4. Verify that the system displays an error message and does not update the order status.
+*   **Expected Result:** The system should display an error message and prevent the update of the order status with an invalid value.
+**Test Cases:**
+
+**TC_001: Valid Typography**
+*   **Description:** Verify that the typography is readable and easy to read.
+*   **Steps:**
+    1. Open the Alphaura Fashion Accessories Web Application.
+    2. Inspect the font styles and sizes used throughout the application.
+    3. Verify that the font styles and sizes are consistent and easy to read.
+*   **Expected Result:** The typography is readable and easy to read.
+
+**TC_002: Invalid Agreement Statement**
+*   **Description:** Verify that the system handles an invalid agreement statement.
+*   **Steps:**
+    1. Open the Alphaura Fashion Accessories Web Application.
+    2. Attempt to submit an agreement statement with invalid or missing information.
+    3. Verify that the system displays an error message and does not allow submission.
+*   **Expected Result:** The system displays an error message and does not allow submission.

@@ -6,13 +6,21 @@ from utils.llms import together_ai
 from dotenv import load_dotenv
 from typing import Optional
 import re
+import time
 import tempfile
 import uuid
 from pathlib import Path
+from pymongo import MongoClient
+from bson import ObjectId
+from bson.errors import InvalidId
 
 app = FastAPI()
 
 load_dotenv()
+
+mongo_client = MongoClient("mongodb://localhost:27017/")
+db = mongo_client["Gen_AI"]
+collection = db["test_case_generation"]
 
 # Configuration (Ensure these environment variables are set)
 PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
@@ -112,25 +120,34 @@ async def process_and_generate(
 
         # Load prompt and chunk size or use defaults
         prompt = prompt_file_path if prompt_file_path else PROMPT_FILE_PATH
-        chunk = chunk_size if chunk_size else DEFAULT_CHUNK_SIZE
+        # chunk = chunk_size if chunk_size else DEFAULT_CHUNK_SIZE
 
-        # 3. Chunk the cleaned BRD text
-        chunks = split_text_into_chunks(cleaned_brd_text, chunk)
+        # # 3. Chunk the cleaned BRD text
+        # chunks = split_text_into_chunks(cleaned_brd_text, chunk)
 
         # 4. Iterate through the chunks and generate test cases
-        all_test_cases = []
-        for i, chunk in enumerate(chunks):
-            print(f"Processing Chunk {i+1}/{len(chunks)}")
-            test_cases_text = test_case_utils.generate_test_cases(
-                chunk,
+        start_time = time.time()
+        test_cases_text = test_case_utils.generate_test_cases(
+                cleaned_brd_text,
                 together_ai.generate_with_together,
                 prompt,
             )
+        all_test_cases = []
+        # for i, chunk in enumerate(chunks):
+        #     print(f"Processing Chunk {i+1}/{len(chunks)}")
+        #     test_cases_text = test_case_utils.generate_test_cases(
+        #         chunk,
+        #         together_ai.generate_with_together,
+        #         prompt,
+        #     )
 
-            if test_cases_text:
-                all_test_cases.append(test_cases_text)
-            else:
-                print(f"Failed to generate test cases for chunk {i+1}.")
+        if test_cases_text:
+            all_test_cases.append(test_cases_text)
+        else:
+            print(f"Failed to generate test cases for document.")
+
+        end_time = time.time()
+        generation_latency = int(end_time - start_time)
 
         # 5. Combine all test cases
         combined_test_cases = "\n".join(all_test_cases)
@@ -156,9 +173,37 @@ async def process_and_generate(
         TEST_CASES_CACHE[cache_key] = combined_test_cases
         print(f"Storing test cases in cache with key: {cache_key}")
 
+        document = {
+            "doc_name": file.filename,
+            "doc_path": str(file_path),  # You can also omit this or change it to a temporary descriptor
+            "llm_response_testcases": combined_test_cases,
+            "llm_response_latency": generation_latency  # Set a value if you track latency
+        }
+
+        result = collection.insert_one(document)
+
         return JSONResponse(
             content={"test_cases": combined_test_cases, "cache_key": cache_key}
         )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+def serialize_document(doc):
+    doc["_id"] = str(doc["_id"])
+    return doc
+
+@app.get("/documents/")
+def get_all_documents():
+    documents = list(collection.find())
+    return [serialize_document(doc) for doc in documents]
+
+@app.get("/documents/{document_id}")
+def get_document_by_id(document_id: str):
+    try:
+        doc = collection.find_one({"_id": ObjectId(document_id)})
+        if doc is None:
+            raise HTTPException(status_code=404, detail="Document not found")
+        return serialize_document(doc)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
