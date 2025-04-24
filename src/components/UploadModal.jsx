@@ -48,12 +48,13 @@
 //     }, 200);
 //   };
 
-//   const handleClose = () => {
+//   const handleClose = (success = false) => {
 //     setFile(null);
 //     setProgress(0);
 //     setUploading(false);
-//     onClose();
+//     onClose(success);
 //   };
+  
 
 //   return (
 //     <Dialog
@@ -63,12 +64,13 @@
 //       fullWidth
 //       PaperProps={{
 //         sx: {
+//           fontWeight: "bold",
 //           borderRadius: 3,
 //           p: 2
 //         }
 //       }}
 //     >
-//       <DialogTitle>Upload Document</DialogTitle>
+//       <DialogTitle sx={{ fontWeight: 'bold' }}>Upload Document</DialogTitle>
 //       <DialogContent sx={{ pt: 1 }}>
 //         <Box sx={{ minHeight: 180, display: "flex", flexDirection: "column", justifyContent: "center" }}>
 //           {!uploading ? (
@@ -103,6 +105,7 @@
 //                     variant="contained"
 //                     sx={{
 //                       mt: 2,
+//                       textTransform:"none",
 //                       backgroundColor: "#00008B",
 //                       "&:hover": {
 //                         backgroundColor: "#000060"
@@ -123,7 +126,7 @@
 //             </>
 //           ) : (
 //             <>
-//               <Typography variant="subtitle2" sx={{ mb: 1, color: "#333" }}>
+//               <Typography variant="subtitle2" sx={{ mb: 1, color: "black",fontWeight:"700" }}>
 //                 {file?.name || "Uploading..."}
 //               </Typography>
 //               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -155,14 +158,14 @@
 //       <DialogActions>
 //         {!uploading && progress === 0 && (
 //           <>
-//             <Button onClick={handleClose} color="secondary">
+//             <Button onClick={handleClose} color="">
 //               Cancel
 //             </Button>
 //             <Button
 //               variant="contained"
-//               color="primary"
 //               onClick={handleUpload}
 //               disabled={!file}
+//               sx={{backgroundColor:"#000080",color:"white"}}
 //             >
 //               Upload
 //             </Button>
@@ -172,9 +175,15 @@
 //         {uploading && (
 //           <Button
 //             variant="outlined"
-//             onClick={handleClose}
-//             color="primary"
+//             onClick={() => handleClose(true)}
 //             disabled={progress < 100}
+//             sx={{backgroundColor:"#000080",color:"white",
+//               "&.Mui-disabled": {
+//         color: "white",
+//         backgroundColor: "#000080",
+//         opacity: 0.6, // optional: for a subtle disabled look
+//       },
+//             }}
 //           >
 //             OK
 //           </Button>
@@ -188,6 +197,7 @@
 
 
 
+//Maincode
 import React, { useState } from "react";
 import {
   Dialog,
@@ -233,7 +243,7 @@ const handleUpload = async () => {
 
   try {
     const response = await axios.post(
-      "http://192.168.0.4:8001/process_pdf/",
+      "http://44.203.17.144:8000/process_and_generate/",
       formData,
       {
         // 🚫 Do NOT set Content-Type manually
@@ -316,6 +326,7 @@ const handleUpload = async () => {
                     sx={{
                       mt: 2,
                       backgroundColor: "#00008B",
+                      textTransform:"none",
                       "&:hover": {
                         backgroundColor: "#000060"
                       }
@@ -367,14 +378,14 @@ const handleUpload = async () => {
       <DialogActions>
         {!uploading && progress === 0 && (
           <>
-            <Button onClick={handleClose} color="secondary">
+            <Button onClick={handleClose} color="">
               Cancel
             </Button>
             <Button
               variant="contained"
-              color="primary"
               onClick={handleUpload}
               disabled={!file}
+              sx={{backgroundColor:"#000080",color:"white"}}
             >
               Upload
             </Button>
@@ -384,9 +395,16 @@ const handleUpload = async () => {
         {uploading && (
           <Button
             variant="outlined"
-            onClick={handleClose}
-            color="primary"
+            onClick={() => handleClose(true)}
             disabled={progress < 100}
+            sx={{backgroundColor:"#000080",color:"white",
+              "&.Mui-disabled": {
+        color: "white",
+        backgroundColor: "#000080",
+        opacity: 0.6, // optional: for a subtle disabled look
+      },
+            }}
+
           >
             OK
           </Button>
