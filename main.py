@@ -449,8 +449,19 @@ from pathlib import Path
 from pymongo import MongoClient
 from bson import ObjectId
 from bson.errors import InvalidId
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
+
+app.add_middleware(
+
+    CORSMiddleware,
+    allow_origins=["*"],  # Or restrict to your frontend domain(s)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+ 
 
 load_dotenv()
 
