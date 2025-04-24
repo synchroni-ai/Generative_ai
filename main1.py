@@ -1,6 +1,6 @@
 import os
 from utils import data_ingestion, test_case_utils
-from utils.llms import together_ai
+from utils.llms import together_ai, openai
 from dotenv import load_dotenv
 import re
 
@@ -12,7 +12,7 @@ PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
 OUTPUT_FILE_PATH = "test_cases.txt"  # Path to the output text file
 
 
-def split_text_into_chunks(text, chunk_size=4000):
+def split_text_into_chunks(text, chunk_size=6000):
     """Splits a long text into chunks based on sentences and paragraphs where possible"""
     chunks = []
     current_chunk = ""
@@ -49,7 +49,7 @@ if __name__ == "__main__":
         # 4. Generate Test Cases for the current chunk
         test_cases_text = test_case_utils.generate_test_cases(
             chunk,
-            together_ai.generate_with_together,
+            openai.generate_with_openai,
             PROMPT_FILE_PATH,  # Same prompt for all chunks
         )
 
