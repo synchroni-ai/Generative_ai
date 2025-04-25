@@ -419,8 +419,8 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import logo from "../asessts/images/logo.png";
-import sideImage from "../asessts/images/left1.png";
-// import sideImage from "../asessts/images/left2.png";
+// import sideImage from "../asessts/images/left1.png";
+import sideImage from "../asessts/images/left2.png";
 // import sideImage from "../asessts/images/left3.png";
 import { useNavigate } from "react-router-dom";
 import { CircularProgress } from '@mui/material';
@@ -450,7 +450,7 @@ const LoginPage = () => {
   };
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex",overflowY:"hidden",overflowX:"hidden" }}>
+    <Box sx={{ minHeight: "100vh", display: "flex",overflowY:"hidden",overflowX:"hidden",backgroundColor:"#f5f5f5" }}>
       {/* Left Side Image with Animation */}
       <Box
   sx={{
@@ -476,9 +476,11 @@ const LoginPage = () => {
       backgroundRepeat: "no-repeat",
       backgroundSize: "contain",
       backgroundPosition: "center",
-      height: "80vh",
+      height: "98vh",
       width: "100%",
       maxWidth: 500,
+      border:"1px solid #f5f5f5"
+      // borderColor:"#f5f5f5"
     }}
   />
 
@@ -488,7 +490,7 @@ const LoginPage = () => {
     alt="Logo"
     style={{
       position: "absolute",
-      top: "100px", // adjust as needed
+      top: "30px", // adjust as needed
       left: "100px", // adjust as needed
       height: "33px", // adjust size
       zIndex: 2,
@@ -575,12 +577,19 @@ const LoginPage = () => {
                 {loading ? <CircularProgress size={16} color="inherit" /> : "Sign In"}
               </Button>
 
-            <Typography mt={2} textAlign="center" sx={{fontSize:"12px"}}>
+            <Typography mt={2} mb={2}textAlign="center" sx={{fontSize:"12px"}}>
               Don’t Have An Account?{" "}
               <Link href="#" underline="hover">
                 Sign Up
               </Link>
             </Typography>
+            <Box className="power" display="flex" justifyContent="center" alignItems="center" mb={3} mt={5}>
+  <Typography sx={{ fontSize: "12px", mr: 1 }}>
+    Powered by
+  </Typography>
+  <img src={logo} alt="Logo" style={{ height: 20 }} />
+</Box>
+
           </form>
           </div>
         {/* </Paper> */}
