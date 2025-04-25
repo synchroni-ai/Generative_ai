@@ -637,7 +637,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await axios.get("http://44.203.17.144:8000/documents/");
+        const response = await axios.get("http://98.81.68.180:8000/documents/");
         setDocuments(response.data); // Assuming response.data is an array
         console.log("Fetched data:", response.data);
       } catch (error) {

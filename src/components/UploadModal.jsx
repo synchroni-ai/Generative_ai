@@ -243,7 +243,7 @@ const handleUpload = async () => {
 
   try {
     const response = await axios.post(
-      "http://44.203.17.144:8000/process_and_generate/",
+      "http://98.81.68.180/process_and_generate/",
       formData,
       {
         // 🚫 Do NOT set Content-Type manually
