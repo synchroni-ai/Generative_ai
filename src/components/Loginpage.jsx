@@ -485,7 +485,7 @@ const LoginPage = () => {
   />
 
   {/* Logo overlay */}
-  <img
+  {/* <img
     src={logo}
     alt="Logo"
     style={{
@@ -495,7 +495,7 @@ const LoginPage = () => {
       height: "33px", // adjust size
       zIndex: 2,
     }}
-  />
+  /> */}
 </Box>
 
 
