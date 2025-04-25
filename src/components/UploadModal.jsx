@@ -197,7 +197,7 @@
 
 
 
-//Maincode
+//Api code
 import React, { useState } from "react";
 import {
   Dialog,
@@ -243,7 +243,7 @@ const handleUpload = async () => {
 
   try {
     const response = await axios.post(
-      "http://98.81.68.180/process_and_generate/",
+      "http://gen-ai.synchroni.xyz:8000/process_and_generate/",
       formData,
       {
         // 🚫 Do NOT set Content-Type manually
@@ -286,7 +286,7 @@ const handleUpload = async () => {
         }
       }}
     >
-<DialogTitle>
+<DialogTitle sx={{ fontWeight: 'bold' }}>
   {uploading
     ? (progress === 100 ? "Uploaded Document" : "Uploading Document...")
     : "Upload Document"}
@@ -346,7 +346,7 @@ const handleUpload = async () => {
             </>
           ) : (
             <>
-              <Typography variant="subtitle2" sx={{ mb: 1, color: "#333" }}>
+              <Typography variant="subtitle2" sx={{ mb: 1, color: "black",fontWeight:"700" }}>
                 {file?.name || "Uploading..."}
               </Typography>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
