@@ -1,7 +1,7 @@
 import os
-from utils import data_ingestion, test_case_utils
+from utils import data_ingestion, test_case_utils, user_story_utils
 from utils.llms import together_ai, openai
-from convert_to_csv import parse_test_cases, write_to_csv
+#from convert_to_csv import parse_test_cases, write_to_csv
 from dotenv import load_dotenv
 import re
 
@@ -9,7 +9,8 @@ load_dotenv()
 
 # Configuration
 PDF_FILE_PATH = os.getenv("PDF_FILE_PATH")
-PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
+TEST_CASE_PROMPT = os.getenv("PROMPT_FILE_PATH")
+USER_STORY_PROMPT = os.getenv("USER_STORY_PROMPT_FILE_PATH")
 # OUTPUT_FILE_PATH = "test_cases_brd.txt"  # Path to the output text file
 # output_file_CSV = "test_cases.csv"  # Path to the output CSV file
 
@@ -41,26 +42,49 @@ if __name__ == "__main__":
     cleaned_brd_text = data_ingestion.clean_text(brd_text)
 
     # 2. Chunk the BRD
-    chunks = split_text_into_chunks(cleaned_brd_text)
+    #chunks = split_text_into_chunks(cleaned_brd_text)
 
     # 3. Iterate through the chunks and generate test cases for each
     all_test_cases = []
-    for i, chunk in enumerate(chunks):
-        print(f"Processing Chunk {i+1}/{len(chunks)}")
+    # for i, chunk in enumerate(chunks):
+    #     print(f"Processing Chunk {i+1}/{len(chunks)}")
 
-        # 4. Generate Test Cases for the current chunk
-        test_cases_text = test_case_utils.generate_test_cases(
-            chunk,
+    #     # 4. Generate Test Cases for the current chunk
+    #     test_cases_text = test_case_utils.generate_test_cases(
+    #         chunk,
+    #         together_ai.generate_with_together,
+    #         PROMPT_FILE_PATH,  # Same prompt for all chunks
+    #     )
+    test_cases_text = test_case_utils.generate_test_cases(
+            brd_text,
             together_ai.generate_with_together,
-            PROMPT_FILE_PATH,  # Same prompt for all chunks
+            TEST_CASE_PROMPT,  # Same prompt for all chunks
         )
 
-        if test_cases_text:
+    if test_cases_text:
             all_test_cases.append(test_cases_text)
-        else:
-            print(f"Failed to generate test cases for chunk {i+1}.")
+    else:
+        print(f"Failed to generate test cases for document.")
 
     # 5. Combine all test cases (JSON format now)
     combined_test_cases = "\n".join(all_test_cases)
 
     print(combined_test_cases)
+
+    all_user_stories = []
+
+    user_stories_text = user_story_utils.generate_user_stories(
+        brd_text,
+        together_ai.generate_with_together,
+        USER_STORY_PROMPT
+
+    )
+    if user_stories_text:
+            all_user_stories.append(user_stories_text)
+    else:
+        print(f"Failed to generate user stories for document.")
+
+    combined_user_stories = "\n".join(all_user_stories)
+    print(combined_user_stories)
+
+
