@@ -2,7 +2,6 @@ venv/
 __pycache__/
 *.pyc
 .DS_Store
-.env
 /tmp/
 
 test_cases.csv
