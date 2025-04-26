@@ -242,8 +242,8 @@ const UploadModal = ({ open, onClose }) => {
     formData.append("file", file);
   
     try {
-      const response = await axios.post("https://gen-ai.synchroni.xyz/process_and_generate/",
-      // const response = await axios.post("http://192.168.0.173:8000/process_and_generate/",
+      const response = await axios.post("https://gen-ai.synchroni.xyz/backend/process_and_generate/",
+      // const response = await axios.post("http://192.168.0.173:8000/backend/process_and_generate/",
         formData,
         {
           // 🚫 Do NOT set Content-Type manually

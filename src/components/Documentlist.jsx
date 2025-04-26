@@ -244,6 +244,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import CloseIcon from "@mui/icons-material/Close";
+import { Skeleton } from "@mui/material";
 import axios from "axios";
 import Header from "./Header";
 import UploadModal from "./UploadModal";
@@ -318,8 +319,8 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await axios.get("https://gen-ai.synchroni.xyz/documents/");
-        // const response = await axios.get("http://192.168.0.173:8000/documents/");
+        const response = await axios.get("https://gen-ai.synchroni.xyz/backend/documents/");
+        // const response = await axios.get("http://192.168.0.173:8000/backend/documents/");
         setDocuments(response.data.reverse()); // Assuming response.data is an array
         console.log("Fetched data:", response.data);
       } catch (error) {
@@ -347,11 +348,38 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
         </Box>
 
         <Container maxWidth="xl" sx={{ mt: 8 }}>
-          {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", mt: 10 }}>
-              <CircularProgress />
-            </Box>
-          ) : (
+        {loading ? (
+  <TableContainer sx={{ width: "100%", border: "1px solid #e6e6e6", borderRadius: "10px", borderBottom: "none" }}>
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell sx={{ fontWeight: "bold" }}>Serial No</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>doc_name</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>doc_path</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>llm_response_latency</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {[...Array(rowsPerPage)].map((_, index) => (
+          <TableRow key={index}>
+            <TableCell>
+              <Skeleton variant="text" width={30} />
+            </TableCell>
+            <TableCell>
+              <Skeleton variant="rectangular" width="80%" height={20} />
+            </TableCell>
+            <TableCell>
+              <Skeleton variant="rectangular" width="90%" height={20} />
+            </TableCell>
+            <TableCell>
+              <Skeleton variant="rectangular" width="60%" height={20} />
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </TableContainer>
+) : (
             <TableContainer  sx={{ width: "100%",border:"1px solid #e6e6e6",borderRadius:"10px",borderBottom:"none" }}>
               <Table aria-label="documents table">
                 <TableHead>
