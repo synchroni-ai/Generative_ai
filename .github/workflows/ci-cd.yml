@@ -3,7 +3,7 @@ name: Full Stack CI/CD Deployment
 on:
   push:
     branches:
-      - mian  # Frontend deployment
+      - main  # Corrected branch name (was 'mian')
 
 jobs:
   deploy:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Pull latest code/home/ubuntu/
+        uses: actions/checkout@v3
 
       # ---- FRONTEND DEPLOYMENT ----
       - name: Set up Node.js
@@ -19,11 +19,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
-          cache: npm
+          cache: 'npm'
 
       - name: Install dependencies
         if: github.ref == 'refs/heads/main'
-        run: npm install  # Install packages
+        run: npm install
 
       - name: Build Frontend
         if: github.ref == 'refs/heads/main'
@@ -36,7 +36,8 @@ jobs:
           host: ${{ secrets.SERVER_HOST_GEN }}
           username: ${{ secrets.SERVER_USER_GEN }}
           key: ${{ secrets.SSH_PRIVATE_KEY_GEN }}
-          script: sudo rm -rf /home/ubuntu/frontend/Generative_ai/build
+          script: |
+            sudo rm -rf /home/ubuntu/frontend/Generative_ai/build
 
       - name: Transfer New Build to Server
         if: github.ref == 'refs/heads/main'
@@ -55,5 +56,5 @@ jobs:
           host: ${{ secrets.SERVER_HOST_GEN }}
           username: ${{ secrets.SERVER_USER_GEN }}
           key: ${{ secrets.SSH_PRIVATE_KEY_GEN }}
-          script: sudo systemctl restart nginx.service
-          
+          script: |
+            sudo systemctl restart nginx
