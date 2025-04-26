@@ -56,3 +56,4 @@ jobs:
           username: ${{ secrets.SERVER_USER_GEN }}
           key: ${{ secrets.SSH_PRIVATE_KEY_GEN }}
           script: sudo systemctl restart nginx.service
+          
