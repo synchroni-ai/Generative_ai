@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Query, Header
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
@@ -50,9 +50,15 @@ TEST_CASES_CACHE = {}
 
 # ----------------- Model Dispatcher -----------------
 MODEL_DISPATCHER = {
-    "Mistral": Mistral.generate_with_mistral,
-    "Openai": openai.generate_with_openai,
-    "Llama": llama.generate_with_llama,
+    "Mistral": lambda prompt, api_key=None: Mistral.generate_with_mistral(
+        prompt, api_key=api_key
+    ),
+    "Openai": lambda prompt, api_key=None: openai.generate_with_openai(
+        prompt, api_key=api_key
+    ),
+    "Llama": lambda prompt, api_key=None: llama.generate_with_llama(
+        prompt, api_key=api_key
+    ),
 }
 
 
@@ -82,9 +88,9 @@ def serialize_document(doc):
 async def process_and_generate(
     file: UploadFile = File(...),
     model_name: str = Form("Mistral"),
+    api_key: Optional[str] = Form(default=None),
     chunk_size: Optional[int] = Query(default=None),
     cache_key: Optional[str] = Query(default=None),
-    api_key: Optional[str] = Header(default=None),  # Single API key header
 ):
     try:
         # ------------- Handle Cache -------------
@@ -104,6 +110,22 @@ async def process_and_generate(
                 status_code=400, detail=f"Unsupported model: {model_name}"
             )
         generation_function = MODEL_DISPATCHER[model_name]
+
+        if model_name in ["Mistral", "Llama"] and (
+            api_key is not None and not api_key.startswith("tg")
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Please provide a valid Together.ai API key for Mistral model.",
+            )
+
+        if model_name == "Openai" and (
+            api_key is not None and not api_key.startswith("sk-")
+        ):
+            raise HTTPException(
+                status_code=400,
+                detail="Please provide a valid OpenAI API key for Openai model.",
+            )
 
         # ------------- Save Uploaded File -------------
         file_name = file.filename
@@ -133,62 +155,24 @@ async def process_and_generate(
         else:
             chunks = split_text_into_chunks(cleaned_text, chunk)
 
-        # ------------- Determine API Key -------------
-        if api_key:
-            selected_api_key = api_key
-        else:
-            if model_name == "Llama":
-                selected_api_key = os.getenv("TOGETHER_API_KEY")
-            elif model_name == "Openai":
-                selected_api_key = os.getenv("OPENAI_API_KEY")
-            else:
-                selected_api_key = (
-                    None  # Or raise an exception if a key is required for other models
-                )
-
-        if selected_api_key is None and model_name in ("Llama", "Openai"):
-            raise HTTPException(
-                status_code=500,
-                detail=f"API key not provided for model {model_name} and not found in environment variables.",
-            )
-
-        # ------------- Dynamically patch the API key based on model -------------
-        def _patched_generate_test_cases(chunk_text, gen_func, prompt_file_path):
-            if model_name in ("Llama", "Openai"):
-                return test_case_utils.generate_test_cases(
-                    chunk_text,
-                    lambda prompt: gen_func(prompt, api_key=selected_api_key),
-                    prompt_file_path,
-                )
-            else:
-                return test_case_utils.generate_test_cases(
-                    chunk_text, gen_func, prompt_file_path
-                )
-
-        def _patched_generate_user_stories(chunk_text, gen_func, prompt_file_path):
-            if model_name in ("Llama", "Openai"):
-                return user_story_utils.generate_user_stories(
-                    chunk_text,
-                    lambda prompt: gen_func(prompt, api_key=selected_api_key),
-                    prompt_file_path,
-                )
-            else:
-                return user_story_utils.generate_user_stories(
-                    chunk_text, gen_func, prompt_file_path
-                )
-
         # ------------- Generate Test Cases -------------
         all_test_cases = []
         all_user_stories = []
         start_time = time.time()
 
         for idx, chunk_text in enumerate(chunks):
-            print(f"Processing chunk {idx+1}/{len(chunks)} with model {model_name}")
-            test_case_text = _patched_generate_test_cases(
-                chunk_text, generation_function, PROMPT_FILE_PATH
+            print(
+                f"Processing chunk {idx+1}/{len(chunks)} with model {model_name} for Test Cases"
             )
-            user_stories_text = _patched_generate_user_stories(
-                chunk_text, generation_function, USER_STORY_PROMPT_FILE_PATH
+            test_case_text = test_case_utils.generate_test_cases(
+                chunk_text,
+                lambda prompt: generation_function(prompt, api_key=api_key),
+                PROMPT_FILE_PATH,
+            )
+            user_stories_text = user_story_utils.generate_user_stories(
+                chunk_text,
+                lambda prompt: generation_function(prompt, api_key=api_key),
+                USER_STORY_PROMPT_FILE_PATH,
             )
             if test_case_text:
                 all_test_cases.append(test_case_text)
@@ -199,6 +183,11 @@ async def process_and_generate(
         combined_user_stories = "\n".join(all_user_stories)
         end_time = time.time()
         generation_latency = int(end_time - start_time)
+
+        # # ------------- Generate User Stories -------------
+        # user_stories_text = user_story_utils.generate_user_stories(
+        #     cleaned_text, generation_function, USER_STORY_PROMPT_FILE_PATH
+        # )
 
         # ------------- Save Outputs -------------
         base_stem = Path(file_name).stem
