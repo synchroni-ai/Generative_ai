@@ -229,7 +229,6 @@ import React, { useState, useEffect } from "react";
 import {
   Button,
   Box,
-  Typography,
   Container,
   Table,
   TableHead,
@@ -237,13 +236,9 @@ import {
   TableRow,
   TableCell,
   TableContainer,
-  Paper,
-  Drawer,
-  IconButton,
-  CircularProgress
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import CloseIcon from "@mui/icons-material/Close";
+import { Search } from 'react-feather'; // Add this at the top
 import { Skeleton } from "@mui/material";
 import axios from "axios";
 import Header from "./Header";
@@ -260,6 +255,7 @@ const Documentlist = () => {
   const [testCaseData, setTestCaseData] = useState("");
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
 const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
 
@@ -315,38 +311,70 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
     flushList();
     return elements;
   };
-
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const response = await axios.get("https://gen-ai.synchroni.xyz/backend/documents/");
-        // const response = await axios.get("http://192.168.0.173:8000/backend/documents/");
-        setDocuments(response.data.reverse()); // Assuming response.data is an array
-        console.log("Fetched data:", response.data);
-      } catch (error) {
-        console.error("Error fetching documents:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchDocuments = async () => {
+    try {
+    const response = await axios.get("https://gen-backend.synchroni.xyz/documents/");
+      // const response = await axios.get("http://192.168.0.173:8000/documents/");
+      setDocuments(response.data.reverse());
+      console.log("Fetched data:", response.data);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
+  useEffect(() => {
     fetchDocuments();
   }, []);
+  
+
+  // useEffect(() => {
+  //   const fetchDocuments = async () => {
+  //     try {
+  //       // const response = await axios.get("https://gen-ai.synchroni.xyz/backend/documents/");
+  //       const response = await axios.get("http://192.168.0.173:8000/documents/");
+  //       setDocuments(response.data.reverse()); // Assuming response.data is an array
+  //       console.log("Fetched data:", response.data);
+  //     } catch (error) {
+  //       console.error("Error fetching documents:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+  
+  //   fetchDocuments();
+  // }, []);
   
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header onLogout={handleLogout} />
       <Box sx={{ mt: 10, px: 2}}>
-        <Box sx={{ position: "absolute", top: 80, right: 20}}>
-          <Button
-            // variant="contained"
-            onClick={handleUploadClick}
-            sx={{ textTransform: "none", fontWeight: "bold", color: "white", backgroundColor: "#000080",borderRadius:"10px",padding:"6px 16px",marginRight:"20px" }}
-          >
-            New Document
-          </Button>
-        </Box>
+      <Box sx={{ position: "absolute", top: 80, right: 20, display: "flex", alignItems: "center" }}>
+  <Box className="search-container" sx={{ position: "relative", mr: 2, width: "250px" }}>
+    <input
+      type="text"
+      placeholder="Search topics..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+    <Search className="basic-header-search-icon" />
+  </Box>
 
+  <Button
+    onClick={handleUploadClick}
+    sx={{
+      textTransform: "none",
+      fontWeight: "bold",
+      color: "white",
+      backgroundColor: "#000080",
+      borderRadius: "10px",
+      padding: "6px 16px",
+    }}
+  >
+    New Document
+  </Button>
+</Box>
         <Container maxWidth="xl" sx={{ mt: 8 }}>
         {loading ? (
   <TableContainer sx={{ width: "100%", border: "1px solid #e6e6e6", borderRadius: "10px", borderBottom: "none" }}>
@@ -391,8 +419,13 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                {documents.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((doc, index) => (
-                    <TableRow key={doc._id}>
+                {documents
+    .filter((doc) =>
+      doc.doc_name.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+    .map((doc, index) => (
+                          <TableRow key={doc._id}>
 <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                     <TableCell
                         sx={{ cursor: "pointer", color: "#1976d2", textDecoration: "underline" }}
@@ -435,7 +468,7 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
   parseFormattedText={parseFormattedText}
 />
 
-      <UploadModal open={modalOpen} onClose={handleModalClose} />
+      <UploadModal open={modalOpen} onClose={handleModalClose} fetchDocuments={fetchDocuments}/>
     </Box>
   );
 };
