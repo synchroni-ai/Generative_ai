@@ -227,44 +227,44 @@ const UploadModal = ({ open, onClose }) => {
     }
   };
 
-const handleUpload = async () => {
-  if (!file) {
-    alert("Please select a file to upload.");
-    return;
-  }
-
-  console.log("Starting upload for:", file.name);
-
-  setUploading(true);
-  setProgress(0);
-
-  const formData = new FormData();
-  formData.append("file", file);
-
-  try {
-    const response = await axios.post(
-      "http://gen-ai.synchroni.xyz:8000/process_and_generate/",
-      formData,
-      {
-        // 🚫 Do NOT set Content-Type manually
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total
-          );
-          setProgress(percent);
-          console.log(`Upload progress: ${percent}%`);
+  const handleUpload = async () => {
+    if (!file) {
+      alert("Please select a file to upload.");
+      return;
+    }
+  
+    console.log("Starting upload for:", file.name);
+  
+    setUploading(true);
+    setProgress(0);
+  
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      const response = await axios.post("https://gen-ai.synchroni.xyz/process_and_generate/",
+      // const response = await axios.post("http://192.168.0.173:8000/process_and_generate/",
+        formData,
+        {
+          // 🚫 Do NOT set Content-Type manually
+          onUploadProgress: (progressEvent) => {
+            const percent = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            setProgress(percent);
+            console.log(`Upload progress: ${percent}%`);
+          }
         }
-      }
-    );
-
-    console.log("Upload complete. Server response:", response.data);
-  } catch (error) {
-    console.error("Upload failed:", error);
-    alert("An error occurred during file upload.");
-    setUploading(false);
-  }
-};
-
+      );
+  
+      console.log("Upload complete. Server response:", response.data);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("An error occurred during file upload.");
+      setUploading(false);
+    }
+  };
+  
 
   const handleClose = () => {
     setFile(null);

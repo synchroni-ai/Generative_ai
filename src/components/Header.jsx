@@ -10,8 +10,6 @@ import {
   MenuItem,
   ListItemIcon
 } from "@mui/material";
-import enrollments from '../asessts/images/enrollment.png';
-import achievements from '../asessts/images/achievements.png';
 import setting from '../asessts/images/settings.png';
 import support from '../asessts/images/support.png';
 import LogoutIcon from '../asessts/images/Logout.png';
@@ -105,20 +103,6 @@ const Header = ({ onLogout }) => {
     },
   }}
 >
-  {/* <MenuItem onClick={handleMenuClose} sx={{color:"#8e8e8e"}}>
-    <ListItemIcon>
-      <img src={enrollments} alt="Enrollments" style={{ width: 20, height: 20 }} />
-    </ListItemIcon>
-    Enrollments
-  </MenuItem>
-
-  <MenuItem onClick={handleMenuClose} sx={{color:"#8e8e8e"}}>
-    <ListItemIcon>
-      <img src={achievements} alt="Achievements" style={{ width: 20, height: 20 }} />
-    </ListItemIcon>
-    Achievements
-  </MenuItem> */}
-
   <MenuItem onClick={handleMenuClose} sx={{color:"#8e8e8e"}}>
     <ListItemIcon>
       <img src={setting} alt="Settings" style={{ width: 20, height: 20 }} />
