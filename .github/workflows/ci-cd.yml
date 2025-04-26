@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Pull latest code/home/ubuntu/LMS-New/frontend/lmsapp/sampleactions
+        uses: actions/checkout@v3  # Pull latest code/home/ubuntu/
 
       # ---- FRONTEND DEPLOYMENT ----
       - name: Set up Node.js
@@ -27,7 +27,7 @@ jobs:
 
       - name: Build Frontend
         if: github.ref == 'refs/heads/main'
-        run: CI=false npm run build:dev
+        run: CI=false npm run build
 
       - name: Remove Previous Build on Server
         if: github.ref == 'refs/heads/main'
