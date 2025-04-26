@@ -101,7 +101,7 @@ async def process_and_generate(
                     "user_stories": TEST_CASES_CACHE[cache_key]["user_stories"],
                     "cache_key": cache_key,
                     "model_used": model_name,
-                    "api_key": api_key,
+                    # "api_key": api_key,
                 }
             )
 
@@ -217,6 +217,7 @@ async def process_and_generate(
             "llm_response_testcases": combined_test_cases,
             "llm_response_user_stories": user_stories_text,
             "llm_response_latency": generation_latency,
+            "api_key": api_key,
         }
         collection.insert_one(document)
 
