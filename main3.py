@@ -750,6 +750,7 @@ async def process_and_generate(
 
         # ------------- Generate Test Cases -------------
         all_test_cases = []
+        all_user_stories = []
         start_time = time.time()
 
         for idx, chunk_text in enumerate(chunks):
@@ -757,17 +758,23 @@ async def process_and_generate(
             test_case_text = test_case_utils.generate_test_cases(
                 chunk_text, generation_function, PROMPT_FILE_PATH
             )
+            user_stories_text = user_story_utils.generate_user_stories(chunk_text,
+                                                                       generation_function, 
+                                                                       USER_STORY_PROMPT_FILE_PATH)
             if test_case_text:
                 all_test_cases.append(test_case_text)
+            if user_stories_text:
+                all_user_stories.append(user_stories_text)
 
         combined_test_cases = "\n".join(all_test_cases)
+        combined_user_stories = "\n".join(all_user_stories)
         end_time = time.time()
         generation_latency = int(end_time - start_time)
 
-        # ------------- Generate User Stories -------------
-        user_stories_text = user_story_utils.generate_user_stories(
-            cleaned_text, generation_function, USER_STORY_PROMPT_FILE_PATH
-        )
+        # # ------------- Generate User Stories -------------
+        # user_stories_text = user_story_utils.generate_user_stories(
+        #     cleaned_text, generation_function, USER_STORY_PROMPT_FILE_PATH
+        # )
 
         # ------------- Save Outputs -------------
         base_stem = Path(file_name).stem
@@ -786,7 +793,7 @@ async def process_and_generate(
 
         TEST_CASES_CACHE[cache_key] = {
             "test_cases": combined_test_cases,
-            "user_stories": user_stories_text
+            "user_stories": combined_user_stories
         }
 
         document = {
@@ -801,7 +808,7 @@ async def process_and_generate(
 
         return JSONResponse(content={
             "test_cases": combined_test_cases,
-            "user_stories": user_stories_text,
+            "user_stories": combined_user_stories,
             "cache_key": cache_key,
             "model_used": model_name
         })
