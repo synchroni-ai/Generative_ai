@@ -1,0 +1,135 @@
+**Test Cases:**
+
+* **Test Case ID:** TC_001
+    * **Description:** Verify that the system allows the store owner/admin to login with valid credentials.
+    * **Steps:** 
+        1. Navigate to the admin login page.
+        2. Enter valid username and password.
+        3. Click on the login button.
+    * **Expected Result:** The system should successfully log in the admin and redirect to the admin dashboard.
+
+* **Test Case ID:** TC_002
+    * **Description:** Verify that the system does not allow the store owner/admin to login with invalid credentials.
+    * **Steps:** 
+        1. Navigate to the admin login page.
+        2. Enter invalid username and password.
+        3. Click on the login button.
+    * **Expected Result:** The system should display an error message indicating invalid credentials.
+
+* **Test Case ID:** TC_003
+    * **Description:** Verify that the system allows the
+**Test Cases:**
+
+**Test Case ID: TC_001**
+* Description: Verify that the website loads correctly
+* Steps: 
+  1. Open a web browser
+  2. Enter the website URL
+* Expected Result: The website should load without any errors
+
+**Test Case ID: TC_002**
+* Description: Verify the search functionality with valid inputs
+* Steps: 
+  1. Navigate to the website
+  2. Enter a valid product name in the search bar
+  3. Click on the search button
+* Expected Result: The website should display the products that match the search query
+
+**Test Case ID: TC_003**
+* Description: Verify the search functionality with invalid inputs
+* Steps: 
+  1. Navigate to the website
+  2. Enter an invalid product name in the search bar
+  3. Click on the search button
+* Expected Result: The website should display a message indicating that
+**Test Cases:**
+
+*   **Test Case ID:** TC_001
+    *   **Description:** Verify the product browsing functionality on stockroom.lk
+    *   **Steps:** 1. Navigate to stockroom.lk 2. Browse through various product categories
+    *   **Expected Result:** Products under each category should be displayed correctly.
+
+*   **Test Case ID:** TC_002
+    *   **Description:** Verify the product filtering functionality on stockroom.lk
+    *   **Steps:** 1. Navigate to stockroom.lk 2. Select a product category 3. Apply various filters
+    *   **Expected Result:** Products should be filtered according to the selected filters.
+
+*   **Test Case ID:** TC_003
+    *   **Description:** Verify the account creation functionality on stockroom.lk
+    *   **Steps:** 1. Navigate to stockroom.lk 2. Click on 'Create Account' 
+**Test Cases:**
+
+* **Test Case ID:** TC_001
+    * **Description:** Verify the functionality of the size guide on Adidas.com/lk
+    * **Steps:** 
+        1. Navigate to Adidas.com/lk
+        2. Select a product
+        3. Click on the size guide
+    * **Expected Result:** The size guide should display correctly with detailed size information and fitting recommendations.
+
+* **Test Case ID:** TC_002
+    * **Description:** Test the functionality of the 360-degree view on Adidas.com/lk
+    * **Steps:** 
+        1. Navigate to Adidas.com/lk
+        2. Select a product
+        3. Click on the 360-degree view option
+    * **Expected Result:** The product should be viewable from all angles.
+
+* **Test Case ID:** TC_003
+    * **Description:** Verify the functionality of the zoom-in feature on Adidas.com/lk
+**Test Cases:**
+
+1. **Test Case ID:** TC_001
+    * **Description:** Verify the functionality of the Size Recommender with valid inputs.
+    * **Steps:** 
+        1. Enter valid body measurements.
+        2. Select a product.
+        3. Use the Size Recommender.
+    * **Expected Result:** The Size Recommender should suggest the appropriate size based on the entered body measurements.
+
+2. **Test Case ID:** TC_002
+    * **Description:** Verify the functionality of the Size Recommender with invalid inputs.
+    * **Steps:** 
+        1. Enter invalid body measurements.
+        2. Select a product.
+        3. Use the Size Recommender.
+    * **Expected Result:** The Size Recommender should display an error message indicating invalid inputs.
+
+3. **Test Case ID:** TC_003
+    * **Description:** Test the boundary values of the Size Recommender.
+    * **Steps:** 
+
+**Test Cases:**
+
+*   **Test Case ID:** TC_001
+    *   **Description:** Verify that a user can create an account with valid inputs.
+    *   **Steps:** 
+        1. Navigate to the "Create Account" page.
+        2. Enter valid name, contact number, and email address.
+        3. Click on "Create Account".
+    *   **Expected Result:** Account is created successfully and user is redirected to the dashboard.
+
+*   **Test Case ID:** TC_002
+    *   **Description:** Verify that the system handles invalid email format during account creation.
+    *   **Steps:** 
+        1. Navigate to the "Create Account" page.
+        2. Enter valid name and contact number, but invalid email address.
+        3. Click on "Create Account".
+    *   **Expected Result:** Error message is displayed indicating invalid email format.
+
+*   **Test Case ID:** TC_003
+
+**Test Cases:**
+
+*   **Test Case ID:** TC_001
+    *   **Description:** Verify the readability of the fonts used in the web app
+    *   **Steps:** 1. Open the web app 2. Navigate through different pages 3. Read the text on each page
+    *   **Expected Result:** The text should be easily readable and complement the design of the web app
+
+*   **Test Case ID:** TC_002
+    *   **Description:** Verify the functionality of the agreement statement
+    *   **Steps:** 1. Open the agreement statement page 2. Try to proceed without signing 3. Sign the agreement 4. Try to proceed
+    *   **Expected Result:** The user should not be able to proceed without signing the agreement. After signing, the user should be able to proceed
+
+*   **Test Case ID:** TC_003
+    *   **Description:** Verify the project initiation process

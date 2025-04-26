@@ -1,0 +1,18 @@
+**User Story ID:** US_001
+* **Title:** Patient Registration
+* **Description:** As a Patient, I want to be able to register on the application, so that I can access the hospital functionalities.
+* **Acceptance Criteria:**
+    * User can find the sign-up form.
+    * User can fill and submit the sign-up form.
+    * User receives a confirmation of successful registration.
+
+**User Story ID:** US_002
+* **Title:** Patient Login
+* **Description:** As a Patient, I want to be able to login to the application, so that I can access my personal dashboard and functionalities.
+* **Acceptance Criteria:**
+    * User can login with their username and password.
+    * User is directed to their personal dashboard upon successful login.
+
+**User Story ID:** US_003
+* **Title:** Doctor Appointment Reservation
+* **Description:** As a Patient, I want to be able to reserve a doctor appointment, so that I can

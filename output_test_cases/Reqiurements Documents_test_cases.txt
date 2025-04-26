@@ -1,45 +1,167 @@
 **Test Cases:**
 
-**TC_001: U1.1F1 - View Registration Page of Patient**
+*   **Test Case ID:** TC_001
+    *   **Description:** Verify that a patient can view the registration page.
+    *   **Steps:**
+        1. Open the application.
+        2. Navigate to the registration page.
+    *   **Expected Result:** The registration page is displayed with the sign-up form.
 
-*   **Description:** Verify that the system displays the registration page for patients.
-*   **Steps:**
-    1. Launch the application and navigate to the login page.
-    2. Click on the "Register" button.
-    3. Verify that the registration page is displayed with the required fields (e.g., name, email, password).
-*   **Expected Result:** The system displays the registration page with the required fields.
+*   **Test Case ID:** TC_002
+    *   **Description:** Verify that a patient can fill and submit the sign-up form with valid data.
+    *   **Steps:**
+        1. Open the registration page.
+        2. Fill in all required fields with valid data.
+        3. Submit the form.
+    *   **Expected Result:** The form is submitted successfully, and the user is redirected to the login page.
 
-**TC_002: U2.2F2 - Book Appointment Online with Diagnostic Center**
+*   **Test Case ID:** TC_003
+    *   **Description:** Verify that the system handles invalid data in the sign-up form.
+    *   **Steps:**
+        1. Open the registration page.
+        2. Fill in required fields with invalid data (e.g., invalid email format).
+        3. Submit the form.
+    *   **Expected Result:** The form is not submitted, and error messages are displayed for invalid fields.
 
-*   **Description:** Verify that the system allows patients to book an appointment with a diagnostic center.
-*   **Steps:**
-    1. Launch the application and navigate to the login page.
-    2. Login as a patient.
-    3. Click on the "Book Appointment" button.
-    4. Select a diagnostic center and a doctor.
-    5. Verify that the system displays the available time slots.
-    6. Select a diagnostic center and a doctor, and a time slot.
-    7. Verify that the system handles the booking successfully.
-*   **Expected Result:** The system allows patients to book an appointment with a diagnostic center and displays the available time slots.
-**Test Cases:**
+*   **Test Case ID:** TC_004
+    *   **Description:** Verify that a patient can log in with valid credentials.
+    *   **Steps:**
+        1. Open the login page.
+        2. Enter valid username and password.
+        3. Click the login button.
+    *   **Expected Result:** The user is logged in successfully and redirected to the dashboard.
 
-**TC_001: Scalability - Valid Input**
+*   **Test Case ID:** TC_005
+    *   **Description:** Verify that the system handles invalid login credentials.
+    *   **Steps:**
+        1. Open the login page.
+        2. Enter invalid username and/or password.
+        3. Click the login button.
+    *   **Expected Result:** An error message is displayed, and the user is not logged in.
 
-*   **Description:** Verify that the system can be scaled to support business growth with valid inputs.
-*   **Steps:**
-    1. Launch the system on a desktop computer.
-    2. Enter valid user credentials.
-    3. Perform a series of tests to simulate increased user traffic and data processing.
-    4. Verify that the system handles the increased load without errors or performance degradation.
-*   **Expected Result:** The system should be able to handle increased user traffic and data processing without errors or performance degradation.
+*   **Test Case ID:** TC_006
+    *   **Description:** Verify that a patient can search for a doctor's information.
+    *   **Steps:**
+        1. Log in as a patient.
+        2. Navigate to the doctor search page.
+        3. Enter a valid doctor's name or specialty.
+        4. Submit the search.
+    *   **Expected Result:** A list of doctors matching the search criteria is displayed.
 
-**TC_002: Interoperability - Android and iOS Compatibility**
+*   **Test Case ID:** TC_007
+    *   **Description:** Verify that a patient can book an appointment with a diagnostic center.
+    *   **Steps:**
+        1. Log in as a patient.
+        2. Navigate to the appointment booking page.
+        3. Select a diagnostic center and a specific time slot.
+        4. Submit the booking.
+    *   **Expected Result:** The appointment is booked successfully, and a confirmation message is displayed.
 
-*   **Description:** Verify that the application is available on both Android and iOS platforms and functions correctly.
-*   **Steps:**
-    1. Launch the application on an Android device.
-    2. Verify that the application functions correctly and performs all expected actions.
-    3. Launch the application on an iOS device.
-    4. Verify that the application functions correctly and performs all expected actions.
-    5. Verify that data security is maintained and patient data is hidden under their account.
-*   **Expected Result:** The application should be available on both Android and iOS platforms and function correctly, with maintained data security.
+*   **Test Case ID:** TC_008
+    *   **Description:** Verify that the system calculates the waiting time for a doctor's appointment.
+    *   **Steps:**
+        1. Log in as a patient.
+        2. Book an appointment with a doctor.
+    *   **Expected Result:** The waiting time is calculated and displayed.
+
+*   **Test Case ID:** TC_009
+    *   **Description:** Verify that a patient can search for a doctor's qualifications.
+    *   **Steps:**
+        1. Log in as a patient.
+        2. Navigate to the doctor qualifications search page.
+        3. Enter search criteria and apply filters.
+        4. Submit the search.
+    *   **Expected Result:** A list of doctors matching the search criteria and filters is displayed.
+
+*   **Test Case ID:** TC_010
+    *   **Description:** Verify that a doctor can register online with valid credentials.
+    *   **Steps:**
+        1. Open the doctor registration page.
+        2. Fill in all required fields with valid data.
+        3. Submit the form.
+    *   **Expected Result:** The form is submitted successfully, and the doctor is registered.
+
+*   **Test Case ID:** TC_011
+    *   **Description:** Verify that a doctor can log in with valid credentials.
+    *   **Steps:**
+        1. Open the login page.
+        2. Enter valid doctor username and password.
+        3. Click the login button.
+    *   **Expected Result:** The doctor is logged in successfully and redirected to the dashboard.
+
+*   **Test Case ID:** TC_012
+    *   **Description:** Verify that a doctor can view and manage appointments.
+    *   **Steps:**
+        1. Log in as a doctor.
+        2. Navigate to the appointments page.
+        3. View and manage appointments.
+    *   **Expected Result:** The doctor can view and manage appointments successfully.
+
+*   **Test Case ID:** TC_013
+    *   **Description:** Verify that a diagnostic center can search for patients associated with a particular doctor.
+    *   **Steps:**
+        1. Log in as a diagnostic center.
+        2. Navigate to the patient search page.
+        3. Enter a doctor's name and submit the search.
+    *   **Expected Result:** A list of patients associated with the specified doctor is displayed.
+
+*   **Test Case ID:** TC_014
+    *   **Description:** Verify that a diagnostic center can update a patient's record.
+    *   **Steps:**
+        1. Log in as a diagnostic center.
+        2. Navigate to the patient records page.
+        3. Select a patient and update their record.
+    *   **Expected Result:** The patient's record is updated successfully.
+
+*   **Test Case ID:** TC_015
+    *   **Description:** Verify that a diagnostic center can upload reports.
+    *   **Steps:**
+        1. Log in as a diagnostic center.
+        2. Navigate to the reports upload page.
+        3. Select a patient and upload a report.
+    *   **Expected Result:** The report is uploaded successfully.
+
+*   **Test Case ID:** TC_016
+    *   **Description:** Verify that the system handles inactivity timeouts.
+    *   **Steps:**
+        1. Log in as any user.
+        2. Remain inactive for the specified timeout period.
+    *   **Expected Result:** The user is logged out automatically, and a timeout message is displayed.
+
+*   **Test Case ID:** TC_017
+    *   **Description:** Verify that the system generates reports in PDF and Word formats.
+    *   **Steps:**
+        1. Log in as a patient or diagnostic center.
+        2. Navigate to the reports section.
+        3. Generate a report and select PDF and Word formats.
+    *   **Expected Result:** The report is generated and downloaded in both PDF and Word formats.
+
+*   **Test Case ID:** TC_018
+    *   **Description:** Verify that the system handles missing data by flagging the record.
+    *   **Steps:**
+        1. Log in as a diagnostic center.
+        2. Navigate to the patient records page.
+        3. Create or update a record with missing data.
+    *   **Expected Result:** The record is flagged as incomplete.
+
+*   **Test Case ID:** TC_019
+    *   **Description:** Verify that the system is available 24/7.
+    *   **Steps:**
+        1. Attempt to access the application at various times throughout the day and night.
+    *   **Expected Result:** The application is accessible at all times.
+
+*   **Test Case ID:** TC_020
+    *   **Description:** Verify that the system has a low acceptance rate for system failures.
+    *   **Steps:**
+        1. Monitor the system for failures over a period of time.
+    *   **Expected Result:** The system failure rate is within acceptable limits.
+API Error: 402
+{
+  "id": "nrcADSz-3NKUce-93642c8b99d22e8a",
+  "error": {
+    "message": "Credit limit exceeded. Please navigate to https://api.together.xyz/settings/billing to add credit or upgrade your plan.",
+    "type": "credit_limit",
+    "param": null,
+    "code": null
+  }
+}

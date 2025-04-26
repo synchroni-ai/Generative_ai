@@ -1,0 +1,31 @@
+**Test Cases:**
+
+*   **Test Case ID:** TC_001
+    *   **Description:** Verify the patient registration process.
+    *   **Steps:** 1. Open the application. 2. Go to the registration page. 3. Fill in the required details. 4. Submit the form.
+    *   **Expected Result:** The patient should be registered successfully and a confirmation message should be displayed.
+
+*   **Test Case ID:** TC_002
+    *   **Description:** Verify the login functionality for the patient.
+    *   **Steps:** 1. Open the application. 2. Enter valid username and password. 3. Click on login.
+    *   **Expected Result:** The patient should be able to login successfully.
+
+*   **Test Case ID:** TC_003
+    *   **Description:** Verify the login functionality with invalid credentials for the patient.
+    *   **Steps:** 1. Open the application. 2
+**Test Cases:**
+
+*   **Test Case ID:** TC_001
+    *   **Description:** Testing the scalability of the system
+    *   **Steps:** 1. Increase the load on the system. 2. Observe the system's response.
+    *   **Expected Result:** The system should be able to handle the increased load without any performance issues.
+
+*   **Test Case ID:** TC_002
+    *   **Description:** Testing the verifiability of the system
+    *   **Steps:** 1. Execute all test cases. 2. Check the test coverage.
+    *   **Expected Result:** 100% branch coverage should be achieved.
+
+*   **Test Case ID:** TC_003
+    *   **Description:** Testing the interoperability of the system on Android
+    *   **Steps:** 1. Install the application on an Android device. 2. Check the functionality of the application.
+    *   **Expected
