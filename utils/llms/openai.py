@@ -6,7 +6,7 @@ load_dotenv()
 
 
 def generate_with_openai(
-    prompt, model_name="gpt-4", temperature=0.3, max_tokens=200, top_p=0.9
+    prompt, model_name="gpt-4", temperature=0.3, max_tokens=200, top_p=0.9, api_key=None
 ):
     """
     Calls the OpenAI API to generate text based on a prompt.
@@ -22,7 +22,7 @@ def generate_with_openai(
     Returns:
         The generated text, or an error message if the API call fails.
     """
-    openai.api_key = os.getenv("OPENAI_API_KEY")
+    openai.api_key = api_key or os.getenv("OPENAI_API_KEY")
 
     if not openai.api_key:
         return "Error: OPENAI_API_KEY environment variable not set."

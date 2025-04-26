@@ -1,31 +1,312 @@
 **Test Cases:**
 
-*   **Test Case ID:** TC_001
-    *   **Description:** Verify the patient registration process.
-    *   **Steps:** 1. Open the application. 2. Go to the registration page. 3. Fill in the required details. 4. Submit the form.
-    *   **Expected Result:** The patient should be registered successfully and a confirmation message should be displayed.
+1. **TC_001: Patient Registration**
+	* Description: Verify that the patient registration form is accessible and can be filled out correctly.
+	* Steps:
+		1. Navigate to the registration page.
+		2. Fill out the registration form with valid information.
+		3. Submit the form.
+	* Expected Result: The patient is successfully registered, and a confirmation message is displayed.
 
-*   **Test Case ID:** TC_002
-    *   **Description:** Verify the login functionality for the patient.
-    *   **Steps:** 1. Open the application. 2. Enter valid username and password. 3. Click on login.
-    *   **Expected Result:** The patient should be able to login successfully.
+2. **TC_002: Invalid Patient Registration**
+	* Description: Verify that the system handles invalid patient registration inputs.
+	* Steps:
+		1. Navigate to the registration page.
+		2. Fill out the registration form with invalid information (e.g., missing fields, invalid email).
+		3. Submit the form.
+	* Expected Result: The system displays an error message indicating the invalid input.
 
-*   **Test Case ID:** TC_003
-    *   **Description:** Verify the login functionality with invalid credentials for the patient.
-    *   **Steps:** 1. Open the application. 2
+3. **TC_003: Patient Login**
+	* Description: Verify that the patient can log in to the application.
+	* Steps:
+		1. Navigate to the login page.
+		2. Enter valid login credentials.
+		3. Click the login button.
+	* Expected Result: The patient is successfully logged in, and the dashboard is displayed.
+
+4. **TC_004: Invalid Patient Login**
+	* Description: Verify that the system handles invalid patient login inputs.
+	* Steps:
+		1. Navigate to the login page.
+		2. Enter invalid login credentials.
+		3. Click the login button.
+	* Expected Result: The system displays an error message indicating the invalid login credentials.
+
+5. **TC_005: Doctor Registration**
+	* Description: Verify that the doctor registration form is accessible and can be filled out correctly.
+	* Steps:
+		1. Navigate to the registration page.
+		2. Fill out the registration form with valid information.
+		3. Submit the form.
+	* Expected Result: The doctor is successfully registered, and a confirmation message is displayed.
+
+6. **TC_006: Invalid Doctor Registration**
+	* Description: Verify that the system handles invalid doctor registration inputs.
+	* Steps:
+		1. Navigate to the registration page.
+		2. Fill out the registration form with invalid information (e.g., missing fields, invalid email).
+		3. Submit the form.
+	* Expected Result: The system displays an error message indicating the invalid input.
+
+7. **TC_007: Diagnostic Center Registration**
+	* Description: Verify that the diagnostic center registration form is accessible and can be filled out correctly.
+	* Steps:
+		1. Navigate to the registration page.
+		2. Fill out the registration form with valid information.
+		3. Submit the form.
+	* Expected Result: The diagnostic center is successfully registered, and a confirmation message is displayed.
+
+8. **TC_008: Invalid Diagnostic Center Registration**
+	* Description: Verify that the system handles invalid diagnostic center registration inputs.
+	* Steps:
+		1. Navigate to the registration page.
+		2. Fill out the registration form with invalid information (e.g., missing fields, invalid email).
+		3. Submit the form.
+	* Expected Result: The system displays an error message indicating the invalid input.
+
+9. **TC_009: Search Doctor**
+	* Description: Verify that the system allows patients to search for doctors.
+	* Steps:
+		1. Navigate to the search doctor page.
+		2. Enter valid search criteria (e.g., name, specialty).
+		3. Click the search button.
+	* Expected Result: A list of matching doctors is displayed.
+
+10. **TC_010: Invalid Search Criteria**
+	* Description: Verify that the system handles invalid search criteria.
+	* Steps:
+		1. Navigate to the search doctor page.
+		2. Enter invalid search criteria (e.g., non-existent name, invalid specialty).
+		3. Click the search button.
+	* Expected Result: The system displays an error message indicating the invalid search criteria.
+
+11. **TC_011: Book Appointment**
+	* Description: Verify that the system allows patients to book appointments with doctors.
+	* Steps:
+		1. Navigate to the book appointment page.
+		2. Select a doctor and available time slot.
+		3. Confirm the appointment.
+	* Expected Result: The appointment is successfully booked, and a confirmation message is displayed.
+
+12. **TC_012: Invalid Appointment Time**
+	* Description: Verify that the system handles invalid appointment time inputs.
+	* Steps:
+		1. Navigate to the book appointment page.
+		2. Select a doctor and invalid time slot (e.g., non-existent time, invalid date).
+		3. Confirm the appointment.
+	* Expected Result: The system displays an error message indicating the invalid appointment time.
+
+13. **TC_013: View Doctor Qualifications**
+	* Description: Verify that the system allows patients to view doctor qualifications.
+	* Steps:
+		1. Navigate to the view doctor qualifications page.
+		2. Select a doctor.
+		3. View the qualifications.
+	* Expected Result: The doctor's qualifications are displayed.
+
+14. **TC_014: Invalid Doctor ID**
+	* Description: Verify that the system handles invalid doctor ID inputs.
+	* Steps:
+		1. Navigate to the view doctor qualifications page.
+		2. Enter an invalid doctor ID.
+		3. View the qualifications.
+	* Expected Result: The system displays an error message indicating the invalid doctor ID.
+
+15. **TC_015: Check Test Reports**
+	* Description: Verify that the system allows patients to access their test reports.
+	* Steps:
+		1. Navigate to the check test reports page.
+		2. Select a report.
+		3. View the report.
+	* Expected Result: The test report is displayed.
+
+16. **TC_016: Invalid Report ID**
+	* Description: Verify that the system handles invalid report ID inputs.
+	* Steps:
+		1. Navigate to the check test reports page.
+		2. Enter an invalid report ID.
+		3. View the report.
+	* Expected Result: The system displays an error message indicating the invalid report ID.
+
+17. **TC_017: Cancel/Update Appointment**
+	* Description: Verify that the system allows patients to cancel or update appointments.
+	* Steps:
+		1. Navigate to the cancel/update appointment page.
+		2. Select an appointment.
+		3. Cancel or update the appointment.
+	* Expected Result: The appointment is successfully canceled or updated, and a confirmation message is displayed.
+
+18. **TC_018: Invalid Appointment ID**
+	* Description: Verify that the system handles invalid appointment ID inputs.
+	* Steps:
+		1. Navigate to the cancel/update appointment page.
+		2. Enter an invalid appointment ID.
+		3. Cancel or update the appointment.
+	* Expected Result: The system displays an error message indicating the invalid appointment ID.
+
+19. **TC_019: Login/Access Levels**
+	* Description: Verify that the system enforces login/access levels for patients, doctors, and diagnostic centers.
+	* Steps:
+		1. Log in as a patient.
+		2. Attempt to access a restricted feature.
+		3. Log out and log in as a doctor.
+		4. Attempt to access a restricted feature.
+		5. Log out and log in as a diagnostic center.
+		6. Attempt to access a restricted feature.
+	* Expected Result: The system enforces the correct access levels for each user role.
+
+20. **TC_020: Password Requirements**
+	* Description: Verify that the system enforces password requirements (e.g., length, special characters, expiry, recycling policies).
+	* Steps:
+		1. Attempt to create a password that does not meet the requirements.
+		2. Create a password that meets the requirements.
+		3. Attempt to log in with the new password.
+	* Expected Result: The system displays an error message indicating the invalid password, and the new password is accepted.
 **Test Cases:**
 
-*   **Test Case ID:** TC_001
-    *   **Description:** Testing the scalability of the system
-    *   **Steps:** 1. Increase the load on the system. 2. Observe the system's response.
-    *   **Expected Result:** The system should be able to handle the increased load without any performance issues.
+**TC_001:** Scalability - Valid Input
+*   Description: Verify that the system can handle a large number of users.
+*   Steps:
+    1. Create a large number of user accounts.
+    2. Perform various actions on the system (e.g., login, logout, data entry).
+    3. Verify that the system responds correctly and does not crash.
+*   Expected Result: The system should handle the large number of users without issues.
 
-*   **Test Case ID:** TC_002
-    *   **Description:** Testing the verifiability of the system
-    *   **Steps:** 1. Execute all test cases. 2. Check the test coverage.
-    *   **Expected Result:** 100% branch coverage should be achieved.
+**TC_002:** Scalability - Invalid Input
+*   Description: Verify that the system handles invalid input (e.g., incorrect login credentials).
+*   Steps:
+    1. Attempt to login with invalid credentials.
+    2. Verify that the system displays an error message.
+*   Expected Result: The system should display an error message and prevent unauthorized access.
 
-*   **Test Case ID:** TC_003
-    *   **Description:** Testing the interoperability of the system on Android
-    *   **Steps:** 1. Install the application on an Android device. 2. Check the functionality of the application.
-    *   **Expected
+**TC_003:** Verifiability - Unit Test Case
+*   Description: Verify that unit test cases cover 100% of the code branches.
+*   Steps:
+    1. Run the unit test cases.
+    2. Verify that all code branches are covered.
+*   Expected Result: The unit test cases should cover 100% of the code branches.
+
+**TC_004:** Interoperability - Android App
+*   Description: Verify that the system is available on Android devices.
+*   Steps:
+    1. Install the Android app.
+    2. Perform various actions on the app (e.g., login, data entry).
+    3. Verify that the app responds correctly.
+*   Expected Result: The app should function correctly on Android devices.
+
+**TC_005:** Interoperability - iOS App
+*   Description: Verify that the system is available on iOS devices.
+*   Steps:
+    1. Install the iOS app.
+    2. Perform various actions on the app (e.g., login, data entry).
+    3. Verify that the app responds correctly.
+*   Expected Result: The app should function correctly on iOS devices.
+
+**TC_006:** Portability - Tablet Compatibility
+*   Description: Verify that the system is compatible with tablets.
+*   Steps:
+    1. Install the system on a tablet.
+    2. Perform various actions on the system (e.g., login, data entry).
+    3. Verify that the system responds correctly.
+*   Expected Result: The system should function correctly on tablets.
+
+**TC_007:** Portability - Smartphone Compatibility
+*   Description: Verify that the system is compatible with smartphones.
+*   Steps:
+    1. Install the system on a smartphone.
+    2. Perform various actions on the system (e.g., login, data entry).
+    3. Verify that the system responds correctly.
+*   Expected Result: The system should function correctly on smartphones.
+
+**TC_008:** Reusability - Code Reuse
+*   Description: Verify that code can be reused across different parts of the system.
+*   Steps:
+    1. Identify reusable code.
+    2. Use the reusable code in a different part of the system.
+    3. Verify that the code functions correctly.
+*   Expected Result: The code should be reusable and function correctly.
+
+**TC_009:** Reusability - Test Case Format
+*   Description: Verify that test cases can be reused in future applications.
+*   Steps:
+    1. Identify reusable test cases.
+    2. Use the reusable test cases in a different application.
+    3. Verify that the test cases function correctly.
+*   Expected Result: The test cases should be reusable and function correctly.
+
+**TC_010:** Boundary Value Test Case - User Account Creation
+*   Description: Verify that the system handles user account creation correctly.
+*   Steps:
+    1. Create a user account with valid input (e.g., name, email, password).
+    2. Verify that the account is created successfully.
+*   Expected Result: The account should be created successfully.
+
+**TC_011:** Boundary Value Test Case - User Account Deletion
+*   Description: Verify that the system handles user account deletion correctly.
+*   Steps:
+    1. Delete a user account.
+    2. Verify that the account is deleted successfully.
+*   Expected Result: The account should be deleted successfully.
+
+**TC_012:** Edge Case Test Case - Large Data Entry
+*   Description: Verify that the system handles large data entry correctly.
+*   Steps:
+    1. Enter a large amount of data into the system.
+    2. Verify that the system responds correctly.
+*   Expected Result: The system should handle large data entry correctly.
+
+**TC_013:** Edge Case Test Case - Small Data Entry
+*   Description: Verify that the system handles small data entry correctly.
+*   Steps:
+    1. Enter a small amount of data into the system.
+    2. Verify that the system responds correctly.
+*   Expected Result: The system should handle small data entry correctly.
+
+**TC_014:** Edge Case Test Case - Invalid Data Entry
+*   Description: Verify that the system handles invalid data entry correctly.
+*   Steps:
+    1. Enter invalid data into the system.
+    2. Verify that the system displays an error message.
+*   Expected Result: The system should display an error message and prevent data corruption.
+
+**TC_015:** Edge Case Test Case - Duplicate Data Entry
+*   Description: Verify that the system handles duplicate data entry correctly.
+*   Steps:
+    1. Enter duplicate data into the system.
+    2. Verify that the system prevents duplicate data entry.
+*   Expected Result: The system should prevent duplicate data entry.
+
+**TC_016:** Edge Case Test Case - Empty Data Entry
+*   Description: Verify that the system handles empty data entry correctly.
+*   Steps:
+    1. Enter empty data into the system.
+    2. Verify that the system displays an error message.
+*   Expected Result: The system should display an error message and prevent data corruption.
+
+**TC_017:** Edge Case Test Case - Special Characters in Data Entry
+*   Description: Verify that special characters are handled correctly in data entry.
+*   Steps:
+    1. Enter special characters in data entry.
+    2. Verify that the system responds correctly.
+*   Expected Result: The system should handle special characters correctly.
+
+**TC_018:** Edge Case Test Case - Long Data Entry
+*   Description: Verify that the system handles long data entry correctly.
+*   Steps:
+    1. Enter a long amount of data into the system.
+    2. Verify that the system responds correctly.
+*   Expected Result: The system should handle long data entry correctly.
+
+**TC_019:** Edge Case Test Case - Short Data Entry
+*   Description: Verify that the system handles short data entry correctly.
+*   Steps:
+    1. Enter a short amount of data into the system.
+    2. Verify that the system responds correctly.
+*   Expected Result: The system should handle short data entry correctly.
+
+**TC_020:** Edge Case Test Case - Data Entry with Spaces
+*   Description: Verify that the system handles data entry with spaces correctly.
+*   Steps:
+    1. Enter data with spaces into the system.
+    2. Verify that the system responds correctly.
+*   Expected Result: The system should handle data entry with spaces correctly.

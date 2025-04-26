@@ -1,18 +1,71 @@
-**User Story ID:** US_001
-* **Title:** Patient Registration
-* **Description:** As a Patient, I want to be able to register on the application, so that I can access the hospital functionalities.
-* **Acceptance Criteria:**
-    * User can find the sign-up form.
-    * User can fill and submit the sign-up form.
-    * User receives a confirmation of successful registration.
+Here are the 10 user stories:
 
-**User Story ID:** US_002
-* **Title:** Patient Login
-* **Description:** As a Patient, I want to be able to login to the application, so that I can access my personal dashboard and functionalities.
-* **Acceptance Criteria:**
-    * User can login with their username and password.
-    * User is directed to their personal dashboard upon successful login.
+**US_001**
+**Title:** Scalable System
+**Description:** As a System Administrator, I want the system to be scalable, so that it can support business growth.
+**Acceptance Criteria:**
+* The system can handle increased load without significant performance degradation.
+* The system architecture allows for easy addition of new components or services.
 
-**User Story ID:** US_003
-* **Title:** Doctor Appointment Reservation
-* **Description:** As a Patient, I want to be able to reserve a doctor appointment, so that I can
+**US_002**
+**Title:** Verifiable System
+**Description:** As a Quality Assurance Engineer, I want the system to be verifiable, so that I can ensure it functions as intended.
+**Acceptance Criteria:**
+* The system has 100% branch coverage through unit test cases.
+* The system functionality is tested with test cases including all possibilities for failure.
+
+**US_003**
+**Title:** Interoperable System
+**Description:** As a Patient, I want the system to be interoperable, so that I can access my data on multiple devices.
+**Acceptance Criteria:**
+* The system is available on Android and iOS platforms.
+* Patient data is hidden under their account and not available to unauthorized users.
+
+**US_004**
+**Title:** Portable System
+**Description:** As a System Administrator, I want the system to be portable, so that it can run on various devices.
+**Acceptance Criteria:**
+* The system can run on tablets and smartphones.
+* The system implementation is not specific to any operating system.
+
+**US_005**
+**Title:** Reusable Code
+**Description:** As a Developer, I want the code to be reusable, so that I can leverage it in future applications.
+**Acceptance Criteria:**
+* The code has functions that can be reused in other parts of the system.
+* Some test cases are in a format that can be used in future applications.
+
+**US_006**
+**Title:** Android App
+**Description:** As a Patient, I want the system to have an Android app, so that I can access my data on my Android device.
+**Acceptance Criteria:**
+* The Android app is available for download from the app store.
+* The Android app allows patients to access their data and perform relevant actions.
+
+**US_007**
+**Title:** iOS App
+**Description:** As a Patient, I want the system to have an iOS app, so that I can access my data on my iOS device.
+**Acceptance Criteria:**
+* The iOS app is available for download from the app store.
+* The iOS app allows patients to access their data and perform relevant actions.
+
+**US_008**
+**Title:** Data Security
+**Description:** As a Patient, I want my data to be secure, so that it is protected from unauthorized access.
+**Acceptance Criteria:**
+* Patient data is encrypted and stored securely.
+* Patient data is only accessible to authorized users.
+
+**US_009**
+**Title:** System Maintenance
+**Description:** As a System Administrator, I want the system to be easy to maintain, so that I can ensure it remains functional and secure.
+**Acceptance Criteria:**
+* The system has a clear and well-documented architecture.
+* The system has a robust logging and monitoring mechanism.
+
+**US_010**
+**Title:** System Updates
+**Description:** As a System Administrator, I want the system to be easy to update, so that I can keep it up-to-date with the latest security patches and features.
+**Acceptance Criteria:**
+* The system has a clear update process and release management.
+* The system has automated testing and validation for updates.
