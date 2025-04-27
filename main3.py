@@ -11,23 +11,20 @@ import os
 import re
 import time
 import uuid
+from fastapi import status
+
 
 # Import your custom modules
 from utils import data_ingestion, test_case_utils, user_story_utils
 from utils.llms import Mistral, openai, llama
 
 # ----------------- FastAPI App Setup -----------------
-app = FastAPI(root_path="/backend")
-origins = [
-    "https://gen-ai.synchroni.xyz",
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+app = FastAPI()
 
 # Enable CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins, 
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -79,7 +76,7 @@ def serialize_document(doc):
     return doc
 
 # ----------------- Main Endpoint -----------------
-@app.post("/process_and_generate/")
+@app.post("/process_and_generate/") 
 async def process_and_generate(
     file: UploadFile = File(...),
     model_name: str = Form("Mistral"),
@@ -192,12 +189,15 @@ async def process_and_generate(
         }
         collection.insert_one(document)
 
-        return JSONResponse(content={
-            "test_cases": combined_test_cases,
-            "user_stories": combined_user_stories,
-            "cache_key": cache_key,
-            "model_used": model_name
-        })
+        return JSONResponse(
+            status_code=200,
+            content={
+                "message": "File Uploaded Successfully",
+                "test_cases": combined_test_cases,
+                "user_stories": combined_user_stories,
+                "cache_key": cache_key,
+                "model_used": model_name
+            })
 
     except HTTPException:
         raise
@@ -219,3 +219,30 @@ def get_document_by_id(document_id: str):
         return serialize_document(doc)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+# ----------------- Delete Document Endpoint -----------------
+@app.delete("/documents/{document_id}")
+def delete_document(document_id: str):
+    try:
+        # Find the document first
+        doc = collection.find_one({"_id": ObjectId(document_id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+        
+        # Delete the file from the input folder
+        file_path = doc.get("doc_path")
+        if file_path and os.path.exists(file_path):
+            os.remove(file_path)
+
+        # Delete from MongoDB
+        collection.delete_one({"_id": ObjectId(document_id)})
+
+        return JSONResponse(
+            content={"success": f"Document {document_id} deleted successfully."},
+            status_code=status.HTTP_200_OK
+        )
+
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
