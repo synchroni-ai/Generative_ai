@@ -1,4 +1,4 @@
-name: SonarQube Code Quality
+name: SonarQube Code Quality - Django Backend
 
 on:
   push:
@@ -13,27 +13,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code
+      # ✅ Checkout repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Set up Node.js environment
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
+      # ✅ Debug: Check directory structure
+      - name: Debug Directory Structure
+        run: |
+          pwd
+          ls -la
 
-      # Install dependencies and fix missing Babel plugin
-      - name: Install dependencies
-        run: |
-          npm install
-          npm install --save-dev @babel/plugin-proposal-private-property-in-object
-      # Run tests
-      - name: Run tests
-        env:
-          CI: true
-        run: |
-          npm test -- --coverage --verbose || echo "Tests failed. Continuing to SonarQube scan."
       # Add sonar-project.properties file
       - name: Configure SonarQube
         run: |
