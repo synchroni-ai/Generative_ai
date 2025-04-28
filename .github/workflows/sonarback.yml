@@ -23,24 +23,27 @@ jobs:
           pwd
           ls -la
 
-      # Add sonar-project.properties file
+      # ✅ Add sonar-project.properties file (Corrected)
       - name: Configure SonarQube
         run: |
           echo "sonar.projectKey=Genback-ai" > sonar-project.properties
           echo "sonar.projectName=Genback-ai" >> sonar-project.properties
           echo "sonar.projectVersion=1.0" >> sonar-project.properties
           echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
-          echo "sonar.sources=src" >> sonar-project.properties
-      # Run SonarQube Scan
+          echo "sonar.sources=." >> sonar-project.properties
+          echo "sonar.inclusions=**/*.py,**/*.yml,**/*.txt,**/*.md" >> sonar-project.properties
+          echo "sonar.exclusions=**/__pycache__/**,**/*.pdf" >> sonar-project.properties
+
+      # ✅ Run SonarQube Scan
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v1.0.0
         env:
           SONAR_HOST_URL: https://sonarq.synchroni.xyz
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_GENBACKAI }}
         with:
-          args: -Dsonar.projectKey=Genback-ai -Dsonar.projectBaseDir=src
+          args: -Dsonar.projectKey=Genback-ai
 
-      # Check SonarQube Quality Gate Status
+      # ✅ Check SonarQube Quality Gate Status
       - name: Verify SonarQube Quality Gate
         run: |
           echo "Checking SonarQube Quality Gate Status..."
@@ -55,10 +58,11 @@ jobs:
           else
             echo "SonarQube Quality Gate Passed!"
           fi
-      # Send Notification to Teams
+
+      # ✅ Send Notification to Teams
       - name: Send Notification to Teams
         run: |
-          SONARQUBE_REPORT_URL="https://sonarq.synchroni.xyz/dashboard?id=Gen-ai"
+          SONARQUBE_REPORT_URL="https://sonarq.synchroni.xyz/dashboard?id=Genback-ai"
           
           curl -H "Content-Type: application/json" -d '{
             "title": "SonarQube Scan Completed",
