@@ -13,17 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ✅ Checkout repository
+      #  Checkout repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # ✅ Debug: Check directory structure
+      #  Debug: Check directory structure
       - name: Debug Directory Structure
         run: |
           pwd
           ls -la
 
-      # ✅ Add sonar-project.properties file (Corrected)
+      #  Add sonar-project.properties file (Corrected)
       - name: Configure SonarQube
         run: |
           echo "sonar.projectKey=Genback-ai" > sonar-project.properties
@@ -34,7 +34,7 @@ jobs:
           echo "sonar.inclusions=**/*.py,**/*.yml,**/*.txt,**/*.md" >> sonar-project.properties
           echo "sonar.exclusions=**/__pycache__/**,**/*.pdf" >> sonar-project.properties
 
-      # ✅ Run SonarQube Scan
+      #  Run SonarQube Scan
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v1.0.0
         env:
@@ -43,7 +43,7 @@ jobs:
         with:
           args: -Dsonar.projectKey=Genback-ai
 
-      # ✅ Check SonarQube Quality Gate Status
+      #  Check SonarQube Quality Gate Status
       - name: Verify SonarQube Quality Gate
         run: |
           echo "Checking SonarQube Quality Gate Status..."
@@ -59,7 +59,7 @@ jobs:
             echo "SonarQube Quality Gate Passed!"
           fi
 
-      # ✅ Send Notification to Teams
+      #  Send Notification to Teams
       - name: Send Notification to Teams
         run: |
           SONARQUBE_REPORT_URL="https://sonarq.synchroni.xyz/dashboard?id=Genback-ai"
