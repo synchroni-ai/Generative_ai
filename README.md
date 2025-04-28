@@ -1,2 +1,1 @@
-uvicorn main2:app --host 0.0.0.0 --port 8000 --reload 
-streamlit run app.py
+main4.py has the dynamic api_key functionality along with model_name.
