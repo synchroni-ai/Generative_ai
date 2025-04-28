@@ -1,71 +1,152 @@
-Here are the 10 user stories:
+Here are the 10 user stories extracted from the BRD:
+
+**US_001: View Registration Page of Patient**
+Title: View Registration Page
+Description: As a Patient, I want to view the registration page, so that I can sign up for the application.
+Acceptance Criteria:
+* The system displays a registration page with required fields.
+* The page includes a clear and concise description of the registration process.
+* The page allows the user to navigate to the next step (filling out the registration form).
+
+**US_002: Register Online with Profile**
+Title: Register Online with Profile
+Description: As a Patient, I want to register online with my profile, so that I can access the application.
+Acceptance Criteria:
+* The system allows the user to register online with a profile.
+* The system verifies the profile information against government registration numbers.
+* The system sends a confirmation email to the user after successful registration.
+
+**US_003: Search Doctor's Information**
+Title: Search Doctor's Information
+Description: As a Patient, I want to search doctor's information, so that I can find the right doctor for my needs.
+Acceptance Criteria:
+* The system allows the user to search for doctor's information by filters (e.g., specialty, location).
+* The system displays a list of search results with relevant doctor information.
+* The system allows the user to view detailed doctor information.
+
+**US_004: Book Appointment Online**
+Title: Book Appointment Online
+Description: As a Patient, I want to book an appointment online, so that I can schedule a convenient time with a doctor.
+Acceptance Criteria:
+* The system allows the user to search and view appointment details (e.g., specific time slot).
+* The system gives confirmation for the appointment and calculates the waiting time.
+* The system sends a confirmation email to the user after successful booking.
+
+**US_005: Search and View Doctor's Qualifications**
+Title: Search and View Doctor's Qualifications
+Description: As a Patient, I want to search and view doctor's qualifications, so that I can make an informed decision about my healthcare.
+Acceptance Criteria:
+* The system allows the user to search qualifications by filters (e.g., specialty, location).
+* The system displays a list of search results with relevant doctor qualifications.
+* The system allows the user to view detailed doctor qualifications.
+
+**US_006: Confirm Appointment Online**
+Title: Confirm Appointment Online
+Description: As a Patient, I want to confirm my appointment online, so that I can ensure my appointment is scheduled correctly.
+Acceptance Criteria:
+* The system allows the user to confirm their appointment online.
+* The system sends a confirmation email to the user after successful confirmation.
+* The system updates the appointment status in the system.
+
+**US_007: View and Manage Appointments**
+Title: View and Manage Appointments
+Description: As a Patient, I want to view and manage my appointments, so that I can keep track of my schedule.
+Acceptance Criteria:
+* The system allows the user to view their upcoming appointments.
+* The system allows the user to cancel or update appointments.
+* The system sends a notification to the user after successful cancellation or update.
+
+**US_008: Access Test Reports of Patients**
+Title: Access Test Reports of Patients
+Description: As a Diagnostic Center, I want to access test reports of patients, so that I can provide accurate diagnoses and treatment.
+Acceptance Criteria:
+* The system allows the Diagnostic Center to access test reports of patients.
+* The system displays a list of search results with relevant patient test reports.
+* The system allows the Diagnostic Center to view detailed patient test reports.
+
+**US_009: Cancel/Update Appointments**
+Title: Cancel/Update Appointments
+Description: As a Patient, I want to cancel or update my appointments, so that I can adjust my schedule as needed.
+Acceptance Criteria:
+* The system allows the user to cancel or update appointments.
+* The system sends a notification to the user after successful cancellation or update.
+* The system updates the appointment status in the system.
+
+**US_010: Log Out from Application**
+Title: Log Out from Application
+Description: As a Patient, I want to log out from the application, so that I can ensure my account is secure.
+Acceptance Criteria:
+* The system allows the user to log out from the application.
+* The system clears the user's session and login credentials after successful logout.
+* The system displays a confirmation message to the user after successful logout.
+Here are the 10 User Stories:
 
 **US_001**
 **Title:** Scalable System
-**Description:** As a System Administrator, I want the system to be scalable, so that it can support business growth.
+**Description:** As a developer, I want the system to be scalable, so that it can support business growth.
 **Acceptance Criteria:**
-* The system can handle increased load without significant performance degradation.
-* The system architecture allows for easy addition of new components or services.
+* The system can handle increased traffic and user load without a significant decrease in performance.
+* The system's architecture allows for easy addition of new features and services.
 
 **US_002**
-**Title:** Verifiable System
-**Description:** As a Quality Assurance Engineer, I want the system to be verifiable, so that I can ensure it functions as intended.
+**Title:** Verifiable Functionality
+**Description:** As a developer, I want the system's functionality to be verifiable, so that I can ensure it works as intended.
 **Acceptance Criteria:**
 * The system has 100% branch coverage through unit test cases.
-* The system functionality is tested with test cases including all possibilities for failure.
+* Test cases cover all possible scenarios, including failure possibilities.
 
 **US_003**
-**Title:** Interoperable System
-**Description:** As a Patient, I want the system to be interoperable, so that I can access my data on multiple devices.
+**Title:** Interoperability with Mobile Devices
+**Description:** As a user, I want the application to be available on Android and iOS, so that I can access it from my mobile device.
 **Acceptance Criteria:**
-* The system is available on Android and iOS platforms.
-* Patient data is hidden under their account and not available to unauthorized users.
+* The application is available for download on both Android and iOS platforms.
+* The application functions correctly on both platforms.
 
 **US_004**
+**Title:** Data Security
+**Description:** As a user, I want my data to be secure, so that it is not accessible to unauthorized individuals.
+**Acceptance Criteria:**
+* Patient data is stored securely and is not accessible to unauthorized users.
+* Data is encrypted and protected from unauthorized access.
+
+**US_005**
 **Title:** Portable System
-**Description:** As a System Administrator, I want the system to be portable, so that it can run on various devices.
+**Description:** As a user, I want the system to be portable, so that I can access it from any device.
 **Acceptance Criteria:**
 * The system can run on tablets and smartphones.
 * The system implementation is not specific to any operating system.
 
-**US_005**
+**US_006**
 **Title:** Reusable Code
-**Description:** As a Developer, I want the code to be reusable, so that I can leverage it in future applications.
+**Description:** As a developer, I want the code to be reusable, so that I can use it in other applications.
 **Acceptance Criteria:**
 * The code has functions that can be reused in other parts of the system.
-* Some test cases are in a format that can be used in future applications.
-
-**US_006**
-**Title:** Android App
-**Description:** As a Patient, I want the system to have an Android app, so that I can access my data on my Android device.
-**Acceptance Criteria:**
-* The Android app is available for download from the app store.
-* The Android app allows patients to access their data and perform relevant actions.
+* Some test cases are written in a format that can be used in future applications.
 
 **US_007**
-**Title:** iOS App
-**Description:** As a Patient, I want the system to have an iOS app, so that I can access my data on my iOS device.
+**Title:** System Testing
+**Description:** As a developer, I want the system to be tested thoroughly, so that I can ensure it works correctly.
 **Acceptance Criteria:**
-* The iOS app is available for download from the app store.
-* The iOS app allows patients to access their data and perform relevant actions.
+* The system is tested with test cases that cover all possible scenarios.
+* The system is tested for performance, security, and functionality.
 
 **US_008**
-**Title:** Data Security
-**Description:** As a Patient, I want my data to be secure, so that it is protected from unauthorized access.
+**Title:** System Maintenance
+**Description:** As a developer, I want the system to be easy to maintain, so that I can make changes and updates as needed.
 **Acceptance Criteria:**
-* Patient data is encrypted and stored securely.
-* Patient data is only accessible to authorized users.
+* The system's architecture allows for easy modification and extension.
+* The system's code is well-organized and easy to understand.
 
 **US_009**
-**Title:** System Maintenance
-**Description:** As a System Administrator, I want the system to be easy to maintain, so that I can ensure it remains functional and secure.
+**Title:** System Monitoring
+**Description:** As a developer, I want the system to be monitored, so that I can identify and fix issues quickly.
 **Acceptance Criteria:**
-* The system has a clear and well-documented architecture.
-* The system has a robust logging and monitoring mechanism.
+* The system is monitored for performance, security, and functionality.
+* Alerts and notifications are sent to developers when issues are detected.
 
 **US_010**
-**Title:** System Updates
-**Description:** As a System Administrator, I want the system to be easy to update, so that I can keep it up-to-date with the latest security patches and features.
+**Title:** System Documentation
+**Description:** As a developer, I want the system to be well-documented, so that I can understand how it works and make changes as needed.
 **Acceptance Criteria:**
-* The system has a clear update process and release management.
-* The system has automated testing and validation for updates.
+* The system's code is well-commented and easy to understand.
+* The system's architecture and design are documented and easily accessible.

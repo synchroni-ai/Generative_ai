@@ -1,7 +1,9 @@
 import os
 from utils import data_ingestion, test_case_utils, user_story_utils
 from utils.llms import together_ai, openai
-#from convert_to_csv import parse_test_cases, write_to_csv
+from post_processing import txt_to_csv, csv_to_excel
+
+# from convert_to_csv import parse_test_cases, write_to_csv
 from dotenv import load_dotenv
 import re
 
@@ -42,7 +44,7 @@ if __name__ == "__main__":
     cleaned_brd_text = data_ingestion.clean_text(brd_text)
 
     # 2. Chunk the BRD
-    #chunks = split_text_into_chunks(cleaned_brd_text)
+    # chunks = split_text_into_chunks(cleaned_brd_text)
 
     # 3. Iterate through the chunks and generate test cases for each
     all_test_cases = []
@@ -56,13 +58,13 @@ if __name__ == "__main__":
     #         PROMPT_FILE_PATH,  # Same prompt for all chunks
     #     )
     test_cases_text = test_case_utils.generate_test_cases(
-            brd_text,
-            together_ai.generate_with_together,
-            TEST_CASE_PROMPT,  # Same prompt for all chunks
-        )
+        brd_text,
+        together_ai.generate_with_together,
+        TEST_CASE_PROMPT,  # Same prompt for all chunks
+    )
 
     if test_cases_text:
-            all_test_cases.append(test_cases_text)
+        all_test_cases.append(test_cases_text)
     else:
         print(f"Failed to generate test cases for document.")
 
@@ -74,17 +76,15 @@ if __name__ == "__main__":
     all_user_stories = []
 
     user_stories_text = user_story_utils.generate_user_stories(
-        brd_text,
-        together_ai.generate_with_together,
-        USER_STORY_PROMPT
-
+        brd_text, together_ai.generate_with_together, USER_STORY_PROMPT
     )
     if user_stories_text:
-            all_user_stories.append(user_stories_text)
+        all_user_stories.append(user_stories_text)
     else:
         print(f"Failed to generate user stories for document.")
 
     combined_user_stories = "\n".join(all_user_stories)
     print(combined_user_stories)
 
-
+    test_cases_csv = txt_to_csv(combined_test_cases, "test_cases.csv")
+    test_cases_excel = csv_to_excel(test_cases_csv, "test_cases.xlsx")

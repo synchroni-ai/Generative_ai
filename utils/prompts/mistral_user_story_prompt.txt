@@ -23,5 +23,5 @@ You are an expert in translating Business Requirements Documents (BRDs) into wel
         *   [Criterion 2]
         *   [Criterion 3]
 
-Generate 5 User Stories. Only return the user stories in the specified output format and not any other text.
+Generate 20 User Stories. Only return the user stories in the specified output format and not any other text.
  

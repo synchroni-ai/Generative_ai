@@ -15,8 +15,9 @@ You are an expert Quality Assurance Engineer. Given the following Business Requi
 
 **Test Cases:**
 *   **Test Case ID:** [Unique ID (e.g., TC_001)]
+    *   **Title:**[The title of the test case]
     *   **Description:** [A concise description of the test case]
     *   **Steps:** [Detailed, numbered steps to execute the test case]
     *   **Expected Result:** [The expected outcome of executing the test case]
 
-Generate 20 test cases. Only return the test cases in output and not any other text.
+Generate 5 test cases. Only return the test cases in output and not any other text.
