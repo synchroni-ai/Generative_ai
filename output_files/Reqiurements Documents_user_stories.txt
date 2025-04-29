@@ -1,152 +1,160 @@
-Here are the 10 user stories extracted from the BRD:
+**User Stories:**
 
-**US_001: View Registration Page of Patient**
-Title: View Registration Page
-Description: As a Patient, I want to view the registration page, so that I can sign up for the application.
-Acceptance Criteria:
-* The system displays a registration page with required fields.
-* The page includes a clear and concise description of the registration process.
-* The page allows the user to navigate to the next step (filling out the registration form).
+*   **User Story ID:** US_001
+    *   **Title:** Patient Registration
+    *   **Description:** As a Patient, I want to view and submit the registration page, so that I can create an account on the application.
+    *   **Acceptance Criteria:**
+        *   The system displays the registration page with required fields.
+        *   The system validates the input data before submission.
+        *   The system confirms successful registration and allows the patient to log in.
 
-**US_002: Register Online with Profile**
-Title: Register Online with Profile
-Description: As a Patient, I want to register online with my profile, so that I can access the application.
-Acceptance Criteria:
-* The system allows the user to register online with a profile.
-* The system verifies the profile information against government registration numbers.
-* The system sends a confirmation email to the user after successful registration.
+*   **User Story ID:** US_002
+    *   **Title:** Patient Login
+    *   **Description:** As a Patient, I want to log in with my username and password, so that I can access my account and use the application's features.
+    *   **Acceptance Criteria:**
+        *   The system provides a login page with username and password fields.
+        *   The system validates the credentials and grants access upon successful login.
+        *   The system displays an error message for invalid credentials.
 
-**US_003: Search Doctor's Information**
-Title: Search Doctor's Information
-Description: As a Patient, I want to search doctor's information, so that I can find the right doctor for my needs.
-Acceptance Criteria:
-* The system allows the user to search for doctor's information by filters (e.g., specialty, location).
-* The system displays a list of search results with relevant doctor information.
-* The system allows the user to view detailed doctor information.
+*   **User Story ID:** US_003
+    *   **Title:** Search Doctor Information
+    *   **Description:** As a Patient, I want to search for doctor's information, so that I can find a suitable doctor for my appointment.
+    *   **Acceptance Criteria:**
+        *   The system provides a search function for doctor's information.
+        *   The system displays search results based on the input criteria.
+        *   The system allows filtering search results by various parameters (e.g., specialty, location).
 
-**US_004: Book Appointment Online**
-Title: Book Appointment Online
-Description: As a Patient, I want to book an appointment online, so that I can schedule a convenient time with a doctor.
-Acceptance Criteria:
-* The system allows the user to search and view appointment details (e.g., specific time slot).
-* The system gives confirmation for the appointment and calculates the waiting time.
-* The system sends a confirmation email to the user after successful booking.
+*   **User Story ID:** US_004
+    *   **Title:** View Doctor Information
+    *   **Description:** As a Patient, I want to view detailed information about a doctor, so that I can make an informed decision about booking an appointment.
+    *   **Acceptance Criteria:**
+        *   The system displays detailed information about the selected doctor.
+        *   The system shows the doctor's qualifications, specialties, and available time slots.
 
-**US_005: Search and View Doctor's Qualifications**
-Title: Search and View Doctor's Qualifications
-Description: As a Patient, I want to search and view doctor's qualifications, so that I can make an informed decision about my healthcare.
-Acceptance Criteria:
-* The system allows the user to search qualifications by filters (e.g., specialty, location).
-* The system displays a list of search results with relevant doctor qualifications.
-* The system allows the user to view detailed doctor qualifications.
+*   **User Story ID:** US_005
+    *   **Title:** Book Appointment Online
+    *   **Description:** As a Patient, I want to book an appointment online with a diagnostic center, so that I can schedule my tests or consultations conveniently.
+    *   **Acceptance Criteria:**
+        *   The system provides an option to book appointments online.
+        *   The system displays available time slots for the selected diagnostic center.
+        *   The system confirms the appointment and calculates the waiting time.
 
-**US_006: Confirm Appointment Online**
-Title: Confirm Appointment Online
-Description: As a Patient, I want to confirm my appointment online, so that I can ensure my appointment is scheduled correctly.
-Acceptance Criteria:
-* The system allows the user to confirm their appointment online.
-* The system sends a confirmation email to the user after successful confirmation.
-* The system updates the appointment status in the system.
+*   **User Story ID:** US_006
+    *   **Title:** View Appointment Details
+    *   **Description:** As a Patient, I want to view the details of my booked appointments, so that I can keep track of my scheduled tests or consultations.
+    *   **Acceptance Criteria:**
+        *   The system displays a list of booked appointments.
+        *   The system shows detailed information about each appointment, including date, time, and location.
+        *   The system allows patients to view and manage their appointments.
 
-**US_007: View and Manage Appointments**
-Title: View and Manage Appointments
-Description: As a Patient, I want to view and manage my appointments, so that I can keep track of my schedule.
-Acceptance Criteria:
-* The system allows the user to view their upcoming appointments.
-* The system allows the user to cancel or update appointments.
-* The system sends a notification to the user after successful cancellation or update.
+*   **User Story ID:** US_007
+    *   **Title:** Search Doctor Qualifications
+    *   **Description:** As a Patient, I want to search for doctors based on their qualifications, so that I can find the most suitable healthcare provider for my needs.
+    *   **Acceptance Criteria:**
+        *   The system provides a search function for doctor qualifications.
+        *   The system displays search results based on the input criteria.
+        *   The system allows filtering search results by various parameters (e.g., specialty, experience).
 
-**US_008: Access Test Reports of Patients**
-Title: Access Test Reports of Patients
-Description: As a Diagnostic Center, I want to access test reports of patients, so that I can provide accurate diagnoses and treatment.
-Acceptance Criteria:
-* The system allows the Diagnostic Center to access test reports of patients.
-* The system displays a list of search results with relevant patient test reports.
-* The system allows the Diagnostic Center to view detailed patient test reports.
+*   **User Story ID:** US_008
+    *   **Title:** View Different Doctors Online
+    *   **Description:** As a Patient, I want to view different doctors online, so that I can compare their profiles and choose the best one for my appointment.
+    *   **Acceptance Criteria:**
+        *   The system displays a list of available doctors.
+        *   The system shows detailed information about each doctor, including qualifications and specialties.
+        *   The system allows patients to filter and sort doctors based on various criteria.
 
-**US_009: Cancel/Update Appointments**
-Title: Cancel/Update Appointments
-Description: As a Patient, I want to cancel or update my appointments, so that I can adjust my schedule as needed.
-Acceptance Criteria:
-* The system allows the user to cancel or update appointments.
-* The system sends a notification to the user after successful cancellation or update.
-* The system updates the appointment status in the system.
+*   **User Story ID:** US_009
+    *   **Title:** Doctor Registration
+    *   **Description:** As a Doctor, I want to register online with my profile in sync with my government registration number, so that I can create an account on the application.
+    *   **Acceptance Criteria:**
+        *   The system provides a registration page for doctors.
+        *   The system validates the input data and government registration number.
+        *   The system confirms successful registration and allows the doctor to log in.
 
-**US_010: Log Out from Application**
-Title: Log Out from Application
-Description: As a Patient, I want to log out from the application, so that I can ensure my account is secure.
-Acceptance Criteria:
-* The system allows the user to log out from the application.
-* The system clears the user's session and login credentials after successful logout.
-* The system displays a confirmation message to the user after successful logout.
-Here are the 10 User Stories:
+*   **User Story ID:** US_010
+    *   **Title:** Doctor Login
+    *   **Description:** As a Doctor, I want to log in to the application if already signed up, so that I can access my account and manage my appointments.
+    *   **Acceptance Criteria:**
+        *   The system provides a login page with username and password fields.
+        *   The system validates the credentials and grants access upon successful login.
+        *   The system displays an error message for invalid credentials.
 
-**US_001**
-**Title:** Scalable System
-**Description:** As a developer, I want the system to be scalable, so that it can support business growth.
-**Acceptance Criteria:**
-* The system can handle increased traffic and user load without a significant decrease in performance.
-* The system's architecture allows for easy addition of new features and services.
+*   **User Story ID:** US_011
+    *   **Title:** Create Doctor Profile
+    *   **Description:** As a Doctor, I want to create and manage my profile, so that patients can view my information and book appointments with me.
+    *   **Acceptance Criteria:**
+        *   The system provides an option to create and edit the doctor's profile.
+        *   The system allows doctors to update their qualifications, specialties, and availability.
+        *   The system displays the doctor's profile information to patients.
 
-**US_002**
-**Title:** Verifiable Functionality
-**Description:** As a developer, I want the system's functionality to be verifiable, so that I can ensure it works as intended.
-**Acceptance Criteria:**
-* The system has 100% branch coverage through unit test cases.
-* Test cases cover all possible scenarios, including failure possibilities.
+*   **User Story ID:** US_012
+    *   **Title:** Manage Appointments
+    *   **Description:** As a Doctor, I want to view and manage my appointments, so that I can keep track of my scheduled consultations and tests.
+    *   **Acceptance Criteria:**
+        *   The system displays a list of scheduled appointments.
+        *   The system allows doctors to view detailed information about each appointment.
+        *   The system enables doctors to update or cancel appointments as needed.
 
-**US_003**
-**Title:** Interoperability with Mobile Devices
-**Description:** As a user, I want the application to be available on Android and iOS, so that I can access it from my mobile device.
-**Acceptance Criteria:**
-* The application is available for download on both Android and iOS platforms.
-* The application functions correctly on both platforms.
+*   **User Story ID:** US_013
+    *   **Title:** Access Test Results
+    *   **Description:** As a Doctor, I want to access test results of patients from the diagnostic center, so that I can review and analyze the results for better diagnosis and treatment.
+    *   **Acceptance Criteria:**
+        *   The system provides an option to view test results.
+        *   The system displays test results associated with the patient's appointments.
+        *   The system allows doctors to download or print test results for further analysis.
 
-**US_004**
-**Title:** Data Security
-**Description:** As a user, I want my data to be secure, so that it is not accessible to unauthorized individuals.
-**Acceptance Criteria:**
-* Patient data is stored securely and is not accessible to unauthorized users.
-* Data is encrypted and protected from unauthorized access.
+*   **User Story ID:** US_014
+    *   **Title:** Cancel/Update Appointments
+    *   **Description:** As a Doctor, I want to cancel or update appointments, so that I can manage my schedule effectively and accommodate changes as needed.
+    *   **Acceptance Criteria:**
+        *   The system allows doctors to cancel or update appointments.
+        *   The system sends notifications to patients about appointment changes.
+        *   The system updates the appointment status in the system.
 
-**US_005**
-**Title:** Portable System
-**Description:** As a user, I want the system to be portable, so that I can access it from any device.
-**Acceptance Criteria:**
-* The system can run on tablets and smartphones.
-* The system implementation is not specific to any operating system.
+*   **User Story ID:** US_015
+    *   **Title:** Diagnostic Center Registration
+    *   **Description:** As a Diagnostic Center, I want to register the diagnostic center in respect to reference number, so that I can create an account on the application.
+    *   **Acceptance Criteria:**
+        *   The system provides a registration page for diagnostic centers.
+        *   The system validates the input data and reference number.
+        *   The system confirms successful registration and allows the diagnostic center to log in.
 
-**US_006**
-**Title:** Reusable Code
-**Description:** As a developer, I want the code to be reusable, so that I can use it in other applications.
-**Acceptance Criteria:**
-* The code has functions that can be reused in other parts of the system.
-* Some test cases are written in a format that can be used in future applications.
+*   **User Story ID:** US_016
+    *   **Title:** Diagnostic Center Login
+    *   **Description:** As a Diagnostic Center, I want to log in to the application, so that I can access my account and manage patient records and appointments.
+    *   **Acceptance Criteria:**
+        *   The system provides a login page with username and password fields.
+        *   The system validates the credentials and grants access upon successful login.
+        *   The system displays an error message for invalid credentials.
 
-**US_007**
-**Title:** System Testing
-**Description:** As a developer, I want the system to be tested thoroughly, so that I can ensure it works correctly.
-**Acceptance Criteria:**
-* The system is tested with test cases that cover all possible scenarios.
-* The system is tested for performance, security, and functionality.
+*   **User Story ID:** US_017
+    *   **Title:** Search Patients
+    *   **Description:** As a Diagnostic Center, I want to search for patients associated with a particular doctor, so that I can manage their records and appointments effectively.
+    *   **Acceptance Criteria:**
+        *   The system provides a search function for patients.
+        *   The system displays search results based on the input criteria.
+        *   The system allows filtering search results by various parameters (e.g., doctor's name, appointment date).
 
-**US_008**
-**Title:** System Maintenance
-**Description:** As a developer, I want the system to be easy to maintain, so that I can make changes and updates as needed.
-**Acceptance Criteria:**
-* The system's architecture allows for easy modification and extension.
-* The system's code is well-organized and easy to understand.
+*   **User Story ID:** US_018
+    *   **Title:** Edit Patient Records
+    *   **Description:** As a Diagnostic Center, I want to edit patient records in respect to test results, so that I can update and maintain accurate patient information.
+    *   **Acceptance Criteria:**
+        *   The system allows diagnostic centers to edit patient records.
+        *   The system validates the input data before saving changes.
+        *   The system updates the patient records in the system.
 
-**US_009**
-**Title:** System Monitoring
-**Description:** As a developer, I want the system to be monitored, so that I can identify and fix issues quickly.
-**Acceptance Criteria:**
-* The system is monitored for performance, security, and functionality.
-* Alerts and notifications are sent to developers when issues are detected.
+*   **User Story ID:** US_019
+    *   **Title:** Manage Diagnostic Center Contact Details
+    *   **Description:** As a Diagnostic Center, I want to add and update contact details, so that patients and doctors can reach us for appointments and inquiries.
+    *   **Acceptance Criteria:**
+        *   The system provides an option to add and update contact details.
+        *   The system validates the input data before saving changes.
+        *   The system displays the updated contact details on the diagnostic center's profile.
 
-**US_010**
-**Title:** System Documentation
-**Description:** As a developer, I want the system to be well-documented, so that I can understand how it works and make changes as needed.
-**Acceptance Criteria:**
-* The system's code is well-commented and easy to understand.
-* The system's architecture and design are documented and easily accessible.
+*   **User Story ID:** US_020
+    *   **Title:** View and Upload Reports
+    *   **Description:** As a Diagnostic Center, I want to view and upload reports, so that doctors and patients can access test results and other relevant information.
+    *   **Acceptance Criteria:**
+        *   The system provides an option to view and upload reports.
+        *   The system allows diagnostic centers to upload reports in various formats (e.g., PDF, Word).
+        *   The system displays uploaded reports to authorized users (doctors and patients).

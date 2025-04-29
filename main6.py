@@ -38,8 +38,8 @@ db = mongo_client["Gen_AI"]
 collection = db["test_case_generation"]
 
 # ----------------- Directories Setup -----------------
-PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
-USER_STORY_PROMPT_FILE_PATH = os.getenv("USER_STORY_PROMPT_FILE_PATH")
+TEST_CASE_PROMPT_FILE_PATH = os.getenv("MISTRAL_TEST_CASE_PROMPT_FILE_PATH")
+USER_STORY_PROMPT_FILE_PATH = os.getenv("MISTRAL_USER_STORY_PROMPT_FILE_PATH")
 INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_files")
 EXCEL_OUTPUT_DIR = os.getenv("EXCEL_OUTPUT_DIR", "excel_files")
@@ -174,7 +174,7 @@ async def process_and_generate(
                 test_case_utils.generate_test_cases,
                 chunk_text,
                 generation_function,
-                PROMPT_FILE_PATH,
+                TEST_CASE_PROMPT_FILE_PATH,
             )
             if test_case_text:
                 all_test_cases.append(test_case_text)
@@ -228,8 +228,8 @@ async def process_and_generate(
                 str(output_test_case_path), str(csv_test_case_path)
             )
         # Convert to CSV
-        test_case_utils.csv_to_excel(
-            str(csv_test_case_path), str(excel_test_case_path)
+        test_case_utils.format_test_cases_excel(
+            str(csv_test_case_path), str(excel_test_case_path), mode="numbered_in_cell"
         )  # Convert CSV to Excel
 
         if model_name == "Mistral":
@@ -240,8 +240,10 @@ async def process_and_generate(
             user_story_utils.txt_to_csv_llama(
                 str(output_user_story_path), str(csv_user_story_path)
             )
-        user_story_utils.csv_to_excel(
-            str(csv_user_story_path), str(excel_user_story_path)
+        user_story_utils.format_acceptance_criteria_excel(
+            str(csv_user_story_path),
+            str(excel_user_story_path),
+            mode="numbered_in_cell",
         )  # Convert CSV to Excel
 
         # --------- Save to MongoDB and Cache ---------

@@ -87,10 +87,10 @@ def txt_to_csv_mistral(input_file, output_file):
     print(f"CSV file '{output_file}' created successfully.")
 
 
-def csv_to_excel(csv_file, excel_file):
-    df = pd.read_csv(csv_file)
-    df.to_excel(excel_file, index=False)
-    print(f"Excel file '{excel_file}' created successfully.")
+# def csv_to_excel(csv_file, excel_file):
+#     df = pd.read_csv(csv_file)
+#     df.to_excel(excel_file, index=False)
+#     print(f"Excel file '{excel_file}' created successfully.")
 
 
 def txt_to_csv_llama(input_file, output_file):
@@ -140,7 +140,9 @@ def txt_to_csv_llama(input_file, output_file):
         # Write to CSV after processing all user stories
         with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(["ID", "Title", "Description", "Acceptance Criteria"])
+            writer.writerow(
+                ["User Story ID", "Title", "Description", "Acceptance Criteria"]
+            )
             writer.writerows(output)
 
         print(f"✅ CSV file '{output_file}' created successfully.")
@@ -153,3 +155,92 @@ def txt_to_csv_llama(input_file, output_file):
         print(f"❌ Error: Regular expression error: {e}")
     except Exception as e:
         print(f"❌ An unexpected error occurred: {e}")
+
+
+def format_acceptance_criteria_excel(
+    input_csv_path: str, output_file: str, mode: str = "numbered_in_cell"
+):
+    """
+    Format the 'Acceptance Criteria' column in a user story CSV and export to Excel.
+    Also removes asterisks (*) from Title, Description, and Acceptance Criteria.
+
+    Parameters:
+    - input_csv_path: Path to the input CSV file
+    - output_folder: Folder where the Excel file will be saved
+    - mode: 'bullet_in_cell' or 'criteria_per_row'
+    """
+    df = pd.read_csv(input_csv_path)
+
+    # Validate necessary columns
+    required_columns = ["Title", "Description", "Acceptance Criteria"]
+    for col in required_columns:
+        if col not in df.columns:
+            raise ValueError(f"The input CSV must contain '{col}' column.")
+
+    # Remove * from Title and Description
+    df["Title"] = df["Title"].fillna("").apply(lambda x: x.replace("*", "").strip())
+    df["Description"] = (
+        df["Description"].fillna("").apply(lambda x: x.replace("*", "").strip())
+    )
+
+    # Helper function to clean and split Acceptance Criteria
+    def safe_split(criteria):
+        if isinstance(criteria, str):
+            criteria = criteria.replace("*", "")  # Remove asterisks
+            criteria_list = criteria.split(" | ")  # Assuming '|' is the delimiter
+            criteria_list = [item.strip() for item in criteria_list if item.strip()]
+            return criteria_list
+        return []
+
+    # Dynamic output file name based on mode
+    mode_suffix = (
+        "bullets_in_cell" if mode == "numbered_in_cell" else "criteria_per_row"
+    )
+    output_excel_path = f"{output_file}"
+
+    # if "User Story ID" in df.columns:
+    #     df["User Story ID"] = [f"US{i+1}" for i in range(len(df))]
+
+    if mode == "numbered_in_cell":
+
+        def format_criteria(criteria):
+            criteria_list = safe_split(criteria)
+            criteria_list = [
+                f"{idx+1}. {item}" for idx, item in enumerate(criteria_list) if item
+            ]
+            return "\n".join(criteria_list)
+
+        df["Acceptance Criteria"] = df["Acceptance Criteria"].apply(format_criteria)
+
+        df["User Story ID"] = [f"US_{i+1:03d}" for i in range(len(df))]
+
+        # Write to Excel with text wrapping
+        with pd.ExcelWriter(output_excel_path, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="UserStories")
+            worksheet = writer.sheets["UserStories"]
+
+            wrap_format = writer.book.add_format({"text_wrap": True, "valign": "top"})
+            criteria_col_idx = df.columns.get_loc("Acceptance Criteria")
+            worksheet.set_column(criteria_col_idx, criteria_col_idx, 50, wrap_format)
+
+    elif mode == "criteria_per_row":
+        expanded_rows = []
+
+        for _, row in df.iterrows():
+            criteria_list = safe_split(row["Acceptance Criteria"])
+            for i, item in enumerate(criteria_list):
+                new_row = (
+                    row.copy()
+                    if i == 0
+                    else pd.Series([""] * len(row), index=row.index)
+                )
+                new_row["Acceptance Criteria"] = item
+                expanded_rows.append(new_row)
+
+        expanded_df = pd.DataFrame(expanded_rows)
+        expanded_df.to_excel(output_excel_path, index=False)
+
+    else:
+        raise ValueError("Invalid mode. Use 'numbered_in_cell' or 'criteria_per_row'.")
+
+    print(f"File saved successfully as: {output_excel_path}")

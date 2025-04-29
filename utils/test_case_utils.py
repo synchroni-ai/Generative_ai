@@ -1,6 +1,7 @@
 import pandas as pd
 import csv
 import re
+import os
 
 
 def generate_test_cases(brd_text, llm_function, prompt_file_path):
@@ -96,35 +97,69 @@ def csv_to_excel(csv_file, excel_file):
 
 
 def txt_to_csv_llama(input_file, output_file):
-    """Converts a text file with Llama-formatted test cases to a CSV file."""
     try:
         with open(input_file, "r", encoding="utf-8") as file:
             content = file.read()
 
-        pattern = r"\*\*TC_(\d+): ([^\*]+)\*\*\s*\*\s*Title:\s*([^\*]+)\s*\*\s*Description:\s*([^\*]+)\s*\*\s*Steps:\s*([\s\S]*?)\s*\*\s*Expected Result:\s*([^\*]+)"
+        # Split the text into test cases using **TC_ as a delimiter
+        test_cases = re.split(r"\*\*TC_", content)
+        test_cases = [tc.strip() for tc in test_cases if tc.strip()]
 
-        test_cases = []
+        output = []
 
-        matches = re.findall(pattern, content)
+        for case in test_cases:
+            # Add back TC_ at the start
+            case = "TC_" + case
 
-        for match in matches:
-            case_id = f"TC_{match[0]}"
-            title = match[2].strip()
-            description = match[3].strip()
-            steps = match[4].strip().replace("\n", " ").replace("\r", "")
-            expected_result = match[5].strip()
+            # Extract ID
+            id_match = re.match(r"(TC_\d+):", case)
+            tc_id = id_match.group(1) if id_match else ""
 
-            test_cases.append([case_id, title, description, steps, expected_result])
+            # Extract Title
+            title_match = re.search(r"\*\s*Title:\s*(.+)", case)
+            title = title_match.group(1).strip() if title_match else ""
+
+            # Extract Description
+            description_match = re.search(r"\*\s*Description:\s*(.+)", case)
+            description = (
+                description_match.group(1).strip() if description_match else ""
+            )
+
+            # Extract Steps
+            steps_match = re.search(
+                r"\*\s*Steps:\s*(.+?)\*\s*Expected Result:", case, re.DOTALL
+            )
+            steps = ""
+            if steps_match:
+                steps_block = steps_match.group(1).strip()
+                steps_lines = re.findall(r"\d+\.\s*(.+)", steps_block)
+                steps = "\n".join(
+                    [
+                        f"Step {i+1}: {step.strip()}"
+                        for i, step in enumerate(steps_lines)
+                    ]
+                )
+
+            # Extract Expected Result
+            expected_match = re.search(r"\*\s*Expected Result:\s*(.+)", case)
+            expected_result = expected_match.group(1).strip() if expected_match else ""
+
+            output.append([tc_id, title, description, steps, expected_result])
 
         # Write to CSV
         with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(
                 ["Test Case ID", "Title", "Description", "Steps", "Expected Result"]
-            )  # Corrected headers
-            writer.writerows(test_cases)  # Corrected: Use test_cases, not rows
+            )
+            writer.writerows(output)
 
-        print(f"CSV file '{output_file}' created successfully.")
+        print(f"✅ CSV file '{output_file}' created successfully.")
+
+    except FileNotFoundError:
+        print(f"Error: Input file '{input_file}' not found.")
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
 
     except FileNotFoundError as e:
         print(f"Error: Input file not found: {e}")
@@ -134,3 +169,73 @@ def txt_to_csv_llama(input_file, output_file):
         print(f"Error: Regular expression error: {e}")
     except Exception as e:
         print(f"An unexpected error occurred: {e}")
+
+
+def format_test_cases_excel(
+    input_csv_path: str, output_excel_file: str, mode: str = "numbered_in_cell"
+):
+    """
+    Format the 'Steps' column in a test case CSV and export to Excel.
+
+    Parameters:
+    - input_csv_path: Path to the input CSV file
+    - output_excel_file: Excel file will be saved
+    - mode: 'numbered_in_cell' or 'step_per_row'
+    """
+
+    # Load the CSV
+    df = pd.read_csv(input_csv_path)
+
+    if "Steps" not in df.columns:
+        raise ValueError("The input CSV must contain a 'Steps' column.")
+
+    def clean_and_split_steps(steps):
+        if pd.isna(steps):
+            return []
+        steps = str(steps).strip().rstrip("*").strip()
+        return [
+            step.strip() for step in re.split(r"\s*\d+\.\s*", steps) if step.strip()
+        ]
+
+    if mode == "numbered_in_cell":
+
+        def format_steps(steps):
+            steps_list = clean_and_split_steps(steps)
+            return "\n".join(f"Step {i+1}: {step}" for i, step in enumerate(steps_list))
+
+        df["Steps"] = df["Steps"].apply(format_steps)
+        # Remove all '*' from all string fields
+        df = df.applymap(lambda x: x.replace("*", "") if isinstance(x, str) else x)
+
+        # Renumber test case IDs sequentially
+        df["Test Case ID"] = [f"TC_{i+1:03d}" for i in range(len(df))]
+
+        with pd.ExcelWriter(output_excel_file, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="TestCases")
+
+            worksheet = writer.sheets["TestCases"]
+            wrap_format = writer.book.add_format({"text_wrap": True, "valign": "top"})
+            steps_col_idx = df.columns.get_loc("Steps")
+            worksheet.set_column(steps_col_idx, steps_col_idx, 50, wrap_format)
+
+    elif mode == "step_per_row":
+        expanded_rows = []
+
+        for _, row in df.iterrows():
+            steps_list = clean_and_split_steps(row["Steps"])
+            for i, step in enumerate(steps_list):
+                new_row = (
+                    row.copy()
+                    if i == 0
+                    else pd.Series([""] * len(row), index=row.index)
+                )
+                new_row["Steps"] = f"Step {i+1}: {step}"
+                expanded_rows.append(new_row)
+
+        expanded_df = pd.DataFrame(expanded_rows)
+        expanded_df.to_excel(output_excel_file, index=False)
+
+    else:
+        raise ValueError("Invalid mode. Use 'numbered_in_cell' or 'step_per_row'.")
+
+    print("File saved successfully as:", output_excel_file)

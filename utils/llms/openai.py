@@ -6,7 +6,7 @@ load_dotenv()
 
 
 def generate_with_openai(
-    prompt, model_name="gpt-4", temperature=0.3, max_tokens=200, top_p=0.9, api_key=None
+    prompt, model_name="gpt-4", temperature=0.3, max_tokens=500, top_p=0.9, api_key=None
 ):
     """
     Calls the OpenAI API to generate text based on a prompt.
