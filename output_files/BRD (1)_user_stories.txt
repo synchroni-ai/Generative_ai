@@ -1,0 +1,81 @@
+Here are the 10 user stories extracted from the BRD:
+
+**US_001: Typography**
+Title: Use readable fonts that complement the design and ensure ease of reading
+Description: As a user, I want to see readable fonts that complement the design and ensure ease of reading, so that I can easily navigate and understand the content.
+Acceptance Criteria:
+* The font family and size are chosen to ensure readability.
+* The font color and background color have sufficient contrast.
+* The font is used consistently throughout the application.
+
+**US_002: Visual Elements**
+Title: Enhance the user experience and engagement with visual elements
+Description: As a user, I want to see visual elements that enhance my experience and engagement, so that I can interact with the application in a more enjoyable and intuitive way.
+Acceptance Criteria:
+* The visual elements are designed to be visually appealing and engaging.
+* The visual elements are used consistently throughout the application.
+* The visual elements do not distract from the main content.
+
+**US_003: Project Initiation**
+Title: Define project scope and stakeholders
+Description: As a project manager, I want to define the project scope and stakeholders, so that I can ensure everyone is on the same page and we can move forward with the project.
+Acceptance Criteria:
+* The project scope is clearly defined and documented.
+* The stakeholders are identified and their roles are defined.
+* The project manager has a clear understanding of the project scope and stakeholders.
+
+**US_004: Planning**
+Title: Develop a project plan and schedule
+Description: As a project manager, I want to develop a project plan and schedule, so that I can ensure the project is completed on time and within budget.
+Acceptance Criteria:
+* The project plan is developed and documented.
+* The project schedule is created and shared with the team.
+* The project plan and schedule are regularly reviewed and updated.
+
+**US_005: UX/UI Design**
+Title: Design a user-friendly and intuitive user interface
+Description: As a user, I want to see a user-friendly and intuitive user interface, so that I can easily navigate and interact with the application.
+Acceptance Criteria:
+* The user interface is designed to be user-friendly and intuitive.
+* The user interface is consistent throughout the application.
+* The user interface does not contain any usability issues.
+
+**US_006: Front-end Development**
+Title: Implement HTML structure and CSS styling
+Description: As a developer, I want to implement the HTML structure and CSS styling, so that I can ensure the application looks and functions as expected.
+Acceptance Criteria:
+* The HTML structure is implemented correctly.
+* The CSS styling is implemented correctly.
+* The application looks and functions as expected.
+
+**US_007: Back-end Development**
+Title: Implement database schema and server-side logic
+Description: As a developer, I want to implement the database schema and server-side logic, so that I can ensure the application is scalable and secure.
+Acceptance Criteria:
+* The database schema is implemented correctly.
+* The server-side logic is implemented correctly.
+* The application is scalable and secure.
+
+**US_008: Testing**
+Title: Conduct unit testing and integration testing
+Description: As a developer, I want to conduct unit testing and integration testing, so that I can ensure the application is bug-free and functions as expected.
+Acceptance Criteria:
+* The unit testing is conducted and all tests pass.
+* The integration testing is conducted and all tests pass.
+* The application is bug-free and functions as expected.
+
+**US_009: Deployment**
+Title: Deploy the application to the production environment
+Description: As a developer, I want to deploy the application to the production environment, so that I can ensure the application is available to users.
+Acceptance Criteria:
+* The application is deployed to the production environment.
+* The application is available to users.
+* The application functions as expected in the production environment.
+
+**US_010: Maintenance and Support**
+Title: Provide regular updates and bug fixes
+Description: As a user, I want to see regular updates and bug fixes, so that I can ensure the application is always up-to-date and functioning correctly.
+Acceptance Criteria:
+* The application is regularly updated with new features and bug fixes.
+* The application is always available and functioning correctly.
+* The users are informed of any updates and changes to the application.

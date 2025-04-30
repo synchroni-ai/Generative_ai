@@ -1,0 +1,1158 @@
+**Test Cases:**
+
+**TC_001:** Store Owner/Admin Login
+*   Description: Verify that a store owner/admin can login to the system with valid credentials.
+*   Steps:
+    1. Navigate to the login page.
+    2. Enter valid store owner/admin credentials (username and password).
+    3. Click the login button.
+*   Expected Result: The system redirects the user to the dashboard.
+
+**TC_002:** Store Owner/Admin Login with Invalid Credentials
+*   Description: Verify that the system handles invalid login credentials.
+*   Steps:
+    1. Navigate to the login page.
+    2. Enter invalid store owner/admin credentials (username and password).
+    3. Click the login button.
+*   Expected Result: The system displays an error message indicating invalid credentials.
+
+**TC_003:** Store Owner/Admin Login with Empty Credentials
+*   Description: Verify that the system handles empty login credentials.
+*   Steps:
+    1. Navigate to the login page.
+    2. Leave the username and password fields empty.
+    3. Click the login button.
+*   Expected Result: The system displays an error message indicating missing credentials.
+
+**TC_004:** Fashion Designer Registration
+*   Description: Verify that a fashion designer can register on the system with valid information.
+*   Steps:
+    1. Navigate to the registration page.
+    2. Enter valid fashion designer information (name, email, password, etc.).
+    3. Click the register button.
+*   Expected Result: The system creates a new fashion designer account.
+
+**TC_005:** Fashion Designer Registration with Invalid Information
+*   Description: Verify that the system handles invalid fashion designer registration information.
+*   Steps:
+    1. Navigate to the registration page.
+    2. Enter invalid fashion designer information (e.g., duplicate email).
+    3. Click the register button.
+*   Expected Result: The system displays an error message indicating invalid information.
+
+**TC_006:** Customer (Fashion Designer) Login
+*   Description: Verify that a fashion designer can login to the system with valid credentials.
+*   Steps:
+    1. Navigate to the login page.
+    2. Enter valid fashion designer credentials (username and password).
+    3. Click the login button.
+*   Expected Result: The system redirects the user to the dashboard.
+
+**TC_007:** Customer (Fashion Designer) Login with Invalid Credentials
+*   Description: Verify that the system handles invalid fashion designer login credentials.
+*   Steps:
+    1. Navigate to the login page.
+    2. Enter invalid fashion designer credentials (username and password).
+    3. Click the login button.
+*   Expected Result: The system displays an error message indicating invalid credentials.
+
+**TC_008:** Customer (Product Purchasing) Login
+*   Description: Verify that a customer can login to the system with valid credentials.
+*   Steps:
+    1. Navigate to the login page.
+    2. Enter valid customer credentials (username and password).
+    3. Click the login button.
+*   Expected Result: The system redirects the user to the dashboard.
+
+**TC_009:** Customer (Product Purchasing) Login with Invalid Credentials
+*   Description: Verify that the system handles invalid customer login credentials.
+*   Steps:
+    1. Navigate to the login page.
+    2. Enter invalid customer credentials (username and password).
+    3. Click the login button.
+*   Expected Result: The system displays an error message indicating invalid credentials.
+
+**TC_010:** Product Search
+*   Description: Verify that the system allows users to search for products by keyword.
+*   Steps:
+    1. Navigate to the product search page.
+    2. Enter a valid product keyword.
+    3. Click the search button.
+*   Expected Result: The system displays a list of relevant products.
+
+**TC_011:** Product Search with Invalid Keyword
+*   Description: Verify that the system handles invalid product search keywords.
+*   Steps:
+    1. Navigate to the product search page.
+    2. Enter an invalid product keyword.
+    3. Click the search button.
+*   Expected Result: The system displays an error message indicating invalid keyword.
+
+**TC_012:** Product Details
+*   Description: Verify that the system displays product details correctly.
+*   Steps:
+    1. Navigate to the product details page.
+    2. Verify that the product information is displayed correctly.
+*   Expected Result: The system displays the product details correctly.
+
+**TC_013:** Product Reviews
+*   Description: Verify that customers can leave reviews for products.
+*   Steps:
+    1. Navigate to the product details page.
+    2. Click the review button.
+    3. Enter a valid review.
+    4. Click the submit button.
+*   Expected Result: The system displays the review on the product details page.
+
+**TC_014:** Product Reviews with Invalid Review
+*   Description: Verify that the system handles invalid product reviews.
+*   Steps:
+    1. Navigate to the product details page.
+    2. Click the review button.
+    3. Enter an invalid review (e.g., empty review).
+    4. Click the submit button.
+*   Expected Result: The system displays an error message indicating invalid review.
+
+**TC_015:** Payment Processing
+*   Description: Verify that the system processes payments correctly.
+*   Steps:
+    1. Navigate to the checkout page.
+    2. Enter valid payment information.
+    3. Click the pay button.
+*   Expected Result: The system processes the payment successfully.
+
+**TC_016:** Payment Processing with Invalid Payment Information
+*   Description: Verify that the system handles invalid payment information.
+*   Steps:
+    1. Navigate to the checkout page.
+    2. Enter invalid payment information (e.g., invalid credit card number).
+    3. Click the pay button.
+*   Expected Result: The system displays an error message indicating invalid payment information.
+
+**TC_017:** Order History
+*   Description: Verify that customers can view their order history.
+*   Steps:
+    1. Navigate to the order history page.
+    2. Verify that the order history is displayed correctly.
+*   Expected Result: The system displays the order history correctly.
+
+**TC_018:** Order History with No Orders
+*   Description: Verify that the system handles the case where a customer has no orders.
+*   Steps:
+    1. Navigate to the order history page.
+    2. Verify that the system displays a message indicating no orders.
+*   Expected Result: The system displays a message indicating no orders.
+
+**TC_019:** Store Owner/Admin Dashboard
+*   Description: Verify that the store owner/admin can access the dashboard.
+*   Steps:
+    1. Navigate to the dashboard page.
+    2. Verify that the dashboard is displayed correctly.
+*   Expected Result: The system displays the dashboard correctly.
+
+**TC_020:** Store Owner/Admin Dashboard with No Data
+*   Description: Verify that the system handles the case where there is no data on the dashboard.
+*   Steps:
+    1. Navigate to the dashboard page.
+    2. Verify that the system displays a message indicating no data.
+*   Expected Result: The system displays a message indicating no data.
+**Test Cases:**
+
+**TC_001: User Registration**
+*   **Description:** Verify that a new user can register successfully with valid credentials.
+*   **Steps:**
+    1. Navigate to the registration page.
+    2. Enter valid credentials (username, email, password, and confirm password).
+    3. Click the "Register" button.
+*   **Expected Result:** The user is successfully registered, and a confirmation message is displayed.
+
+**TC_002: Invalid User Registration**
+*   **Description:** Verify that the system handles invalid user registration attempts.
+*   **Steps:**
+    1. Navigate to the registration page.
+    2. Enter invalid credentials (e.g., duplicate username, invalid email, or weak password).
+    3. Click the "Register" button.
+*   **Expected Result:** An error message is displayed, indicating that the registration attempt failed.
+
+**TC_003: User Login**
+*   **Description:** Verify that a registered user can log in successfully with valid credentials.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Enter valid login credentials (username and password).
+    3. Click the "Login" button.
+*   **Expected Result:** The user is successfully logged in, and the dashboard is displayed.
+
+**TC_004: Invalid User Login**
+*   **Description:** Verify that the system handles invalid user login attempts.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Enter invalid login credentials (e.g., incorrect username or password).
+    3. Click the "Login" button.
+*   **Expected Result:** An error message is displayed, indicating that the login attempt failed.
+
+**TC_005: Product Search**
+*   **Description:** Verify that the product search function works correctly with valid search queries.
+*   **Steps:**
+    1. Navigate to the product search page.
+    2. Enter a valid search query (e.g., product name or category).
+    3. Click the "Search" button.
+*   **Expected Result:** A list of relevant products is displayed, matching the search query.
+
+**TC_006: Product Search with Invalid Query**
+*   **Description:** Verify that the system handles invalid product search queries.
+*   **Steps:**
+    1. Navigate to the product search page.
+    2. Enter an invalid search query (e.g., special characters or empty string).
+    3. Click the "Search" button.
+*   **Expected Result:** An error message is displayed, indicating that the search query is invalid.
+
+**TC_007: Product Details**
+*   **Description:** Verify that the product details page displays accurate information.
+*   **Steps:**
+    1. Navigate to a product details page.
+    2. Verify that the product information (name, description, price, etc.) is accurate.
+*   **Expected Result:** The product details are displayed correctly.
+
+**TC_008: Product Reviews**
+*   **Description:** Verify that users can leave reviews for products.
+*   **Steps:**
+    1. Navigate to a product details page.
+    2. Click the "Leave a Review" button.
+    3. Enter a review and rating.
+    4. Click the "Submit" button.
+*   **Expected Result:** The review is successfully submitted, and the review list is updated.
+
+**TC_009: Invalid Product Review**
+*   **Description:** Verify that the system handles invalid product reviews.
+*   **Steps:**
+    1. Navigate to a product details page.
+    2. Click the "Leave a Review" button.
+    3. Enter invalid review data (e.g., empty review or invalid rating).
+    4. Click the "Submit" button.
+*   **Expected Result:** An error message is displayed, indicating that the review is invalid.
+
+**TC_010: Cart Management**
+*   **Description:** Verify that users can add and remove products from their cart.
+*   **Steps:**
+    1. Navigate to the product search page.
+    2. Add a product to the cart.
+    3. Verify that the product is added to the cart.
+    4. Remove the product from the cart.
+    5. Verify that the product is removed from the cart.
+*   **Expected Result:** The cart is updated correctly, and the product is added or removed as expected.
+
+**TC_011: Checkout**
+*   **Description:** Verify that users can complete the checkout process successfully.
+*   **Steps:**
+    1. Navigate to the cart page.
+    2. Click the "Checkout" button.
+    3. Enter shipping and payment information.
+    4. Click the "Place Order" button.
+*   **Expected Result:** The order is successfully placed, and a confirmation message is displayed.
+
+**TC_012: Invalid Checkout**
+*   **Description:** Verify that the system handles invalid checkout attempts.
+*   **Steps:**
+    1. Navigate to the cart page.
+    2. Click the "Checkout" button.
+    3. Enter invalid shipping or payment information.
+    4. Click the "Place Order" button.
+*   **Expected Result:** An error message is displayed, indicating that the checkout attempt failed.
+
+**TC_013: Order History**
+*   **Description:** Verify that users can view their order history.
+*   **Steps:**
+    1. Navigate to the account dashboard.
+    2. Click the "Order History" tab.
+    3. Verify that the order history is displayed correctly.
+*   **Expected Result:** The order history is displayed correctly, including order details and status.
+
+**TC_014: Order Status Update**
+*   **Description:** Verify that the system updates order status correctly.
+*   **Steps:**
+    1. Place an order.
+    2. Update the order status (e.g., from "pending" to "shipped").
+    3. Verify that the order status is updated correctly.
+*   **Expected Result:** The order status is updated correctly.
+
+**TC_015: Payment Gateway**
+*   **Description:** Verify that the payment gateway works correctly with valid payment information.
+*   **Steps:**
+    1. Navigate to the checkout page.
+    2. Enter valid payment information (e.g., credit card details).
+    3. Click the "Pay" button.
+*   **Expected Result:** The payment is processed successfully, and a confirmation message is displayed.
+
+**TC_016: Invalid Payment Information**
+*   **Description:** Verify that the system handles invalid payment information.
+*   **Steps:**
+    1. Navigate to the checkout page.
+    2. Enter invalid payment information (e.g., expired credit card or incorrect CVV).
+    3. Click the "Pay" button.
+*   **Expected Result:** An error message is displayed, indicating that the payment attempt failed.
+
+**TC_017: Product Filtering**
+*   **Description:** Verify that the product filtering function works correctly with valid filter criteria.
+*   **Steps:**
+    1. Navigate to the product search page.
+    2. Apply valid filter criteria (e.g., price range or category).
+    3. Click the "Apply Filter" button.
+*   **Expected Result:** The filtered product list is displayed correctly.
+
+**TC_018: Product Filtering with Invalid Criteria**
+*   **Description:** Verify that the system handles invalid product filter criteria.
+*   **Steps:**
+    1. Navigate to the product search page.
+    2. Apply invalid filter criteria (e.g., invalid price range or category).
+    3. Click the "Apply Filter" button.
+*   **Expected Result:** An error message is displayed, indicating that the filter criteria is invalid.
+
+**TC_019: Product Sorting**
+*   **Description:** Verify that the product sorting function works correctly with valid sort criteria.
+*   **Steps:**
+    1. Navigate to the product search page.
+    2. Apply valid sort criteria (e.g., price or rating).
+    3. Click the "Apply Sort" button.
+*   **Expected Result:** The sorted product list is displayed correctly.
+
+**TC_020: Product Sorting with Invalid Criteria**
+*   **Description:** Verify that the system handles invalid product sort criteria.
+*   **Steps:**
+    1. Navigate to the product search page.
+    2. Apply invalid sort criteria (e.g., invalid sort field or direction).
+    3. Click the "Apply Sort" button.
+*   **Expected Result:** An error message is displayed, indicating that the sort criteria is invalid.
+**Test Cases:**
+
+**TC_001: Stockroom.lk Product Browsing**
+*   Description: Verify that the product browsing feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Stockroom.lk with a valid account.
+    2. Navigate to the product catalog.
+    3. Search for a specific product using the search bar.
+    4. Verify that the search results display relevant products.
+*   Expected Result: The search results display relevant products.
+
+**TC_002: Stockroom.lk Product Filtering**
+*   Description: Verify that the product filtering feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Stockroom.lk with a valid account.
+    2. Navigate to the product catalog.
+    3. Apply filters (e.g., price range, brand, category) to narrow down the search results.
+    4. Verify that the filtered results display only relevant products.
+*   Expected Result: The filtered results display only relevant products.
+
+**TC_003: Stockroom.lk Secure Payment Options**
+*   Description: Verify that the secure payment options feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Stockroom.lk with a valid account.
+    2. Add a product to the cart.
+    3. Proceed to checkout.
+    4. Select a secure payment option (e.g., credit/debit card, online banking).
+    5. Verify that the payment process is secure and successful.
+*   Expected Result: The payment process is secure and successful.
+
+**TC_004: Stockroom.lk Account Management**
+*   Description: Verify that the account management feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Stockroom.lk with a valid account.
+    2. Navigate to the account dashboard.
+    3. Verify that the account information is accurate and up-to-date.
+    4. Update account information (e.g., email, password).
+    5. Verify that the updated information is reflected in the account dashboard.
+*   Expected Result: The account information is accurate and up-to-date.
+
+**TC_005: Stockroom.lk Customer Reviews and Ratings**
+*   Description: Verify that the customer reviews and ratings feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Stockroom.lk with a valid account.
+    2. Navigate to a product page.
+    3. Verify that customer reviews and ratings are displayed.
+    4. Leave a review and rating for the product.
+    5. Verify that the review and rating are displayed on the product page.
+*   Expected Result: The customer reviews and ratings are displayed and can be left by users.
+
+**TC_006: Stockroom.lk Social Sharing**
+*   Description: Verify that the social sharing feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Stockroom.lk with a valid account.
+    2. Navigate to a product page.
+    3. Click the social sharing button (e.g., Facebook, Twitter).
+    4. Verify that the product is shared on the selected social media platform.
+*   Expected Result: The product is shared on the selected social media platform.
+
+**TC_007: Incarnage.com Gaming Focus**
+*   Description: Verify that the gaming focus feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Incarnage.com with a valid account.
+    2. Navigate to the gaming section.
+    3. Verify that the gaming section displays relevant products and content.
+*   Expected Result: The gaming section displays relevant products and content.
+
+**TC_008: Incarnage.com Limited Edition Releases**
+*   Description: Verify that the limited edition releases feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Incarnage.com with a valid account.
+    2. Navigate to the limited edition releases section.
+    3. Verify that the section displays relevant products and release dates.
+*   Expected Result: The section displays relevant products and release dates.
+
+**TC_009: Incarnage.com Pre-Order System**
+*   Description: Verify that the pre-order system feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Incarnage.com with a valid account.
+    2. Navigate to a product page.
+    3. Verify that the product is available for pre-order.
+    4. Place a pre-order for the product.
+    5. Verify that the pre-order is successful.
+*   Expected Result: The pre-order is successful.
+
+**TC_010: Incarnage.com Community Forums**
+*   Description: Verify that the community forums feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Incarnage.com with a valid account.
+    2. Navigate to the community forums section.
+    3. Verify that the section displays relevant topics and posts.
+    4. Create a new topic or post.
+    5. Verify that the topic or post is displayed in the community forums.
+*   Expected Result: The community forums display relevant topics and posts.
+
+**TC_011: Incarnage.com Live Chat Support**
+*   Description: Verify that the live chat support feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Incarnage.com with a valid account.
+    2. Navigate to the live chat support section.
+    3. Initiate a live chat session.
+    4. Verify that the support agent responds to the chat.
+*   Expected Result: The support agent responds to the chat.
+
+**TC_012: Incarnage.com Newsletter Subscriptions**
+*   Description: Verify that the newsletter subscriptions feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Incarnage.com with a valid account.
+    2. Navigate to the newsletter subscription section.
+    3. Subscribe to the newsletter.
+    4. Verify that the newsletter is sent to the subscribed email address.
+*   Expected Result: The newsletter is sent to the subscribed email address.
+
+**TC_013: Adidas.com/lk Product Customization**
+*   Description: Verify that the product customization feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Adidas.com/lk with a valid account.
+    2. Navigate to the product customization section.
+    3. Select a product to customize.
+    4. Apply custom designs, colors, and graphics.
+    5. Verify that the customized product is displayed.
+*   Expected Result: The customized product is displayed.
+
+**TC_014: Adidas.com/lk Secure Payment Options**
+*   Description: Verify that the secure payment options feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Adidas.com/lk with a valid account.
+    2. Add a product to the cart.
+    3. Proceed to checkout.
+    4. Select a secure payment option (e.g., credit/debit card, online banking).
+    5. Verify that the payment process is secure and successful.
+*   Expected Result: The payment process is secure and successful.
+
+**TC_015: Adidas.com/lk Account Management**
+*   Description: Verify that the account management feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Adidas.com/lk with a valid account.
+    2. Navigate to the account dashboard.
+    3. Verify that the account information is accurate and up-to-date.
+    4. Update account information (e.g., email, password).
+    5. Verify that the updated information is reflected in the account dashboard.
+*   Expected Result: The account information is accurate and up-to-date.
+
+**TC_016: Adidas.com/lk Product Search**
+*   Description: Verify that the product search feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Adidas.com/lk with a valid account.
+    2. Navigate to the product catalog.
+    3. Search for a specific product using the search bar.
+    4. Verify that the search results display relevant products.
+*   Expected Result: The search results display relevant products.
+
+**TC_017: Adidas.com/lk Product Filtering**
+*   Description: Verify that the product filtering feature works as expected with valid inputs.
+*   Steps:
+    1. Log in to Adidas.com/lk with a valid account.
+    2. Navigate to the product catalog.
+    3. Apply filters (e.g., price range, brand, category) to narrow down the search results.
+    4. Verify that the filtered results display only relevant products.
+*   Expected Result: The filtered results display only relevant products.
+
+**TC_018: Stockroom.lk Invalid Product Search**
+*   Description: Verify that the product search feature handles invalid inputs gracefully.
+*   Steps:
+    1. Log in to Stockroom.lk with a valid account.
+    2. Navigate to the product catalog.
+    3. Search for a non-existent product using the search bar.
+    4. Verify that an error message is displayed.
+*   Expected Result: An error message is displayed.
+
+**TC_019: Incarnage.com Invalid Pre-Order**
+*   Description: Verify that the pre-order system feature handles invalid inputs gracefully.
+*   Steps:
+    1. Log in to Incarnage.com with a valid account.
+    2.
+**Test Cases:**
+
+**TC_001:**
+*   **Description:** Verify login functionality with valid credentials
+*   **Steps:**
+    1. Navigate to the login page
+    2. Enter valid username and password
+    3. Click the login button
+*   **Expected Result:** Successful login and access to account dashboard
+
+**TC_002:**
+*   **Description:** Verify login functionality with invalid credentials
+*   **Steps:**
+    1. Navigate to the login page
+    2. Enter invalid username and password
+    3. Click the login button
+*   **Expected Result:** Error message indicating invalid credentials
+
+**TC_003:**
+*   **Description:** Verify account creation with valid information
+*   **Steps:**
+    1. Navigate to the registration page
+    2. Enter valid username, password, and email
+    3. Click the register button
+*   **Expected Result:** Successful account creation and login
+
+**TC_004:**
+*   **Description:** Verify account creation with invalid information
+*   **Steps:**
+    1. Navigate to the registration page
+    2. Enter invalid username, password, and email
+    3. Click the register button
+*   **Expected Result:** Error message indicating invalid information
+
+**TC_005:**
+*   **Description:** Verify product search functionality with valid keywords
+*   **Steps:**
+    1. Navigate to the product search page
+    2. Enter valid keywords
+    3. Click the search button
+*   **Expected Result:** Relevant product results displayed
+
+**TC_006:**
+*   **Description:** Verify product search functionality with invalid keywords
+*   **Steps:**
+    1. Navigate to the product search page
+    2. Enter invalid keywords
+    3. Click the search button
+*   **Expected Result:** Error message indicating invalid keywords
+
+**TC_007:**
+*   **Description:** Verify product filtering functionality with valid categories
+*   **Steps:**
+    1. Navigate to the product search page
+    2. Select valid categories
+    3. Click the filter button
+*   **Expected Result:** Relevant product results displayed
+
+**TC_008:**
+*   **Description:** Verify product filtering functionality with invalid categories
+*   **Steps:**
+    1. Navigate to the product search page
+    2. Select invalid categories
+    3. Click the filter button
+*   **Expected Result:** Error message indicating invalid categories
+
+**TC_009:**
+*   **Description:** Verify personalized recommendations with valid customer data
+*   **Steps:**
+    1. Navigate to the personalized recommendations page
+    2. Enter valid customer data
+    3. Click the recommend button
+*   **Expected Result:** Relevant product recommendations displayed
+
+**TC_010:**
+*   **Description:** Verify personalized recommendations with invalid customer data
+*   **Steps:**
+    1. Navigate to the personalized recommendations page
+    2. Enter invalid customer data
+    3. Click the recommend button
+*   **Expected Result:** Error message indicating invalid customer data
+
+**TC_011:**
+*   **Description:** Verify social media integration with valid social media platforms
+*   **Steps:**
+    1. Navigate to the social media integration page
+    2. Select valid social media platforms
+    3. Click the share button
+*   **Expected Result:** Successful sharing of product information on social media platforms
+
+**TC_012:**
+*   **Description:** Verify social media integration with invalid social media platforms
+*   **Steps:**
+    1. Navigate to the social media integration page
+    2. Select invalid social media platforms
+    3. Click the share button
+*   **Expected Result:** Error message indicating invalid social media platforms
+
+**TC_013:**
+*   **Description:** Verify customization options with valid product information
+*   **Steps:**
+    1. Navigate to the customization options page
+    2. Enter valid product information
+    3. Click the customize button
+*   **Expected Result:** Relevant customization options displayed
+
+**TC_014:**
+*   **Description:** Verify customization options with invalid product information
+*   **Steps:**
+    1. Navigate to the customization options page
+    2. Enter invalid product information
+    3. Click the customize button
+*   **Expected Result:** Error message indicating invalid product information
+
+**TC_015:**
+*   **Description:** Verify fashion quiz with valid user input
+*   **Steps:**
+    1. Navigate to the fashion quiz page
+    2. Enter valid user input
+    3. Click the submit button
+*   **Expected Result:** Relevant fashion quiz results displayed
+
+**TC_016:**
+*   **Description:** Verify fashion quiz with invalid user input
+*   **Steps:**
+    1. Navigate to the fashion quiz page
+    2. Enter invalid user input
+    3. Click the submit button
+*   **Expected Result:** Error message indicating invalid user input
+
+**TC_017:**
+*   **Description:** Verify style guides with valid product information
+*   **Steps:**
+    1. Navigate to the style guides page
+    2. Enter valid product information
+    3. Click the view button
+*   **Expected Result:** Relevant style guides displayed
+
+**TC_018:**
+*   **Description:** Verify style guides with invalid product information
+*   **Steps:**
+    1. Navigate to the style guides page
+    2. Enter invalid product information
+    3. Click the view button
+*   **Expected Result:** Error message indicating invalid product information
+
+**TC_019:**
+*   **Description:** Verify real-time updates and notifications with valid order information
+*   **Steps:**
+    1. Navigate to the order tracking page
+    2. Enter valid order information
+    3. Click the track button
+*   **Expected Result:** Real-time updates and notifications displayed
+
+**TC_020:**
+*   **Description:** Verify real-time updates and notifications with invalid order information
+*   **Steps:**
+    1. Navigate to the order tracking page
+    2. Enter invalid order information
+    3. Click the track button
+*   **Expected Result:** Error message indicating invalid order information
+**Test Cases:**
+
+**TC_001:** Size Recommender - Valid Input
+*   Description: Verify that the size recommender provides accurate results for valid body measurements.
+*   Steps:
+    1. Enter valid body measurements (e.g., height, weight, chest circumference) in the size recommender form.
+    2. Select a brand-specific size chart.
+    3. Click the "Recommends" button.
+*   Expected Result: The size recommender displays a recommended size based on the entered body measurements and selected size chart.
+
+**TC_002:** Size Recommender - Invalid Input
+*   Description: Verify that the size recommender handles invalid input (e.g., missing or inconsistent measurements).
+*   Steps:
+    1. Enter invalid body measurements (e.g., missing height, inconsistent weight and chest circumference).
+    2. Select a brand-specific size chart.
+    3. Click the "Recommends" button.
+*   Expected Result: The size recommender displays an error message indicating invalid input.
+
+**TC_003:** Fashion Events Calendar - Valid Input
+*   Description: Verify that the fashion events calendar displays upcoming events correctly.
+*   Steps:
+    1. Access the fashion events calendar page.
+    2. Verify that the calendar displays upcoming events (e.g., runway shows, sales events).
+*   Expected Result: The calendar displays the correct events with their respective dates and times.
+
+**TC_004:** Fashion Events Calendar - Invalid Input
+*   Description: Verify that the fashion events calendar handles invalid input (e.g., attempting to access a non-existent event).
+*   Steps:
+    1. Attempt to access a non-existent event on the calendar.
+*   Expected Result: The calendar displays an error message indicating that the event does not exist.
+
+**TC_005:** Fast Selling Products and New Arrivals - Valid Input
+*   Description: Verify that the fast selling products and new arrivals section displays correct information.
+*   Steps:
+    1. Access the fast selling products and new arrivals section.
+    2. Verify that the section displays top-selling products and newly added items.
+*   Expected Result: The section displays the correct information with product images and descriptions.
+
+**TC_006:** Fast Selling Products and New Arrivals - Invalid Input
+*   Description: Verify that the fast selling products and new arrivals section handles invalid input (e.g., attempting to access a non-existent product).
+*   Steps:
+    1. Attempt to access a non-existent product in the section.
+*   Expected Result: The section displays an error message indicating that the product does not exist.
+
+**TC_007:** Agile Development - Iterative Development
+*   Description: Verify that the agile development methodology allows for iterative development and continuous improvement.
+*   Steps:
+    1. Access the website's development dashboard.
+    2. Verify that the dashboard displays the current iteration and upcoming features.
+*   Expected Result: The dashboard displays the correct information, and the development team can iterate and improve the website based on user feedback.
+
+**TC_008:** Agile Development - Customer-Centric Focus
+*   Description: Verify that the agile development methodology prioritizes customer collaboration and feedback.
+*   Steps:
+    1. Access the website's feedback section.
+    2. Verify that the section allows users to provide feedback and suggestions.
+*   Expected Result: The section allows users to provide feedback and suggestions, which are incorporated into the development process.
+
+**TC_009:** Agile Development - Continuous Improvement
+*   Description: Verify that the agile development methodology promotes continuous improvement and iteration.
+*   Steps:
+    1. Access the website's changelog.
+    2. Verify that the changelog displays the history of updates and improvements.
+*   Expected Result: The changelog displays the correct history of updates and improvements, demonstrating continuous iteration and improvement.
+
+**TC_010:** Financial Feasibility - Budget Allocation
+*   Description: Verify that the financial feasibility report accurately allocates budget for the website development.
+*   Steps:
+    1. Access the financial feasibility report.
+    2. Verify that the report displays the allocated budget for each component (e.g., domain, development).
+*   Expected Result: The report displays the correct allocated budget for each component.
+
+**TC_011:** Financial Feasibility - Cost Estimation
+*   Description: Verify that the financial feasibility report accurately estimates costs for the website development.
+*   Steps:
+    1. Access the financial feasibility report.
+    2. Verify that the report displays the estimated costs for each component (e.g., domain, development).
+*   Expected Result: The report displays the correct estimated costs for each component.
+
+**TC_012:** Size Recommender - Boundary Value Test - Height
+*   Description: Verify that the size recommender handles height values at the boundary (e.g., 5'0" vs. 5'1").
+*   Steps:
+    1. Enter height values at the boundary (e.g., 5'0", 5'1").
+    2. Select a brand-specific size chart.
+    3. Click the "Recommends" button.
+*   Expected Result: The size recommender displays a recommended size based on the entered height values.
+
+**TC_013:** Size Recommender - Boundary Value Test - Weight
+*   Description: Verify that the size recommender handles weight values at the boundary (e.g., 100 lbs vs. 101 lbs).
+*   Steps:
+    1. Enter weight values at the boundary (e.g., 100 lbs, 101 lbs).
+    2. Select a brand-specific size chart.
+    3. Click the "Recommends" button.
+*   Expected Result: The size recommender displays a recommended size based on the entered weight values.
+
+**TC_014:** Fashion Events Calendar - Edge Case - Future Event
+*   Description: Verify that the fashion events calendar handles future events correctly.
+*   Steps:
+    1. Access the fashion events calendar page.
+    2. Verify that the calendar displays a future event (e.g., a runway show scheduled for next month).
+*   Expected Result: The calendar displays the correct information for the future event.
+
+**TC_015:** Fast Selling Products and New Arrivals - Edge Case - Out-of-Stock Product
+*   Description: Verify that the fast selling products and new arrivals section handles out-of-stock products correctly.
+*   Steps:
+    1. Access the fast selling products and new arrivals section.
+    2. Verify that the section displays an out-of-stock product.
+*   Expected Result: The section displays an error message or a notification indicating that the product is out of stock.
+
+**TC_016:** Agile Development - Edge Case - Change in Requirements
+*   Description: Verify that the agile development methodology allows for changes in requirements during development.
+*   Steps:
+    1. Access the website's development dashboard.
+    2. Verify that the dashboard displays the current iteration and upcoming features.
+    3. Simulate a change in requirements (e.g., adding a new feature).
+*   Expected Result: The development team can iterate and improve the website based on the changed requirements.
+
+**TC_017:** Agile Development - Edge Case - Technical Debt
+*   Description: Verify that the agile development methodology prioritizes technical debt and refactoring.
+*   Steps:
+    1. Access the website's development dashboard.
+    2. Verify that the dashboard displays technical debt and refactoring tasks.
+*   Expected Result: The dashboard displays the correct information, and the development team can prioritize technical debt and refactoring tasks.
+
+**TC_018:** Financial Feasibility - Edge Case - Budget Overrun
+*   Description: Verify that the financial feasibility report handles budget overruns correctly.
+*   Steps:
+    1. Access the financial feasibility report.
+    2. Simulate a budget overrun (e.g., unexpected development costs).
+*   Expected Result: The report displays the correct information, and the development team can adjust the budget accordingly.
+
+**TC_019:** Size Recommender - Edge Case - Multiple Measurements
+*   Description: Verify that the size recommender handles multiple measurements correctly.
+*   Steps:
+    1. Enter multiple measurements (e.g., height, weight, chest circumference) in the size recommender form.
+    2. Select a brand-specific size chart.
+    3. Click the "Recommends" button.
+*   Expected Result: The size recommender displays a recommended size based on the entered multiple measurements.
+
+**TC_020:** Fashion Events Calendar - Edge Case - Cancellation
+*   Description: Verify that the fashion events calendar handles event cancellations correctly.
+*   Steps:
+    1. Access the fashion events calendar page.
+    2. Verify that the calendar displays a cancelled event (e.g., a runway show cancelled due to unforeseen circumstances).
+*   Expected Result: The calendar displays an error message or a notification indicating that the event has been cancelled.
+**Test Cases:**
+
+**TC_001: User Management - Valid Registration**
+*   Description: Verify that a user can create an account with valid information.
+*   Steps:
+    1. Navigate to the registration page.
+    2. Fill in the required fields with valid information (name, contact number, email address).
+    3. Click the "Register" button.
+*   Expected Result: The user is successfully registered, and a confirmation message is displayed.
+
+**TC_002: User Management - Invalid Registration**
+*   Description: Verify that the system handles invalid registration attempts.
+*   Steps:
+    1. Navigate to the registration page.
+    2. Fill in the required fields with invalid information (e.g., empty fields, incorrect email format).
+    3. Click the "Register" button.
+*   Expected Result: An error message is displayed, indicating that the registration failed.
+
+**TC_003: Product Management - Add Product**
+*   Description: Verify that an admin can add a new product.
+*   Steps:
+    1. Log in as an admin.
+    2. Navigate to the product management page.
+    3. Fill in the required fields with valid product information.
+    4. Click the "Add Product" button.
+*   Expected Result: The product is successfully added, and a confirmation message is displayed.
+
+**TC_004: Product Management - Delete Product**
+*   Description: Verify that an admin can delete an existing product.
+*   Steps:
+    1. Log in as an admin.
+    2. Navigate to the product management page.
+    3. Select a product to delete.
+    4. Click the "Delete Product" button.
+*   Expected Result: The product is successfully deleted, and a confirmation message is displayed.
+
+**TC_005: Blog Management - Create Blog Post**
+*   Description: Verify that a fashion designer can create a new blog post.
+*   Steps:
+    1. Log in as a fashion designer.
+    2. Navigate to the blog management page.
+    3. Fill in the required fields with valid blog post information.
+    4. Click the "Create Blog Post" button.
+*   Expected Result: The blog post is successfully created, and a confirmation message is displayed.
+
+**TC_006: Blog Management - Edit Blog Post**
+*   Description: Verify that a fashion designer can edit an existing blog post.
+*   Steps:
+    1. Log in as a fashion designer.
+    2. Navigate to the blog management page.
+    3. Select a blog post to edit.
+    4. Make changes to the blog post information.
+    5. Click the "Update Blog Post" button.
+*   Expected Result: The blog post is successfully updated, and a confirmation message is displayed.
+
+**TC_007: Order Management - Place Order**
+*   Description: Verify that a customer can place an order.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to the shopping cart page.
+    3. Review the order summary.
+    4. Click the "Place Order" button.
+*   Expected Result: The order is successfully placed, and a confirmation message is displayed.
+
+**TC_008: Order Management - Cancel Order**
+*   Description: Verify that an admin can cancel an existing order.
+*   Steps:
+    1. Log in as an admin.
+    2. Navigate to the order management page.
+    3. Select an order to cancel.
+    4. Click the "Cancel Order" button.
+*   Expected Result: The order is successfully canceled, and a confirmation message is displayed.
+
+**TC_009: Feedback Management - Leave Feedback**
+*   Description: Verify that a customer can leave feedback on a product.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to the product page.
+    3. Click the "Leave Feedback" button.
+    4. Fill in the feedback form with valid information.
+    5. Click the "Submit Feedback" button.
+*   Expected Result: The feedback is successfully submitted, and a confirmation message is displayed.
+
+**TC_010: Discount Management - Apply Discount**
+*   Description: Verify that a customer can apply a discount to their order.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to the shopping cart page.
+    3. Review the order summary.
+    4. Click the "Apply Discount" button.
+*   Expected Result: The discount is successfully applied, and the order total is updated.
+
+**TC_011: Search and Filtering - Search Products**
+*   Description: Verify that a user can search for products using keywords.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to the product search page.
+    3. Enter a valid search keyword.
+    4. Click the "Search" button.
+*   Expected Result: The search results are displayed, and the products match the search keyword.
+
+**TC_012: Search and Filtering - Filter Products**
+*   Description: Verify that a user can filter products by category, price, and discounts.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to the product search page.
+    3. Select a filter option (category, price, or discounts).
+    4. Click the "Apply Filter" button.
+*   Expected Result: The filtered products are displayed, and the results match the selected filter option.
+
+**TC_013: Communication Features - Send Inquiry**
+*   Description: Verify that a customer can send an inquiry to a fashion designer.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to the fashion designer's profile page.
+    3. Click the "Send Inquiry" button.
+    4. Fill in the inquiry form with valid information.
+    5. Click the "Submit Inquiry" button.
+*   Expected Result: The inquiry is successfully submitted, and a confirmation message is displayed.
+
+**TC_014: User Interface - Navigation**
+*   Description: Verify that the user interface is intuitive and easy to navigate.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to the website homepage.
+    3. Verify that the navigation menu is functional and easy to use.
+*   Expected Result: The navigation menu is functional, and the user can easily access different pages and features.
+
+**TC_015: Color Scheme and Branding - Consistency**
+*   Description: Verify that the color scheme and branding elements are consistent throughout the website.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to different pages and features on the website.
+    3. Verify that the color scheme and branding elements are consistent.
+*   Expected Result: The color scheme and branding elements are consistent throughout the website.
+
+**TC_016: Images and Visual Elements - Quality**
+*   Description: Verify that the images and visual elements on the website are of high quality.
+*   Steps:
+    1. Log in as a customer.
+    2. Navigate to different pages and features on the website.
+    3. Verify that the images and visual elements are high-quality and visually appealing.
+*   Expected Result: The images and visual elements are high-quality and visually appealing.
+
+**TC_017: Order Fulfillment - Processing Time**
+*   Description: Verify that the order fulfillment process is efficient and timely.
+*   Steps:
+    1. Log in as a customer.
+    2. Place an order.
+    3. Verify that the order is processed and fulfilled within a reasonable timeframe.
+*   Expected Result: The order is processed and fulfilled within a reasonable timeframe.
+
+**TC_018: Customer Relationship Management (CRM) - Integration**
+*   Description: Verify that the CRM system is integrated with the website.
+*   Steps:
+    1. Log in as a customer.
+    2. Interact with the website (e.g., place an order, leave feedback).
+    3. Verify that the CRM system is updated accordingly.
+*   Expected Result: The CRM system is updated with the customer's interactions and data.
+
+**TC_019: Point of Sale (POS) Integration - Financial Transactions**
+*   Description: Verify that the POS system is integrated with the website for financial transactions.
+*   Steps:
+    1. Log in as an admin.
+    2. Process a financial transaction (e.g., sale, refund).
+    3. Verify that the POS system is updated accordingly.
+*   Expected Result: The POS system is updated with the financial transaction data.
+
+**TC_020: Schedule Feasibility - Project Timeline**
+*   Description: Verify that the project timeline is realistic and achievable.
+*   Steps:
+    1. Review the project schedule.
+    2. Verify that the tasks and milestones are realistic and achievable.
+*   Expected Result: The project timeline is realistic and achievable, and the tasks and milestones are well-planned and managed.
+**Test Cases:**
+
+**TC_001: Typography Test**
+*   **Description:** Verify that the application uses readable fonts that complement the design and ensure ease of reading.
+*   **Steps:**
+    1. Launch the application.
+    2. Inspect the font used for the main content area.
+    3. Verify that the font is readable and easy to read.
+*   **Expected Result:** The application uses a readable font that is easy to read.
+
+**TC_002: Invalid Input Test**
+*   **Description:** Verify that the application handles invalid input for the agreement statement.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter invalid input (e.g., special characters) in the agreement statement field.
+    3. Submit the form.
+    4. Verify that the application displays an error message.
+*   **Expected Result:** The application displays an error message indicating invalid input.
+
+**TC_003: Boundary Value Test - Font Size**
+*   **Description:** Verify that the application handles font sizes within the expected range.
+*   **Steps:**
+    1. Launch the application.
+    2. Increase the font size to the maximum allowed value.
+    3. Verify that the font size is displayed correctly.
+    4. Decrease the font size to the minimum allowed value.
+    5. Verify that the font size is displayed correctly.
+*   **Expected Result:** The application displays the font size correctly within the expected range.
+
+**TC_004: Edge Case Test - Font Style**
+*   **Description:** Verify that the application handles unusual font styles.
+*   **Steps:**
+    1. Launch the application.
+    2. Change the font style to an unusual value (e.g., "Comic Sans").
+    3. Verify that the font style is displayed correctly.
+*   **Expected Result:** The application displays the unusual font style correctly.
+
+**TC_005: Positive Test Case - Agreement Statement**
+*   **Description:** Verify that the application accepts a valid agreement statement.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter a valid agreement statement.
+    3. Submit the form.
+    4. Verify that the application saves the agreement statement correctly.
+*   **Expected Result:** The application saves the agreement statement correctly.
+
+**TC_006: Negative Test Case - Empty Agreement Statement**
+*   **Description:** Verify that the application handles an empty agreement statement.
+*   **Steps:**
+    1. Launch the application.
+    2. Leave the agreement statement field empty.
+    3. Submit the form.
+    4. Verify that the application displays an error message.
+*   **Expected Result:** The application displays an error message indicating an empty agreement statement.
+
+**TC_007: Boundary Value Test - Agreement Statement Length**
+*   **Description:** Verify that the application handles agreement statement lengths within the expected range.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter an agreement statement that is within the expected length range.
+    3. Verify that the application saves the agreement statement correctly.
+    4. Enter an agreement statement that is longer than the expected length range.
+    5. Verify that the application displays an error message.
+*   **Expected Result:** The application saves the agreement statement correctly within the expected length range.
+
+**TC_008: Edge Case Test - Agreement Statement Special Characters**
+*   **Description:** Verify that the application handles agreement statements with special characters.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter an agreement statement with special characters.
+    3. Verify that the application saves the agreement statement correctly.
+*   **Expected Result:** The application saves the agreement statement correctly with special characters.
+
+**TC_009: Positive Test Case - Project Initiation**
+*   **Description:** Verify that the application initiates a project correctly.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter project details.
+    3. Submit the form.
+    4. Verify that the application initiates the project correctly.
+*   **Expected Result:** The application initiates the project correctly.
+
+**TC_010: Negative Test Case - Invalid Project Details**
+*   **Description:** Verify that the application handles invalid project details.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter invalid project details.
+    3. Submit the form.
+    4. Verify that the application displays an error message.
+*   **Expected Result:** The application displays an error message indicating invalid project details.
+
+**TC_011: Boundary Value Test - Project Scope**
+*   **Description:** Verify that the application handles project scope within the expected range.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter a project scope that is within the expected range.
+    3. Verify that the application saves the project scope correctly.
+    4. Enter a project scope that is outside the expected range.
+    5. Verify that the application displays an error message.
+*   **Expected Result:** The application saves the project scope correctly within the expected range.
+
+**TC_012: Edge Case Test - Project Stakeholders**
+*   **Description:** Verify that the application handles project stakeholders correctly.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter project stakeholders.
+    3. Verify that the application saves the project stakeholders correctly.
+*   **Expected Result:** The application saves the project stakeholders correctly.
+
+**TC_013: Positive Test Case - Project Feasibility Study**
+*   **Description:** Verify that the application conducts a project feasibility study correctly.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter project details.
+    3. Submit the form.
+    4. Verify that the application conducts a project feasibility study correctly.
+*   **Expected Result:** The application conducts a project feasibility study correctly.
+
+**TC_014: Negative Test Case - Invalid Project Feasibility Study**
+*   **Description:** Verify that the application handles invalid project feasibility study inputs.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter invalid project feasibility study inputs.
+    3. Submit the form.
+    4. Verify that the application displays an error message.
+*   **Expected Result:** The application displays an error message indicating invalid project feasibility study inputs.
+
+**TC_015: Boundary Value Test - Project Schedule**
+*   **Description:** Verify that the application handles project schedules within the expected range.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter a project schedule that is within the expected range.
+    3. Verify that the application saves the project schedule correctly.
+    4. Enter a project schedule that is outside the expected range.
+    5. Verify that the application displays an error message.
+*   **Expected Result:** The application saves the project schedule correctly within the expected range.
+
+**TC_016: Edge Case Test - Project Resource Allocation**
+*   **Description:** Verify that the application handles project resource allocation correctly.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter project resource allocation.
+    3. Verify that the application saves the project resource allocation correctly.
+*   **Expected Result:** The application saves the project resource allocation correctly.
+
+**TC_017: Positive Test Case - Project Technical Requirements**
+*   **Description:** Verify that the application defines project technical requirements correctly.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter project technical requirements.
+    3. Verify that the application saves the project technical requirements correctly.
+*   **Expected Result:** The application saves the project technical requirements correctly.
+
+**TC_018: Negative Test Case - Invalid Project Technical Requirements**
+*   **Description:** Verify that the application handles invalid project technical requirements inputs.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter invalid project technical requirements inputs.
+    3. Submit the form.
+    4. Verify that the application displays an error message.
+*   **Expected Result:** The application displays an error message indicating invalid project technical requirements inputs.
+
+**TC_019: Boundary Value Test - Project Design Phase**
+*   **Description:** Verify that the application handles project design phase inputs within the expected range.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter project design phase inputs that are within the expected range.
+    3. Verify that the application saves the project design phase inputs correctly.
+    4. Enter project design phase inputs that are outside the expected range.
+    5. Verify that the application displays an error message.
+*   **Expected Result:** The application saves the project design phase inputs correctly within the expected range.
+
+**TC_020: Edge Case Test - Project Development Phase**
+*   **Description:** Verify that the application handles project development phase inputs correctly.
+*   **Steps:**
+    1. Launch the application.
+    2. Enter project development phase inputs.
+    3. Verify that the application saves the project development phase inputs correctly.
+*   **Expected Result:** The application saves the project development phase inputs correctly.

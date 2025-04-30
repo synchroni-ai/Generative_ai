@@ -1,105 +1,66 @@
-import streamlit as st
-import requests
-import json
+from fastapi import FastAPI, UploadFile, File, Request
+from fastapi.responses import JSONResponse
+from tasks.generate_test_cases import generate_test_cases
+from tasks.generate_user_stories import generate_user_stories
+from celery.result import AsyncResult
+import motor.motor_asyncio
+import os
+from dotenv import load_dotenv
 
-# --- API Base URL ---
-API_BASE_URL = "http://localhost:8000"  # Adjust if your API is running elsewhere
+load_dotenv()
 
+app = FastAPI()
 
-def process_pdf(pdf_file):
-    """Uploads the PDF to the API and returns the cleaned text."""
-    files = {"file": pdf_file}
+# MongoDB Setup
+client = motor.motor_asyncio.AsyncIOMotorClient(os.getenv("mongodb://localhost:27017"))
+db = client[os.getenv("Gen_AI")]
+
+# Placeholder: Simulated PDF processing
+@app.post("/process_pdf/")
+async def process_pdf(file: UploadFile = File(...)):
     try:
-        response = requests.post(f"{API_BASE_URL}/process_pdf/", files=files)
-        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
-        data = response.json()
-        return data.get("cleaned_text")
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error processing PDF: {e}")
-        return None
+        # Simulate extracting cleaned text
+        content = await file.read()
+        cleaned_text = content.decode("utf-8", errors="ignore")
+        return {"cleaned_text": cleaned_text}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
+# Generate Test Cases Endpoint
+@app.post("/generate_test_cases/")
+async def generate_test_cases_endpoint(payload: dict):
+    cleaned_text = payload.get("cleaned_text")
+    if not cleaned_text:
+        return JSONResponse(status_code=400, content={"error": "Missing 'cleaned_text'"})
+    
+    task = generate_test_cases.delay(cleaned_text)
+    await db.tasks.insert_one({"task_id": task.id, "status": "PENDING", "type": "test_cases"})
+    return {"task_id": task.id}
 
-def generate_test_cases(
-    cleaned_text, prompt_file_path=None, chunk_size=None, cache_key=None
-):
-    """Calls the API to generate test cases."""
-    params = {"cleaned_text": cleaned_text}
-    if prompt_file_path:
-        params["prompt_file_path"] = prompt_file_path
-    if chunk_size:
-        params["chunk_size"] = chunk_size
-    if cache_key:
-        params["cache_key"] = cache_key
+# Generate User Stories Endpoint
+@app.post("/generate_user_stories/")
+async def generate_user_stories_endpoint(payload: dict):
+    input_text = payload.get("input_text")
+    if not input_text:
+        return JSONResponse(status_code=400, content={"error": "Missing 'input_text'"})
+    
+    task = generate_user_stories.delay(input_text)
+    await db.tasks.insert_one({"task_id": task.id, "status": "PENDING", "type": "user_stories"})
+    return {"task_id": task.id}
 
-    try:
-        response = requests.get(f"{API_BASE_URL}/generate_test_cases/", params=params)
-        response.raise_for_status()
-        data = response.json()
-        return data
-    except requests.exceptions.RequestException as e:
-        st.error(f"Error generating test cases: {e}")
-        return None
+# Status Check Endpoint (for any task)
+@app.get("/status/{task_id}")
+async def check_status(task_id: str):
+    from celery_config import celery_app
+    result = AsyncResult(task_id, app=celery_app)
 
+    # Optional: update status in MongoDB
+    await db.tasks.update_one(
+        {"task_id": task_id},
+        {"$set": {"status": result.status}}
+    )
 
-# --- Streamlit UI ---
-st.title("BRD Test Case Generator")
-
-# 1. PDF Upload
-st.header("1. Upload BRD PDF")
-uploaded_file = st.file_uploader("Choose a PDF file", type="pdf")
-
-if uploaded_file is not None:
-    with st.spinner("Processing PDF..."):
-        cleaned_text = process_pdf(uploaded_file)
-
-    if cleaned_text:
-        st.success("PDF processed successfully!")
-
-        # 2. Configuration
-        st.header("2. Configuration (Optional)")
-        prompt_file_path = st.text_input("Prompt File Path (optional)")
-        chunk_size = st.number_input(
-            "Chunk Size (optional)",
-            min_value=100,
-            max_value=10000,
-            value=4000,
-            step=100,
-        )
-        use_cache = st.checkbox("Use Cache", value=False)
-        cache_key = (
-            st.session_state.get("cache_key", None) if use_cache else None
-        )  # get cache_key from session state if cache is selected
-
-        if use_cache and cache_key:
-            st.write(f"Using cached test cases with key: {cache_key}")
-        elif use_cache:
-            st.write("Generating new test cases - first run")
-        # 3. Generate Test Cases
-        st.header("3. Generate Test Cases")
-        if st.button("Generate Test Cases"):
-            with st.spinner("Generating test cases..."):
-                result = generate_test_cases(
-                    cleaned_text, prompt_file_path, chunk_size, cache_key
-                )
-
-            if result:
-                st.success("Test cases generated successfully!")
-                st.session_state["test_cases"] = result.get("test_cases")
-                st.session_state["cache_key"] = result.get("cache_key")
-                st.write("Test Cases:")
-                st.code(st.session_state.get("test_cases", ""), language="text")
-                st.write(f"Cache Key: {st.session_state.get('cache_key', 'N/A')}")
-            else:
-                st.error("Failed to generate test cases.")
-
-        # 4. Display Generated Test Cases
-        st.header("4. Test Cases")
-        if "test_cases" in st.session_state and st.session_state["test_cases"]:
-            st.write("Test Cases:")
-            st.code(st.session_state["test_cases"], language="text")
-        else:
-            st.info("Generate test cases to see the results.")
+    if result.ready():
+        return {"status": result.status, "result": result.result}
     else:
-        st.error("Failed to process the PDF. Please check the file.")
-else:
-    st.info("Upload a PDF file to begin.")
+        return {"status": result.status}

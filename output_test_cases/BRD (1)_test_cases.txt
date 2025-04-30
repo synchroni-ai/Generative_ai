@@ -1,0 +1,206 @@
+API Error: 402
+{
+  "id": "nrckRyq-3NKUce-9364cf8a2f0b2e9d",
+  "error": {
+    "message": "Credit limit exceeded. Please navigate to https://api.together.xyz/settings/billing to add credit or upgrade your plan.",
+    "type": "credit_limit",
+    "param": null,
+    "code": null
+  }
+}
+API Error: 402
+{
+  "id": "nrckSE4-3NKUce-9364cf8e9f8c2e99",
+  "error": {
+    "message": "Credit limit exceeded. Please navigate to https://api.together.xyz/settings/billing to add credit or upgrade your plan.",
+    "type": "credit_limit",
+    "param": null,
+    "code": null
+  }
+}
+API Error: 402
+{
+  "id": "nrckSLj-3NKUce-9364cf93ccdf2e99",
+  "error": {
+    "message": "Credit limit exceeded. Please navigate to https://api.together.xyz/settings/billing to add credit or upgrade your plan.",
+    "type": "credit_limit",
+    "param": null,
+    "code": null
+  }
+}
+API Error: 402
+{
+  "id": "nrckSgi-4Yz4kd-9364cf965afa2e9f",
+  "error": {
+    "message": "Credit limit exceeded. Please navigate to https://api.together.xyz/settings/billing to add credit or upgrade your plan.",
+    "type": "credit_limit",
+    "param": null,
+    "code": null
+  }
+}
+**Test Cases:**
+
+*   **Test Case ID:** TC_001
+    *   **Description:** Verify that the Size Recommender provides accurate size suggestions based on valid body measurements.
+    *   **Steps:**
+        1. Enter valid body measurements (e.g., height, weight, chest, waist, hips).
+        2. Submit the measurements.
+    *   **Expected Result:** The system should return a recommended size based on the provided measurements.
+
+*   **Test Case ID:** TC_002
+    *   **Description:** Verify that the Size Recommender handles invalid body measurements gracefully.
+    *   **Steps:**
+        1. Enter invalid body measurements (e.g., negative values, text).
+        2. Submit the measurements.
+    *   **Expected Result:** The system should display an error message and not crash.
+
+*   **Test Case ID:** TC_003
+    *   **Description:** Verify that the Size Recommender considers past purchases in size recommendations.
+    *   **Steps:**
+        1. Enter body measurements.
+        2. Submit the measurements.
+    *   **Expected Result:** The system should consider past purchase data and provide a size recommendation.
+
+*   **Test Case ID:** TC_004
+    *   **Description:** Verify that the Size Recommender handles boundary values for body measurements.
+    *   **Steps:**
+        1. Enter boundary values for body measurements (e.g., minimum and maximum values).
+        2. Submit the measurements.
+    *   **Expected Result:** The system should return a recommended size without errors.
+
+*   **Test Case ID:** TC_005
+    *   **Description:** Verify that the Fashion Events Calendar displays upcoming events correctly.
+    *   **Steps:**
+        1. Navigate to the Fashion Events Calendar.
+        2. View the list of upcoming events.
+    *   **Expected Result:** The calendar should display upcoming fashion events with correct dates and details.
+
+*   **Test Case ID:** TC_006
+    *   **Description:** Verify that the Fashion Events Calendar handles no upcoming events gracefully.
+    *   **Steps:**
+        1. Navigate to the Fashion Events Calendar.
+        2. View the list of upcoming events when there are none scheduled.
+    *   **Expected Result:** The system should display a message indicating no upcoming events.
+
+*   **Test Case ID:** TC_007
+    *   **Description:** Verify that the Fast Selling Products section displays top-selling items correctly.
+    *   **Steps:**
+        1. Navigate to the Fast Selling Products section.
+        2. View the list of top-selling products.
+    *   **Expected Result:** The section should display the top-selling products with correct details.
+
+*   **Test Case ID:** TC_008
+    *   **Description:** Verify that the New Arrivals section displays newly added items correctly.
+    *   **Steps:**
+        1. Navigate to the New Arrivals section.
+        2. View the list of newly added items.
+    *   **Expected Result:** The section should display the new arrivals with correct details.
+
+*   **Test Case ID:** TC_009
+    *   **Description:** Verify that the Size Recommender handles empty input fields gracefully.
+    *   **Steps:**
+        1. Leave all body measurement fields empty.
+        2. Submit the form.
+    *   **Expected Result:** The system should display an error message and not crash.
+
+*   **Test Case ID:** TC_010
+    *   **Description:** Verify that the Size Recommender provides size recommendations for different brands.
+    *   **Steps:**
+        1. Enter body measurements.
+        2. Select a specific brand.
+        3. Submit the measurements.
+    *   **Expected Result:** The system should return a size recommendation based on the selected brand's size chart.
+
+*   **Test Case ID:** TC_011
+    *   **Description:** Verify that the Fashion Events Calendar allows users to filter events by type.
+    *   **Steps:**
+        1. Navigate to the Fashion Events Calendar.
+        2. Apply a filter for a specific event type (e.g., runway shows).
+    *   **Expected Result:** The calendar should display only the filtered event type.
+
+*   **Test Case ID:** TC_012
+    *   **Description:** Verify that the Fast Selling Products section updates correctly when new top-selling items are added.
+    *   **Steps:**
+        1. Navigate to the Fast Selling Products section.
+        2. Wait for a new top-selling item to be added.
+        3. Refresh the page.
+    *   **Expected Result:** The section should display the updated list of top-selling products.
+
+*   **Test Case ID:** TC_013
+    *   **Description:** Verify that the New Arrivals section updates correctly when new items are added.
+    *   **Steps:**
+        1. Navigate to the New Arrivals section.
+        2. Wait for a new item to be added.
+        3. Refresh the page.
+    *   **Expected Result:** The section should display the updated list of new arrivals.
+
+*   **Test Case ID:** TC_014
+    *   **Description:** Verify that the Size Recommender handles non-numeric input for body measurements gracefully.
+    *   **Steps:**
+        1. Enter non-numeric values for body measurements (e.g., text, special characters).
+        2. Submit the measurements.
+    *   **Expected Result:** The system should display an error message and not crash.
+
+*   **Test Case ID:** TC_015
+    *   **Description:** Verify that the Fashion Events Calendar displays events in chronological order.
+    *   **Steps:**
+        1. Navigate to the Fashion Events Calendar.
+        2. View the list of upcoming events.
+    *   **Expected Result:** The events should be listed in chronological order.
+
+*   **Test Case ID:** TC_016
+    *   **Description:** Verify that the Size Recommender provides size recommendations for different genders.
+    *   **Steps:**
+        1. Enter body measurements.
+        2. Select a specific gender.
+        3. Submit the measurements.
+    *   **Expected Result:** The system should return a size recommendation based on the selected gender.
+
+*   **Test Case ID:** TC_017
+    *   **Description:** Verify that the Fast Selling Products section handles no top-selling items gracefully.
+    *   **Steps:**
+        1. Navigate to the Fast Selling Products section.
+        2. View the list of top-selling products when there are none.
+    *   **Expected Result:** The system should display a message indicating no top-selling products.
+
+*   **Test Case ID:** TC_018
+    *   **Description:** Verify that the New Arrivals section handles no new items gracefully.
+    *   **Steps:**
+        1. Navigate to the New Arrivals section.
+        2. View the list of new arrivals when there are none.
+    *   **Expected Result:** The system should display a message indicating no new arrivals.
+
+*   **Test Case ID:** TC_019
+    *   **Description:** Verify that the Size Recommender handles extremely large or small body measurements gracefully.
+    *   **Steps:**
+        1. Enter extremely large or small body measurements (e.g., height > 300 cm, weight < 1 kg).
+        2. Submit the measurements.
+    *   **Expected Result:** The system should display an error message and not crash.
+
+*   **Test Case ID:** TC_020
+    *   **Description:** Verify that the Fashion Events Calendar allows users to add events to their personal calendar.
+    *   **Steps:**
+        1. Navigate to the Fashion Events Calendar.
+        2. Select an event.
+        3. Click on the option to add the event to the personal calendar.
+    *   **Expected Result:** The event should be added to the user's personal calendar with correct details.
+API Error: 402
+{
+  "id": "nrckZyE-4Yz4kd-9364d030de882e90",
+  "error": {
+    "message": "Credit limit exceeded. Please navigate to https://api.together.xyz/settings/billing to add credit or upgrade your plan.",
+    "type": "credit_limit",
+    "param": null,
+    "code": null
+  }
+}
+API Error: 402
+{
+  "id": "nrcka7G-4Yz4kd-9364d0352a8d2e9f",
+  "error": {
+    "message": "Credit limit exceeded. Please navigate to https://api.together.xyz/settings/billing to add credit or upgrade your plan.",
+    "type": "credit_limit",
+    "param": null,
+    "code": null
+  }
+}
