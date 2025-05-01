@@ -1,0 +1,180 @@
+**User Stories:**
+
+*   **User Story ID:** US_001
+    *   **Title:** Patient Registration
+    *   **Description:** As a Patient, I want to view and fill out the registration page, so that I can create an account on the application.
+    *   **Acceptance Criteria:**
+        *   The system displays the registration page with required fields.
+        *   The user can input data into the registration form.
+        *   The system validates the input data before submission.
+        *   The system confirms successful registration.
+
+*   **User Story ID:** US_002
+    *   **Title:** Patient Login
+    *   **Description:** As a Patient, I want to log in with my username and password, so that I can access my account.
+    *   **Acceptance Criteria:**
+        *   The system displays the login page with username and password fields.
+        *   The user can input their credentials.
+        *   The system validates the credentials and grants access.
+        *   The system redirects to the dashboard upon successful login.
+
+*   **User Story ID:** US_003
+    *   **Title:** Search Doctor Information
+    *   **Description:** As a Patient, I want to search for doctor's information, so that I can find a suitable doctor for my needs.
+    *   **Acceptance Criteria:**
+        *   The system provides a search functionality for doctors.
+        *   The user can input search criteria (e.g., name, specialty).
+        *   The system displays relevant doctor information.
+        *   The system allows filtering and sorting of search results.
+
+*   **User Story ID:** US_004
+    *   **Title:** View Doctor Qualifications
+    *   **Description:** As a Patient, I want to search and view doctor’s qualifications, so that I can make an informed decision about my healthcare provider.
+    *   **Acceptance Criteria:**
+        *   The system provides a search functionality for doctor qualifications.
+        *   The user can input search criteria (e.g., specialty, certification).
+        *   The system displays relevant doctor qualifications.
+        *   The system allows filtering and sorting of search results.
+
+*   **User Story ID:** US_005
+    *   **Title:** Book Appointment Online
+    *   **Description:** As a Patient, I want to book an appointment online with a diagnostic center, so that I can schedule my medical tests conveniently.
+    *   **Acceptance Criteria:**
+        *   The system displays available time slots for appointments.
+        *   The user can select a preferred time slot.
+        *   The system confirms the appointment booking.
+        *   The system calculates and displays the waiting time for the appointment.
+
+*   **User Story ID:** US_006
+    *   **Title:** View Appointment Details
+    *   **Description:** As a Patient, I want to view the details of my booked appointments, so that I can manage my schedule effectively.
+    *   **Acceptance Criteria:**
+        *   The system displays a list of booked appointments.
+        *   The user can view details of each appointment (e.g., date, time, location).
+        *   The system allows the user to cancel or reschedule appointments.
+
+*   **User Story ID:** US_007
+    *   **Title:** Doctor Registration
+    *   **Description:** As a Doctor, I want to register online with my profile in sync with my government registration number, so that I can create an account on the application.
+    *   **Acceptance Criteria:**
+        *   The system displays the registration page with required fields.
+        *   The user can input data into the registration form.
+        *   The system validates the input data and government registration number.
+        *   The system confirms successful registration.
+
+*   **User Story ID:** US_008
+    *   **Title:** Doctor Login
+    *   **Description:** As a Doctor, I want to log in with my credentials, so that I can access my account and manage my appointments.
+    *   **Acceptance Criteria:**
+        *   The system displays the login page with username and password fields.
+        *   The user can input their credentials.
+        *   The system validates the credentials and grants access.
+        *   The system redirects to the dashboard upon successful login.
+
+*   **User Story ID:** US_009
+    *   **Title:** Manage Appointments
+    *   **Description:** As a Doctor, I want to view and manage my appointments, so that I can organize my schedule effectively.
+    *   **Acceptance Criteria:**
+        *   The system displays a list of upcoming appointments.
+        *   The user can view details of each appointment (e.g., patient name, date, time).
+        *   The system allows the user to update or cancel appointments.
+        *   The system sends notifications to patients about appointment changes.
+
+*   **User Story ID:** US_010
+    *   **Title:** Access Test Results
+    *   **Description:** As a Doctor, I want to access test results of patients from the diagnostic center, so that I can review and make informed decisions about treatment.
+    *   **Acceptance Criteria:**
+        *   The system displays a list of patients with available test results.
+        *   The user can view detailed test results for each patient.
+        *   The system allows the user to download or print test results.
+        *   The system notifies the user of new test results.
+
+*   **User Story ID:** US_011
+    *   **Title:** Search Patients
+    *   **Description:** As a Diagnostic Center, I want to search for patients associated with a particular doctor, so that I can manage and track patient records effectively.
+    *   **Acceptance Criteria:**
+        *   The system provides a search functionality for patients.
+        *   The user can input search criteria (e.g., doctor's name, patient's name).
+        *   The system displays relevant patient information.
+        *   The system allows filtering and sorting of search results.
+
+*   **User Story ID:** US_012
+    *   **Title:** Register Diagnostic Center
+    *   **Description:** As a Diagnostic Center, I want to register the center with a reference number, so that I can create an account on the application.
+    *   **Acceptance Criteria:**
+        *   The system displays the registration page with required fields.
+        *   The user can input data into the registration form.
+        *   The system validates the input data and reference number.
+        *   The system confirms successful registration.
+
+*   **User Story ID:** US_013
+    *   **Title:** Login as Diagnostic Center
+    *   **Description:** As a Diagnostic Center, I want to log in with my credentials, so that I can access my account and manage patient records.
+    *   **Acceptance Criteria:**
+        *   The system displays the login page with username and password fields.
+        *   The user can input their credentials.
+        *   The system validates the credentials and grants access.
+        *   The system redirects to the dashboard upon successful login.
+
+*   **User Story ID:** US_014
+    *   **Title:** Edit Patient Records
+    *   **Description:** As a Diagnostic Center, I want to edit patient records in respect to test results, so that I can update and maintain accurate patient information.
+    *   **Acceptance Criteria:**
+        *   The system displays patient records with editable fields.
+        *   The user can input updated information.
+        *   The system validates the input data before saving.
+        *   The system confirms successful updates to patient records.
+
+*   **User Story ID:** US_015
+    *   **Title:** Add Contact Details
+    *   **Description:** As a Diagnostic Center, I want to add contact details of the center, so that patients can easily reach us for inquiries and appointments.
+    *   **Acceptance Criteria:**
+        *   The system displays a form for adding contact details.
+        *   The user can input contact information (e.g., address, phone number, email).
+        *   The system validates the input data before saving.
+        *   The system confirms successful addition of contact details.
+
+*   **User Story ID:** US_016
+    *   **Title:** Update Contact Details
+    *   **Description:** As a Diagnostic Center, I want to update contact details of the center, so that patients have the most current information for reaching us.
+    *   **Acceptance Criteria:**
+        *   The system displays current contact details with editable fields.
+        *   The user can input updated information.
+        *   The system validates the input data before saving.
+        *   The system confirms successful updates to contact details.
+
+*   **User Story ID:** US_017
+    *   **Title:** View Appointments
+    *   **Description:** As a Diagnostic Center, I want to view appointments scheduled with the center, so that I can manage and prepare for patient visits.
+    *   **Acceptance Criteria:**
+        *   The system displays a list of scheduled appointments.
+        *   The user can view details of each appointment (e.g., patient name, date, time).
+        *   The system allows the user to update or cancel appointments.
+        *   The system sends notifications to patients about appointment changes.
+
+*   **User Story ID:** US_018
+    *   **Title:** Upload Reports
+    *   **Description:** As a Diagnostic Center, I want to upload test reports for patients, so that doctors and patients can access the results conveniently.
+    *   **Acceptance Criteria:**
+        *   The system provides a functionality to upload reports.
+        *   The user can select and upload report files.
+        *   The system validates the uploaded files.
+        *   The system confirms successful upload and associates reports with the correct patient.
+
+*   **User Story ID:** US_019
+    *   **Title:** Logout Functionality
+    *   **Description:** As a User (Patient, Doctor, Diagnostic Center), I want to log out from the application, so that I can securely end my session.
+    *   **Acceptance Criteria:**
+        *   The system displays a logout option in the user interface.
+        *   The user can select the logout option.
+        *   The system invalidates the user's session.
+        *   The system redirects to the login page upon successful logout.
+
+*   **User Story ID:** US_020
+    *   **Title:** Access Security
+    *   **Description:** As a System Administrator, I want to manage access permissions for the application data, so that I can control who can access and modify sensitive information.
+    *   **Acceptance Criteria:**
+        *   The system provides a functionality to manage access permissions.
+        *   The administrator can assign and modify access levels (e.g., CRUD levels) for different user roles.
+        *   The system validates the input data before saving.
+        *   The system confirms successful updates to access permissions.

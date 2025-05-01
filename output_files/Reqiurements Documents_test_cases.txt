@@ -1,0 +1,185 @@
+**Test Cases:**
+
+**TC_001**
+*   **Title:** Valid Patient Registration
+*   **Description:** Verify that a patient can successfully register with valid inputs.
+*   **Steps:**
+    1. Navigate to the registration page.
+    2. Fill in all required fields with valid data.
+    3. Submit the registration form.
+*   **Expected Result:** The patient should be registered successfully, and a confirmation message should be displayed.
+
+**TC_002**
+*   **Title:** Invalid Patient Registration - Missing Fields
+*   **Description:** Verify that the system handles missing required fields during patient registration.
+*   **Steps:**
+    1. Navigate to the registration page.
+    2. Leave one or more required fields empty.
+    3. Submit the registration form.
+*   **Expected Result:** The system should display error messages for the missing fields and not allow registration.
+
+**TC_003**
+*   **Title:** Successful Patient Login
+*   **Description:** Verify that a patient can log in with valid credentials.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Enter valid username and password.
+    3. Click the login button.
+*   **Expected Result:** The patient should be logged in successfully, and the dashboard should be displayed.
+
+**TC_004**
+*   **Title:** Invalid Patient Login - Wrong Password
+*   **Description:** Verify that the system handles incorrect passwords during patient login.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Enter a valid username and an incorrect password.
+    3. Click the login button.
+*   **Expected Result:** The system should display an error message indicating incorrect credentials.
+
+**TC_005**
+*   **Title:** Search Doctor by Name
+*   **Description:** Verify that a patient can search for a doctor by name.
+*   **Steps:**
+    1. Log in as a patient.
+    2. Navigate to the doctor search page.
+    3. Enter a valid doctor's name.
+    4. Submit the search query.
+*   **Expected Result:** The system should display a list of doctors matching the name.
+
+**TC_006**
+*   **Title:** Search Doctor by Specialization
+*   **Description:** Verify that a patient can search for a doctor by specialization.
+*   **Steps:**
+    1. Log in as a patient.
+    2. Navigate to the doctor search page.
+    3. Select a specialization from the filter options.
+    4. Submit the search query.
+*   **Expected Result:** The system should display a list of doctors matching the selected specialization.
+
+**TC_007**
+*   **Title:** Book Appointment with Valid Details
+*   **Description:** Verify that a patient can book an appointment with valid details.
+*   **Steps:**
+    1. Log in as a patient.
+    2. Search for a doctor and select an available time slot.
+    3. Fill in all required appointment details.
+    4. Submit the appointment booking.
+*   **Expected Result:** The system should confirm the appointment and display a waiting time estimate.
+
+**TC_008**
+*   **Title:** Book Appointment with Invalid Time Slot
+*   **Description:** Verify that the system handles invalid time slots during appointment booking.
+*   **Steps:**
+    1. Log in as a patient.
+    2. Search for a doctor and select an already booked time slot.
+    3. Fill in all required appointment details.
+    4. Submit the appointment booking.
+*   **Expected Result:** The system should display an error message indicating the time slot is not available.
+
+**TC_009**
+*   **Title:** View Doctor Qualifications
+*   **Description:** Verify that a patient can view a doctor's qualifications.
+*   **Steps:**
+    1. Log in as a patient.
+    2. Search for a doctor and select a doctor from the list.
+    3. Navigate to the qualifications section.
+*   **Expected Result:** The system should display the doctor's qualifications.
+
+**TC_010**
+*   **Title:** Doctor Registration with Valid Details
+*   **Description:** Verify that a doctor can register with valid details.
+*   **Steps:**
+    1. Navigate to the doctor registration page.
+    2. Fill in all required fields with valid data, including government registration number.
+    3. Submit the registration form.
+*   **Expected Result:** The doctor should be registered successfully, and a confirmation message should be displayed.
+
+**TC_011**
+*   **Title:** Doctor Registration with Invalid Government Number
+*   **Description:** Verify that the system handles invalid government registration numbers during doctor registration.
+*   **Steps:**
+    1. Navigate to the doctor registration page.
+    2. Fill in all required fields with valid data, except for an invalid government registration number.
+    3. Submit the registration form.
+*   **Expected Result:** The system should display an error message indicating the government registration number is invalid.
+
+**TC_012**
+*   **Title:** Doctor Login with Valid Credentials
+*   **Description:** Verify that a doctor can log in with valid credentials.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Enter valid username and password.
+    3. Click the login button.
+*   **Expected Result:** The doctor should be logged in successfully, and the dashboard should be displayed.
+
+**TC_013**
+*   **Title:** View and Manage Appointments
+*   **Description:** Verify that a doctor can view and manage appointments.
+*   **Steps:**
+    1. Log in as a doctor.
+    2. Navigate to the appointments section.
+    3. View the list of appointments.
+    4. Update or cancel an appointment.
+*   **Expected Result:** The system should allow the doctor to view, update, and cancel appointments successfully.
+
+**TC_014**
+*   **Title:** Access Patient Test Results
+*   **Description:** Verify that a doctor can access patient test results from the diagnostic center.
+*   **Steps:**
+    1. Log in as a doctor.
+    2. Navigate to the patient records section.
+    3. Select a patient and view their test results.
+*   **Expected Result:** The system should display the patient's test results.
+
+**TC_015**
+*   **Title:** Diagnostic Center Registration
+*   **Description:** Verify that a diagnostic center can register with valid details.
+*   **Steps:**
+    1. Navigate to the diagnostic center registration page.
+    2. Fill in all required fields with valid data, including reference number.
+    3. Submit the registration form.
+*   **Expected Result:** The diagnostic center should be registered successfully, and a confirmation message should be displayed.
+
+**TC_016**
+*   **Title:** Diagnostic Center Login with Valid Credentials
+*   **Description:** Verify that a diagnostic center can log in with valid credentials.
+*   **Steps:**
+    1. Navigate to the login page.
+    2. Enter valid username and password.
+    3. Click the login button.
+*   **Expected Result:** The diagnostic center should be logged in successfully, and the dashboard should be displayed.
+
+**TC_017**
+*   **Title:** Update Patient Records
+*   **Description:** Verify that a diagnostic center can update patient records.
+*   **Steps:**
+    1. Log in as a diagnostic center.
+    2. Navigate to the patient records section.
+    3. Select a patient and update their test results.
+*   **Expected Result:** The system should allow the diagnostic center to update the patient's records successfully.
+
+**TC_018**
+*   **Title:** Upload Reports
+*   **Description:** Verify that a diagnostic center can upload reports.
+*   **Steps:**
+    1. Log in as a diagnostic center.
+    2. Navigate to the reports section.
+    3. Upload a report for a patient.
+*   **Expected Result:** The system should allow the diagnostic center to upload the report successfully.
+
+**TC_019**
+*   **Title:** Logout from Application
+*   **Description:** Verify that a user can log out from the application.
+*   **Steps:**
+    1. Log in as any user role (patient, doctor, diagnostic center).
+    2. Navigate to the logout option.
+    3. Click the logout button.
+*   **Expected Result:** The user should be logged out successfully, and the login page should be displayed.
+
+**TC_020**
+*   **Title:** Inactivity Timeout
+*   **Description:** Verify that the system logs out a user due to inactivity.
+*   **Steps:**
+    1. Log in as any user role (patient, doctor, diagnostic center).
+    2. Remain inactive for the specified timeout period.
+*   **Expected Result:** The system should automatically log out the user due to inactivity and display the login page.
