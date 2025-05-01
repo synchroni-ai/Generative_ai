@@ -1,589 +1,40 @@
-# # # apis
-
-# # from fastapi import FastAPI, UploadFile, File, HTTPException, Query
-# # from fastapi.responses import JSONResponse
-# # import os
-# # from utils import data_ingestion, test_case_utils
-# # from utils.llms import together_ai
-# # from dotenv import load_dotenv
-# # from typing import Optional
-# # import re
-# # import time
-# # import tempfile
-# # import uuid
-# # from pathlib import Path
-# # from pymongo import MongoClient
-# # from bson import ObjectId
-# # from bson.errors import InvalidId
-
-# # app = FastAPI()
-
-# # load_dotenv()
-
-# # mongo_client = MongoClient("mongodb://localhost:27017/")
-# # db = mongo_client["Gen_AI"]
-# # collection = db["test_case_generation"]
-
-# # # Configuration (Ensure these environment variables are set)
-# # PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
-# # DEFAULT_CHUNK_SIZE = 7000
-# # TEST_CASES_CACHE = {}  # In-memory cache for test cases
-
-# # # Input and Output Directories
-# # INPUT_DIR = os.getenv(
-# #     "INPUT_DIR", "input_pdfs"
-# # )  # Default to 'input_pdfs' if not in .env
-# # OUTPUT_DIR = os.getenv(
-# #     "OUTPUT_DIR", "output_test_cases"
-# # )  # Default to 'output_test_cases' if not in .env
-
-# # # Create directories if they don't exist
-# # Path(INPUT_DIR).mkdir(parents=True, exist_ok=True)
-# # Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-
-
-# # def split_text_into_chunks(text, chunk_size=7000):
-# #     """Splits a long text into chunks based on sentences and paragraphs where possible"""
-# #     chunks = []
-# #     current_chunk = ""
-# #     sentences = re.split(
-# #         r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s", text
-# #     )  # Split into sentences
-# #     for sentence in sentences:
-# #         if len(current_chunk) + len(sentence) + 1 <= chunk_size:  # +1 for space
-# #             current_chunk += sentence + " "
-# #         else:
-# #             chunks.append(current_chunk.strip())  # Add the previous chunk
-# #             current_chunk = sentence + " "  # Start a new chunk
-# #     if current_chunk:  # Add the last chunk
-# #         chunks.append(current_chunk.strip())
-# #     return chunks
-
-
-# # @app.post("/process_and_generate/")
-# # async def process_and_generate(
-# #     file: UploadFile = File(...),
-# #     prompt_file_path: Optional[str] = Query(
-# #         default=None,
-# #         title="Prompt File Path",
-# #         description="The path to the prompt file (optional).",
-# #     ),
-# #     chunk_size: Optional[int] = Query(
-# #         default=None, title="Chunk Size", description="The size of chunks (optional)."
-# #     ),
-# #     cache_key: Optional[str] = Query(
-# #         default=None,
-# #         title="Cache Key",
-# #         description="Key to retrieve cached test cases.",
-# #     ),
-# # ):
-# #     """
-# #     Endpoint to receive a PDF, extract text, clean it, chunk it, and generate test cases.
-# #     Saves the uploaded PDF and generated test cases to specified directories.
-# #     Optionally retrieves test cases from cache if a cache key is provided.
-
-# #     Args:
-# #         file: Uploaded PDF file.
-# #         prompt_file_path: The path to the prompt file (optional).
-# #         chunk_size: The size of chunks (optional).
-# #         cache_key: Key to retrieve cached test cases (optional).
-
-# #     Returns:
-# #         JSON response containing the generated test cases and a cache key, or an error message.
-# #     """
-# #     try:
-# #         # Check cache first
-# #         if cache_key and cache_key in TEST_CASES_CACHE:
-# #             print(f"Retrieving test cases from cache with key: {cache_key}")
-# #             return JSONResponse(
-# #                 content={
-# #                     "test_cases": TEST_CASES_CACHE[cache_key],
-# #                     "cache_key": cache_key,
-# #                 }
-# #             )
-
-# #         # 1. Save the uploaded PDF
-# #         file_name = file.filename
-# #         file_path = Path(INPUT_DIR) / file_name
-# #         try:
-# #             contents = await file.read()
-# #             with open(file_path, "wb") as f:
-# #                 f.write(contents)
-# #         except Exception as e:
-# #             raise HTTPException(status_code=500, detail=f"Error saving PDF: {str(e)}")
-# #         finally:
-# #             await file.close()
-
-# #         # 2. Process the PDF file
-# #         brd_text, _ = data_ingestion.load_pdf_text(str(file_path))  # Pass string path
-# #         if not brd_text:
-# #             raise HTTPException(status_code=500, detail="Failed to load PDF text.")
-# #         cleaned_brd_text = data_ingestion.clean_text(brd_text)
-
-# #         # Load prompt and chunk size or use defaults
-# #         prompt = prompt_file_path if prompt_file_path else PROMPT_FILE_PATH
-# #         # chunk = chunk_size if chunk_size else DEFAULT_CHUNK_SIZE
-
-# #         # # 3. Chunk the cleaned BRD text
-# #         # chunks = split_text_into_chunks(cleaned_brd_text, chunk)
-
-# #         # 4. Iterate through the chunks and generate test cases
-# #         start_time = time.time()
-# #         test_cases_text = test_case_utils.generate_test_cases(
-# #                 cleaned_brd_text,
-# #                 together_ai.generate_with_together,
-# #                 prompt,
-# #             )
-# #         all_test_cases = []
-# #         # for i, chunk in enumerate(chunks):
-# #         #     print(f"Processing Chunk {i+1}/{len(chunks)}")
-# #         #     test_cases_text = test_case_utils.generate_test_cases(
-# #         #         chunk,
-# #         #         together_ai.generate_with_together,
-# #         #         prompt,
-# #         #     )
-
-# #         if test_cases_text:
-# #             all_test_cases.append(test_cases_text)
-# #         else:
-# #             print(f"Failed to generate test cases for document.")
-
-# #         end_time = time.time()
-# #         generation_latency = int(end_time - start_time)
-
-# #         # 5. Combine all test cases
-# #         combined_test_cases = "\n".join(all_test_cases)
-
-# #         # 6. Save the generated test cases to a text file
-# #         output_file_name = (
-# #             f"{Path(file_name).stem}_test_cases.txt"  # Use stem for name w/o extension
-# #         )
-# #         output_file_path = Path(OUTPUT_DIR) / output_file_name
-
-# #         try:
-# #             with open(output_file_path, "w") as f:
-# #                 f.write(combined_test_cases)
-# #         except Exception as e:
-# #             raise HTTPException(
-# #                 status_code=500, detail=f"Error saving test cases: {str(e)}"
-# #             )
-
-# #         # 7. Store the generated test cases in the cache
-# #         if not cache_key:
-# #             cache_key = str(uuid.uuid4())
-
-# #         TEST_CASES_CACHE[cache_key] = combined_test_cases
-# #         print(f"Storing test cases in cache with key: {cache_key}")
-
-# #         document = {
-# #             "doc_name": file.filename,
-# #             "doc_path": str(file_path),  # You can also omit this or change it to a temporary descriptor
-# #             "llm_response_testcases": combined_test_cases,
-# #             "llm_response_latency": generation_latency  # Set a value if you track latency
-# #         }
-
-# #         result = collection.insert_one(document)
-
-# #         return JSONResponse(
-# #             content={"test_cases": combined_test_cases, "cache_key": cache_key}
-# #         )
-
-# #     except Exception as e:
-# #         raise HTTPException(status_code=500, detail=str(e))
-    
-# # def serialize_document(doc):
-# #     doc["_id"] = str(doc["_id"])
-# #     return doc
-
-# # @app.get("/documents/")
-# # def get_all_documents():
-# #     documents = list(collection.find())
-# #     return [serialize_document(doc) for doc in documents]
-
-# # @app.get("/documents/{document_id}")
-# # def get_document_by_id(document_id: str):
-# #     try:
-# #         doc = collection.find_one({"_id": ObjectId(document_id)})
-# #         if doc is None:
-# #             raise HTTPException(status_code=404, detail="Document not found")
-# #         return serialize_document(doc)
-# #     except InvalidId:
-# #         raise HTTPException(status_code=400, detail="Invalid document ID format")
-
-
-# from fastapi import FastAPI, UploadFile, File, HTTPException, Query
-# from fastapi.responses import JSONResponse
-# import os
-# from utils import data_ingestion, test_case_utils
-# from utils.llms import together_ai
-# from dotenv import load_dotenv
-# from typing import Optional
-# import re
-# import time
-# import tempfile
-# import uuid
-# from pathlib import Path
-# from pymongo import MongoClient
-# from bson import ObjectId
-# from bson.errors import InvalidId
-
-# app = FastAPI()
-
-# load_dotenv()
-
-# mongo_client = MongoClient("mongodb://localhost:27017/")
-# db = mongo_client["Gen_AI"]
-# collection = db["test_case_generation"]
-
-# # Configuration (Ensure these environment variables are set)
-# PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
-# DEFAULT_CHUNK_SIZE = 7000
-# TEST_CASES_CACHE = {}  # In-memory cache for test cases
-
-# # Input and Output Directories
-# INPUT_DIR = os.getenv(
-#     "INPUT_DIR", "input_pdfs"
-# )  # Default to 'input_pdfs' if not in .env
-# OUTPUT_DIR = os.getenv(
-#     "OUTPUT_DIR", "output_test_cases"
-# )  # Default to 'output_test_cases' if not in .env
-
-# # Create directories if they don't exist
-# Path(INPUT_DIR).mkdir(parents=True, exist_ok=True)
-# Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-
-
-# def split_text_into_chunks(text, chunk_size=7000):
-#     """Splits a long text into chunks based on sentences and paragraphs where possible"""
-#     chunks = []
-#     current_chunk = ""
-#     sentences = re.split(
-#         r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s", text
-#     )  # Split into sentences
-#     for sentence in sentences:
-#         if len(current_chunk) + len(sentence) + 1 <= chunk_size:  # +1 for space
-#             current_chunk += sentence + " "
-#         else:
-#             chunks.append(current_chunk.strip())  # Add the previous chunk
-#             current_chunk = sentence + " "  # Start a new chunk
-#     if current_chunk:  # Add the last chunk
-#         chunks.append(current_chunk.strip())
-#     return chunks
-
-
-# @app.post("/process_and_generate/")
-# async def process_and_generate(
-#     file: UploadFile = File(...),
-#     prompt_file_path: Optional[str] = Query(
-#         default=None,
-#         title="Prompt File Path",
-#         description="The path to the prompt file (optional).",
-#     ),
-#     chunk_size: Optional[int] = Query(
-#         default=None, title="Chunk Size", description="The size of chunks (optional)."
-#     ),
-#     cache_key: Optional[str] = Query(
-#         default=None,
-#         title="Cache Key",
-#         description="Key to retrieve cached test cases.",
-#     ),
-# ):
-#     """
-#     Endpoint to receive a PDF, extract text, clean it, chunk it, and generate test cases.
-#     Saves the uploaded PDF and generated test cases to specified directories.
-#     Optionally retrieves test cases from cache if a cache key is provided.
-
-#     Args:
-#         file: Uploaded PDF file.
-#         prompt_file_path: The path to the prompt file (optional).
-#         chunk_size: The size of chunks (optional).
-#         cache_key: Key to retrieve cached test cases (optional).
-
-#     Returns:
-#         JSON response containing the generated test cases and a cache key, or an error message.
-#     """
-#     try:
-#         # Check cache first
-#         if cache_key and cache_key in TEST_CASES_CACHE:
-#             print(f"Retrieving test cases from cache with key: {cache_key}")
-#             return JSONResponse(
-#                 content={
-#                     "test_cases": TEST_CASES_CACHE[cache_key],
-#                     "cache_key": cache_key,
-#                 }
-#             )
-
-#         # 1. Save the uploaded PDF
-#         file_name = file.filename
-#         file_path = Path(INPUT_DIR) / file_name
-#         try:
-#             contents = await file.read()
-#             with open(file_path, "wb") as f:
-#                 f.write(contents)
-#         except Exception as e:
-#             raise HTTPException(status_code=500, detail=f"Error saving PDF: {str(e)}")
-#         finally:
-#             await file.close()
-
-#         # 2. Process the PDF file
-#         brd_text, _ = data_ingestion.load_pdf_text(str(file_path))  # Pass string path
-#         if not brd_text:
-#             raise HTTPException(status_code=500, detail="Failed to load PDF text.")
-#         cleaned_brd_text = data_ingestion.clean_text(brd_text)
-
-#         # Load prompt and chunk size or use defaults
-#         prompt = prompt_file_path if prompt_file_path else PROMPT_FILE_PATH
-#         chunk = chunk_size if chunk_size else DEFAULT_CHUNK_SIZE
-#         # chunk = chunk_size if chunk_size else DEFAULT_CHUNK_SIZE
-
-#         # 3. Chunk the cleaned BRD text
-#         chunks = split_text_into_chunks(cleaned_brd_text, chunk)
-#         # # 3. Chunk the cleaned BRD text
-#         # chunks = split_text_into_chunks(cleaned_brd_text, chunk)
-
-#         # 4. Iterate through the chunks and generate test cases
-#         all_test_cases = []
-#         for i, chunk in enumerate(chunks):
-#             print(f"Processing Chunk {i+1}/{len(chunks)}")
-#             test_cases_text = test_case_utils.generate_test_cases(
-#                 chunk,
-#                 start_time = time.time()
-#                 test_cases_text = test_case_utils.generate_test_cases(
-#                         cleaned_brd_text,
-#                         together_ai.generate_with_together,
-#                         prompt,
-#             )
-#             )
-#         all_test_cases = []
-#         # for i, chunk in enumerate(chunks):
-#         #     print(f"Processing Chunk {i+1}/{len(chunks)}")
-#         #     test_cases_text = test_case_utils.generate_test_cases(
-#         #         chunk,
-#         #         together_ai.generate_with_together,
-#         #         prompt,
-#         #     )
-
-#         if test_cases_text:
-#             all_test_cases.append(test_cases_text)
-#         else:
-#             print(f"Failed to generate test cases for document.")
-
-#             if test_cases_text:
-#                 all_test_cases.append(test_cases_text)
-#             else:
-#                 print(f"Failed to generate test cases for chunk {i+1}.")
-#         end_time = time.time()
-#         generation_latency = int(end_time - start_time)
-
-#         # 5. Combine all test cases
-#         combined_test_cases = "\n".join(all_test_cases)
-
-#         # 6. Save the generated test cases to a text file
-#         output_file_name = (
-#             f"{Path(file_name).stem}_test_cases.txt"  # Use stem for name w/o extension
-#         )
-#         output_file_path = Path(OUTPUT_DIR) / output_file_name
-
-#         try:
-#             with open(output_file_path, "w") as f:
-#                 f.write(combined_test_cases)
-#         except Exception as e:
-#             raise HTTPException(
-#                 status_code=500, detail=f"Error saving test cases: {str(e)}"
-#             )
-
-#         # 7. Store the generated test cases in the cache
-#         if not cache_key:
-#             cache_key = str(uuid.uuid4())
-
-#         TEST_CASES_CACHE[cache_key] = combined_test_cases
-#         print(f"Storing test cases in cache with key: {cache_key}")
-
-#         document = {
-#             "doc_name": file.filename,
-#             "doc_path": str(file_path),  # You can also omit this or change it to a temporary descriptor
-#             "llm_response_testcases": combined_test_cases,
-#             "llm_response_latency": generation_latency  # Set a value if you track latency
-#         }
-
-#         result = collection.insert_one(document)
-
-#         return JSONResponse(
-#             content={"test_cases": combined_test_cases, "cache_key": cache_key}
-#         )
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-    
-# def serialize_document(doc):
-#     doc["_id"] = str(doc["_id"])
-#     return doc
-
-# @app.get("/documents/")
-# def get_all_documents():
-#     documents = list(collection.find())
-#     return [serialize_document(doc) for doc in documents]
-
-# @app.get("/documents/{document_id}")
-# def get_document_by_id(document_id: str):
-#     try:
-#         doc = collection.find_one({"_id": ObjectId(document_id)})
-#         if doc is None:
-#             raise HTTPException(status_code=404, detail="Document not found")
-#         return serialize_document(doc)
-#     except InvalidId:
-#         raise HTTPException(status_code=400, detail="Invalid document ID format")
-
-
-
-from fastapi import FastAPI, UploadFile, File, HTTPException, Query
-from fastapi.responses import JSONResponse
-import os
-from utils import data_ingestion, test_case_utils
-from utils.llms import together_ai
+from fastapi import BackgroundTasks, HTTPException
+from tasks import process_and_generate_task
+from celery.result import AsyncResult
+from fastapi import (
+    FastAPI,
+    UploadFile,
+    File,
+    HTTPException,
+    Form,
+    Query,
+    status,
+    WebSocket,
+)
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
+from typing import Optional, List
 from dotenv import load_dotenv
-from typing import Optional
-import re
-import time
-import uuid
-from pathlib import Path
 from pymongo import MongoClient
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi.middleware.cors import CORSMiddleware
+from pathlib import Path
+import os
+import re
+import time
+import uuid
+import pandas as pd
+from openpyxl import load_workbook
 
-app = FastAPI()
+# Import your custom modules
+from utils import data_ingestion, test_case_utils, user_story_utils
+from utils.llms import Mistral, openai, llama
+from core.websocket import websocket_endpoint
 
-app.add_middleware(
 
-    CORSMiddleware,
-    allow_origins=["*"],  # Or restrict to your frontend domain(s)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
- 
-
-load_dotenv()
-
-mongo_client = MongoClient("mongodb://localhost:27017/")
+mongo_client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017/"))
 db = mongo_client["Gen_AI"]
 collection = db["test_case_generation"]
-
-PROMPT_FILE_PATH = os.getenv("PROMPT_FILE_PATH")
-DEFAULT_CHUNK_SIZE = 7000
-TEST_CASES_CACHE = {}
-
-INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
-OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_test_cases")
-
-Path(INPUT_DIR).mkdir(parents=True, exist_ok=True)
-Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-
-
-def split_text_into_chunks(text, chunk_size=7000):
-    chunks = []
-    current_chunk = ""
-    sentences = re.split(
-        r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s", text
-    )
-    for sentence in sentences:
-        if len(current_chunk) + len(sentence) + 1 <= chunk_size:
-            current_chunk += sentence + " "
-        else:
-            chunks.append(current_chunk.strip())
-            current_chunk = sentence + " "
-    if current_chunk:
-        chunks.append(current_chunk.strip())
-    return chunks
-
-
-@app.post("/process_and_generate/")
-async def process_and_generate(
-    file: UploadFile = File(...),
-    prompt_file_path: Optional[str] = Query(default=None),
-    chunk_size: Optional[int] = Query(default=None),
-    cache_key: Optional[str] = Query(default=None),
-):
-    try:
-        if cache_key and cache_key in TEST_CASES_CACHE:
-            print(f"Retrieving test cases from cache with key: {cache_key}")
-            return JSONResponse(content={
-                "test_cases": TEST_CASES_CACHE[cache_key],
-                "cache_key": cache_key,
-            })
-
-        file_name = file.filename
-        file_path = Path(INPUT_DIR) / file_name
-
-        try:
-            contents = await file.read()
-            with open(file_path, "wb") as f:
-                f.write(contents)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error saving PDF: {str(e)}")
-        finally:
-            await file.close()
-
-        brd_text, _ = data_ingestion.load_pdf_text(str(file_path))
-        if not brd_text:
-            raise HTTPException(status_code=500, detail="Failed to load PDF text.")
-        cleaned_brd_text = data_ingestion.clean_text(brd_text)
-
-        prompt = prompt_file_path if prompt_file_path else PROMPT_FILE_PATH
-        chunk = chunk_size if chunk_size else DEFAULT_CHUNK_SIZE
-
-        chunks = split_text_into_chunks(cleaned_brd_text, chunk)
-
-        all_test_cases = []
-        start_time = time.time()
-
-        for i, chunk_text in enumerate(chunks):
-            print(f"Processing Chunk {i + 1}/{len(chunks)}")
-            test_cases_text = test_case_utils.generate_test_cases(
-                chunk_text,
-                together_ai.generate_with_together,
-                prompt,
-            )
-            if test_cases_text:
-                all_test_cases.append(test_cases_text)
-            else:
-                print(f"Failed to generate test cases for chunk {i + 1}.")
-
-        end_time = time.time()
-        generation_latency = int(end_time - start_time)
-
-        combined_test_cases = "\n".join(all_test_cases)
-
-        output_file_name = f"{Path(file_name).stem}_test_cases.txt"
-        output_file_path = Path(OUTPUT_DIR) / output_file_name
-
-        try:
-            with open(output_file_path, "w") as f:
-                f.write(combined_test_cases)
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=f"Error saving test cases: {str(e)}")
-
-        if not cache_key:
-            cache_key = str(uuid.uuid4())
-
-        TEST_CASES_CACHE[cache_key] = combined_test_cases
-        print(f"Storing test cases in cache with key: {cache_key}")
-
-        document = {
-            "doc_name": file.filename,
-            "doc_path": str(file_path),
-            "llm_response_testcases": combined_test_cases,
-            "llm_response_latency": generation_latency
-        }
-        collection.insert_one(document)
-
-        return JSONResponse(content={
-            "test_cases": combined_test_cases,
-            "cache_key": cache_key
-        })
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 def serialize_document(doc):
@@ -591,6 +42,67 @@ def serialize_document(doc):
     return doc
 
 
+# ----------------- Directories Setup -----------------
+TEST_CASE_PROMPT_FILE_PATH = os.getenv("MISTRAL_TEST_CASE_PROMPT_FILE_PATH")
+USER_STORY_PROMPT_FILE_PATH = os.getenv("MISTRAL_USER_STORY_PROMPT_FILE_PATH")
+INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
+OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_files")
+EXCEL_OUTPUT_DIR = os.getenv("EXCEL_OUTPUT_DIR", "excel_files")
+
+
+app = FastAPI()
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.post("/process_and_generate/")
+async def process_and_generate(
+    file: UploadFile = File(...),
+    model_name: str = Form("Mistral"),
+    chunk_size: Optional[int] = Query(default=None),
+    cache_key: Optional[str] = Query(default=None),
+):
+    file_name = file.filename
+    file_path = Path(INPUT_DIR) / file_name
+
+    # Save the uploaded file
+    try:
+        contents = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(contents)
+    finally:
+        await file.close()
+
+    # Start the Celery task
+    task = process_and_generate_task.delay(
+        str(file_path), model_name, chunk_size, cache_key
+    )
+
+    return {
+        "message": "File uploaded successfully. Processing started.",
+        "task_id": task.id,
+    }
+
+
+@app.get("/task_status/{task_id}")
+async def get_task_status(task_id: str):
+    task = AsyncResult(task_id)
+    if task.state == "SUCCESS":
+        return {"status": "Completed", "result": task.result}
+    elif task.state == "FAILURE":
+        return {"status": "Failed", "error": str(task.info)}
+    else:
+        return {"status": task.state}
+
+
+# ----------------- MongoDB Fetch Endpoints -----------------
 @app.get("/documents/")
 def get_all_documents():
     documents = list(collection.find())
@@ -601,8 +113,75 @@ def get_all_documents():
 def get_document_by_id(document_id: str):
     try:
         doc = collection.find_one({"_id": ObjectId(document_id)})
-        if doc is None:
+        if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
         return serialize_document(doc)
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+
+# ----------------- Delete Documents Endpoint -----------------
+@app.delete("/delete-documents")
+def delete_documents(document_ids: List[str]):
+    try:
+        for document_id in document_ids:
+            doc = collection.find_one({"_id": ObjectId(document_id)})
+            if not doc:
+                raise HTTPException(
+                    status_code=404, detail=f"Document {document_id} not found"
+                )
+
+            file_path = doc.get("doc_path")
+            if file_path and os.path.exists(file_path):
+                os.remove(file_path)
+
+            collection.delete_one({"_id": ObjectId(document_id)})
+
+        return JSONResponse(
+            content={"success": f"{len(document_ids)} documents deleted successfully."},
+            status_code=status.HTTP_200_OK,
+        )
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ----------------- Download Excel Endpoints -----------------
+@app.get("/download/testcases/{document_id}")
+def download_test_cases_excel(document_id: str):
+    try:
+        doc = collection.find_one({"_id": ObjectId(document_id)})
+        if not doc or "test_case_excel_path" not in doc:
+            raise HTTPException(
+                status_code=404, detail="Excel file not found for test cases"
+            )
+        return FileResponse(
+            doc["test_case_excel_path"],
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename=Path(doc["test_case_excel_path"]).name,
+        )
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+
+@app.get("/download/userstories/{document_id}")
+def download_user_stories_excel(document_id: str):
+    try:
+        doc = collection.find_one({"_id": ObjectId(document_id)})
+        if not doc or "user_story_excel_path" not in doc:
+            raise HTTPException(
+                status_code=404, detail="Excel file not found for user stories"
+            )
+        return FileResponse(
+            doc["user_story_excel_path"],
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            filename=Path(doc["user_story_excel_path"]).name,
+        )
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+
+@app.websocket("/ws/task_status")
+async def websocket_task_status(websocket: WebSocket, task_id: str = Query(...)):
+    await websocket_endpoint(websocket, task_id)

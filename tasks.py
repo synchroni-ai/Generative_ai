@@ -151,6 +151,42 @@ def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key
             combined_user_stories, str(output_user_story_path)
         )
 
+        # Save Excel files using the new functions
+        excel_test_case_path = Path(EXCEL_OUTPUT_DIR) / f"{base_stem}_test_cases.xlsx"
+        excel_user_story_path = (
+            Path(EXCEL_OUTPUT_DIR) / f"{base_stem}_user_stories.xlsx"
+        )
+
+        csv_test_case_path = Path(OUTPUT_DIR) / f"{base_stem}_test_cases.csv"
+        csv_user_story_path = Path(OUTPUT_DIR) / f"{base_stem}_user_stories.csv"
+
+        if model_name == "Mistral":
+            test_case_utils.txt_to_csv_mistral(
+                str(output_test_case_path), str(csv_test_case_path)
+            )
+        else:  # Llama
+            test_case_utils.txt_to_csv_llama(
+                str(output_test_case_path), str(csv_test_case_path)
+            )
+        # Convert to CSV
+        test_case_utils.format_test_cases_excel(
+            str(csv_test_case_path), str(excel_test_case_path), mode="numbered_in_cell"
+        )  # Convert CSV to Excel
+
+        if model_name == "Mistral":
+            user_story_utils.txt_to_csv_mistral(
+                str(output_user_story_path), str(csv_user_story_path)
+            )
+        else:
+            user_story_utils.txt_to_csv_llama(
+                str(output_user_story_path), str(csv_user_story_path)
+            )
+        user_story_utils.format_acceptance_criteria_excel(
+            str(csv_user_story_path),
+            str(excel_user_story_path),
+            mode="numbered_in_cell",
+        )  # Convert CSV to Excel
+
         # Save to MongoDB and Cache
         if not cache_key:
             cache_key = str(uuid.uuid4())
@@ -163,8 +199,8 @@ def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key
         document = {
             "doc_name": os.path.basename(file_path),
             "doc_path": str(file_path),
-            "test_case_excel_path": str(output_test_case_path),
-            "user_story_excel_path": str(output_user_story_path),
+            "test_case_excel_path": str(excel_test_case_path),
+            "user_story_excel_path": str(excel_user_story_path),
             "selected_model": model_name,
             "llm_response_testcases": combined_test_cases,
             "llm_response_user_stories": combined_user_stories,
