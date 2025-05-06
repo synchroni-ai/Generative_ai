@@ -111,9 +111,12 @@ def txt_to_csv_llama(input_file, output_file):
             # Add back TC_ at the start
             case = "TC_" + case
 
-            # Extract ID
+            # Check if the case starts with a valid TC_\d+ pattern
             id_match = re.match(r"(TC_\d+):", case)
-            tc_id = id_match.group(1) if id_match else ""
+            if not id_match:
+                continue  # Skip invalid test cases (e.g., **Test Cases:**)
+
+            tc_id = id_match.group(1)
 
             # Extract Title
             title_match = re.search(r"\*\s*Title:\s*(.+)", case)
@@ -158,11 +161,6 @@ def txt_to_csv_llama(input_file, output_file):
 
     except FileNotFoundError:
         print(f"Error: Input file '{input_file}' not found.")
-    except Exception as e:
-        print(f"Error occurred: {str(e)}")
-
-    except FileNotFoundError as e:
-        print(f"Error: Input file not found: {e}")
     except OSError as e:
         print(f"Error: Could not write to output file: {e}")
     except re.error as e:
