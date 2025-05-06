@@ -40,6 +40,9 @@ def generate_with_openai(
             max_tokens=max_tokens,
             top_p=top_p,
         )
-        return response.choices[0].message.content
+
+        total_tokens = response.usage.total_tokens
+
+        return response.choices[0].message.content, total_tokens
     except Exception as e:
-        return f"API Error: {str(e)}"
+        return f"API Error: {str(e)}", 0

@@ -20,11 +20,11 @@ def generate_test_cases(brd_text, llm_function, prompt_file_path):
         with open(prompt_file_path, "r") as f:
             prompt_template = f.read()
         prompt = prompt_template.format(brd_text=brd_text)
-        test_cases = llm_function(prompt)
-        return test_cases
+        test_cases, total_tokens = llm_function(prompt)
+        return test_cases, total_tokens
     except Exception as e:
         print(f"Error generating test cases: {e}")
-        return None
+        return None, 0
 
 
 def store_test_cases_to_text_file(test_cases_text, output_path="test_cases.txt"):
@@ -90,10 +90,10 @@ def txt_to_csv_mistral(input_file, output_file):
     print(f"CSV file '{output_file}' created successfully.")
 
 
-def csv_to_excel(csv_file, excel_file):
-    df = pd.read_csv(csv_file)
-    df.to_excel(excel_file, index=False)
-    print(f"Excel file '{excel_file}' created successfully.")
+# def csv_to_excel(csv_file, excel_file):
+#     df = pd.read_csv(csv_file)
+#     df.to_excel(excel_file, index=False)
+#     print(f"Excel file '{excel_file}' created successfully.")
 
 
 def txt_to_csv_llama(input_file, output_file):

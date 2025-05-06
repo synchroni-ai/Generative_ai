@@ -45,7 +45,10 @@ def generate_with_mistral(prompt, temperature=0.3, max_tokens=2500, api_key=None
         data=json.dumps(payload),
     )
 
+    usage = response.json().get("usage", {})
+    total_tokens = usage.get("total_tokens", 0)
+
     if response.status_code == 200:
-        return response.json()["choices"][0]["message"]["content"]
+        return response.json()["choices"][0]["message"]["content"], total_tokens
     else:
-        return f"API Error: {response.status_code}\n{response.text}"
+        return f"API Error: {response.status_code}\n{response.text}", 0

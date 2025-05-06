@@ -20,11 +20,11 @@ def generate_user_stories(brd_text, llm_function, prompt_file_path):
         with open(prompt_file_path, "r") as f:
             prompt_template = f.read()
         prompt = prompt_template.format(brd_text=brd_text)
-        user_stories = llm_function(prompt)
-        return user_stories
+        user_stories, total_tokens = llm_function(prompt)
+        return user_stories, total_tokens
     except Exception as e:
         print(f"Error generating user stories: {e}")
-        return None
+        return None, 0
 
 
 def store_user_stories_to_text_file(user_stories_text, output_path="user_stories.txt"):

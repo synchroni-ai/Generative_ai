@@ -13,7 +13,10 @@ import pandas as pd
 mongo_client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017/"))
 db = mongo_client["Gen_AI"]
 collection = db["test_case_generation"]
+cost_collection = db["cost_tracking"]
 
+
+COST_PER_1M_TOKENS = {"Llama": 0.20, "Mistral": 0.80}
 # ----------------- Directories Setup -----------------
 TEST_CASE_PROMPT_FILE_PATH = os.getenv("MISTRAL_TEST_CASE_PROMPT_FILE_PATH")
 USER_STORY_PROMPT_FILE_PATH = os.getenv("MISTRAL_USER_STORY_PROMPT_FILE_PATH")
@@ -77,7 +80,9 @@ async def safe_generate(generate_func, *args, **kwargs):
 
 
 @celery_app.task(bind=True)
-def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key):
+def process_and_generate_task(
+    self, file_path, model_name, chunk_size, cache_key, api_key
+):
     print("🎯 Celery task started:", file_path)  # Add this
 
     try:
@@ -88,6 +93,7 @@ def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key
                 "user_stories": TEST_CASES_CACHE[cache_key]["user_stories"],
                 "cache_key": cache_key,
                 "model_used": model_name,
+                "api_key": f"API Key ending with..{api_key[-5]}",
             }
 
         if model_name not in MODEL_DISPATCHER:
@@ -122,7 +128,7 @@ def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key
 
         # --------- First for Test Cases ---------
         for idx, chunk_text in enumerate(chunks, start=1):
-            test_case_text = test_case_utils.generate_test_cases(
+            test_case_text, test_case_tokens = test_case_utils.generate_test_cases(
                 chunk_text, generation_function, TEST_CASE_PROMPT_FILE_PATH
             )
             if test_case_text:
@@ -130,7 +136,7 @@ def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key
 
         # --------- Then for User Stories ---------
         for idx, chunk_text in enumerate(chunks, start=1):
-            user_story_text = user_story_utils.generate_user_stories(
+            user_story_text, user_story_tokens = user_story_utils.generate_user_stories(
                 chunk_text, generation_function, USER_STORY_PROMPT_FILE_PATH
             )
             if user_story_text:
@@ -187,6 +193,10 @@ def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key
             mode="numbered_in_cell",
         )  # Convert CSV to Excel
 
+        tokens_per_request = test_case_tokens + user_story_tokens
+        cost_per_token = COST_PER_1M_TOKENS.get(model_name)
+        cost = (tokens_per_request / 1000000) * cost_per_token
+
         # Save to MongoDB and Cache
         if not cache_key:
             cache_key = str(uuid.uuid4())
@@ -204,10 +214,20 @@ def process_and_generate_task(self, file_path, model_name, chunk_size, cache_key
             "selected_model": model_name,
             "llm_response_testcases": combined_test_cases,
             "llm_response_user_stories": combined_user_stories,
+            "total_tokens": tokens_per_request,
+            "approximate_cost_incurred": cost,
+            "api_key_used": (
+                f"Token ending with ...{api_key[-5:]}" if api_key else "Default API Key"
+            ),
         }
 
         try:
             collection.insert_one(document)
+            cost_collection.update_one(
+                {"api_key": api_key},
+                {"$inc": {"tokens_used": tokens_per_request, "cost_usd": cost}},
+                upsert=True,
+            )
         except Exception as e:
             print("MongoDB Insertion Error:", str(e))
 

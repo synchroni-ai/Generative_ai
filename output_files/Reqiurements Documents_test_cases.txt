@@ -1,185 +1,344 @@
+Here are the 20 test cases:
+
 **Test Cases:**
 
-**Test Case ID:** TC_001
-    *   **Title:** Valid Patient Registration
-    *   **Description:** Verify that a patient can successfully register with valid inputs.
-    *   **Steps:**
-        1. Navigate to the registration page.
-        2. Enter valid details in all required fields.
-        3. Submit the registration form.
-    *   **Expected Result:** The system should register the patient successfully and redirect to the login page.
+**TC_001: View Registration Page of Patient**
+*   Title: View Registration Page of Patient
+*   Description: Verify that the system allows the user to find the sign up form.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Click on the "Register" button.
+    3. Verify that the registration page is displayed.
+*   Expected Result: The registration page is displayed.
 
-**Test Case ID:** TC_002
-    *   **Title:** Invalid Patient Registration - Missing Fields
-    *   **Description:** Verify that the system handles missing required fields during patient registration.
-    *   **Steps:**
-        1. Navigate to the registration page.
-        2. Leave one or more required fields empty.
-        3. Submit the registration form.
-    *   **Expected Result:** The system should display error messages for the missing fields and not register the patient.
+**TC_002: Invalid Registration Page of Patient**
+*   Title: Invalid Registration Page of Patient
+*   Description: Verify that the system handles invalid registration page inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter invalid registration page inputs.
+    3. Verify that an error message is displayed.
+*   Expected Result: An error message is displayed.
 
-**Test Case ID:** TC_003
-    *   **Title:** Valid Patient Login
-    *   **Description:** Verify that a patient can successfully log in with valid credentials.
-    *   **Steps:**
-        1. Navigate to the login page.
-        2. Enter valid username and password.
-        3. Click on the login button.
-    *   **Expected Result:** The system should log in the patient successfully and redirect to the dashboard.
+**TC_003: Boundary Value Test Case for Registration Page of Patient**
+*   Title: Boundary Value Test Case for Registration Page of Patient
+*   Description: Verify that the system handles registration page inputs at the boundaries.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter registration page inputs at the boundaries (e.g., minimum and maximum values).
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_004
-    *   **Title:** Invalid Patient Login - Wrong Password
-    *   **Description:** Verify that the system handles incorrect password during patient login.
-    *   **Steps:**
-        1. Navigate to the login page.
-        2. Enter valid username and incorrect password.
-        3. Click on the login button.
-    *   **Expected Result:** The system should display an error message indicating incorrect credentials.
+**TC_004: Edge Case Test Case for Registration Page of Patient**
+*   Title: Edge Case Test Case for Registration Page of Patient
+*   Description: Verify that the system handles unusual or unexpected registration page inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter unusual or unexpected registration page inputs.
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_005
-    *   **Title:** Search Doctor by Name
-    *   **Description:** Verify that a patient can search for a doctor by name.
-    *   **Steps:**
-        1. Log in as a patient.
-        2. Navigate to the doctor search page.
-        3. Enter a valid doctor's name.
-        4. Submit the search query.
-    *   **Expected Result:** The system should display a list of doctors matching the name.
+**TC_005: Login to the App**
+*   Title: Login to the App
+*   Description: Verify that the system allows the user to login with valid credentials.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter valid login credentials.
+    3. Verify that the user is logged in successfully.
+*   Expected Result: The user is logged in successfully.
 
-**Test Case ID:** TC_006
-    *   **Title:** Search Doctor by Specialization
-    *   **Description:** Verify that a patient can search for a doctor by specialization.
-    *   **Steps:**
-        1. Log in as a patient.
-        2. Navigate to the doctor search page.
-        3. Select a specialization from the filter options.
-        4. Submit the search query.
-    *   **Expected Result:** The system should display a list of doctors matching the specialization.
+**TC_006: Invalid Login Credentials**
+*   Title: Invalid Login Credentials
+*   Description: Verify that the system handles invalid login credentials.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter invalid login credentials.
+    3. Verify that an error message is displayed.
+*   Expected Result: An error message is displayed.
 
-**Test Case ID:** TC_007
-    *   **Title:** Book Appointment with Valid Details
-    *   **Description:** Verify that a patient can book an appointment with valid details.
-    *   **Steps:**
-        1. Log in as a patient.
-        2. Search for a doctor and select a time slot.
-        3. Enter valid details in the appointment form.
-        4. Submit the appointment form.
-    *   **Expected Result:** The system should confirm the appointment and display the waiting time.
+**TC_007: Boundary Value Test Case for Login**
+*   Title: Boundary Value Test Case for Login
+*   Description: Verify that the system handles login inputs at the boundaries.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter login inputs at the boundaries (e.g., minimum and maximum values).
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_008
-    *   **Title:** Book Appointment with Invalid Details
-    *   **Description:** Verify that the system handles invalid details during appointment booking.
-    *   **Steps:**
-        1. Log in as a patient.
-        2. Search for a doctor and select a time slot.
-        3. Enter invalid details in the appointment form (e.g., invalid phone number).
-        4. Submit the appointment form.
-    *   **Expected Result:** The system should display error messages for the invalid fields and not book the appointment.
+**TC_008: Edge Case Test Case for Login**
+*   Title: Edge Case Test Case for Login
+*   Description: Verify that the system handles unusual or unexpected login inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter unusual or unexpected login inputs.
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_009
-    *   **Title:** View Doctor Qualifications
-    *   **Description:** Verify that a patient can view a doctor's qualifications.
-    *   **Steps:**
-        1. Log in as a patient.
-        2. Search for a doctor and view their profile.
-        3. Navigate to the qualifications section.
-    *   **Expected Result:** The system should display the doctor's qualifications.
+**TC_009: View Doctor Information**
+*   Title: View Doctor Information
+*   Description: Verify that the system allows the user to search doctor's information.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Search for a doctor's information.
+    3. Verify that the doctor's information is displayed.
+*   Expected Result: The doctor's information is displayed.
 
-**Test Case ID:** TC_010
-    *   **Title:** Doctor Registration with Valid Details
-    *   **Description:** Verify that a doctor can register with valid details.
-    *   **Steps:**
-        1. Navigate to the doctor registration page.
-        2. Enter valid details, including a valid government registration number.
-        3. Submit the registration form.
-    *   **Expected Result:** The system should register the doctor successfully and redirect to the login page.
+**TC_010: Invalid Doctor Information**
+*   Title: Invalid Doctor Information
+*   Description: Verify that the system handles invalid doctor information inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter invalid doctor information inputs.
+    3. Verify that an error message is displayed.
+*   Expected Result: An error message is displayed.
 
-**Test Case ID:** TC_011
-    *   **Title:** Doctor Registration with Invalid Government Number
-    *   **Description:** Verify that the system handles an invalid government registration number during doctor registration.
-    *   **Steps:**
-        1. Navigate to the doctor registration page.
-        2. Enter valid details, but use an invalid government registration number.
-        3. Submit the registration form.
-    *   **Expected Result:** The system should display an error message and not register the doctor.
+**TC_011: Boundary Value Test Case for Doctor Information**
+*   Title: Boundary Value Test Case for Doctor Information
+*   Description: Verify that the system handles doctor information inputs at the boundaries.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter doctor information inputs at the boundaries (e.g., minimum and maximum values).
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_012
-    *   **Title:** Doctor Login with Valid Credentials
-    *   **Description:** Verify that a doctor can log in with valid credentials.
-    *   **Steps:**
-        1. Navigate to the login page.
-        2. Enter valid username and password.
-        3. Click on the login button.
-    *   **Expected Result:** The system should log in the doctor successfully and redirect to the dashboard.
+**TC_012: Edge Case Test Case for Doctor Information**
+*   Title: Edge Case Test Case for Doctor Information
+*   Description: Verify that the system handles unusual or unexpected doctor information inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter unusual or unexpected doctor information inputs.
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_013
-    *   **Title:** View and Manage Appointments
-    *   **Description:** Verify that a doctor can view and manage their appointments.
-    *   **Steps:**
-        1. Log in as a doctor.
-        2. Navigate to the appointments section.
-        3. View the list of appointments.
-        4. Attempt to update or cancel an appointment.
-    *   **Expected Result:** The system should display the list of appointments and allow the doctor to update or cancel them.
+**TC_013: Book Appointment Online with Diagnostic Center**
+*   Title: Book Appointment Online with Diagnostic Center
+*   Description: Verify that the system allows the patient to search and view appointment details.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Search for an appointment.
+    3. Verify that the appointment details are displayed.
+*   Expected Result: The appointment details are displayed.
 
-**Test Case ID:** TC_014
-    *   **Title:** Access Test Results
-    *   **Description:** Verify that a doctor can access test results of patients.
-    *   **Steps:**
-        1. Log in as a doctor.
-        2. Navigate to the test results section.
-        3. Select a patient and view their test results.
-    *   **Expected Result:** The system should display the patient's test results.
+**TC_014: Invalid Appointment Information**
+*   Title: Invalid Appointment Information
+*   Description: Verify that the system handles invalid appointment information inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter invalid appointment information inputs.
+    3. Verify that an error message is displayed.
+*   Expected Result: An error message is displayed.
 
-**Test Case ID:** TC_015
-    *   **Title:** Diagnostic Center Registration with Valid Details
-    *   **Description:** Verify that a diagnostic center can register with valid details.
-    *   **Steps:**
-        1. Navigate to the diagnostic center registration page.
-        2. Enter valid details, including a valid reference number.
-        3. Submit the registration form.
-    *   **Expected Result:** The system should register the diagnostic center successfully and redirect to the login page.
+**TC_015: Boundary Value Test Case for Appointment Information**
+*   Title: Boundary Value Test Case for Appointment Information
+*   Description: Verify that the system handles appointment information inputs at the boundaries.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter appointment information inputs at the boundaries (e.g., minimum and maximum values).
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_016
-    *   **Title:** Diagnostic Center Login with Valid Credentials
-    *   **Description:** Verify that a diagnostic center can log in with valid credentials.
-    *   **Steps:**
-        1. Navigate to the login page.
-        2. Enter valid username and password.
-        3. Click on the login button.
-    *   **Expected Result:** The system should log in the diagnostic center successfully and redirect to the dashboard.
+**TC_016: Edge Case Test Case for Appointment Information**
+*   Title: Edge Case Test Case for Appointment Information
+*   Description: Verify that the system handles unusual or unexpected appointment information inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter unusual or unexpected appointment information inputs.
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_017
-    *   **Title:** Update Patient Records
-    *   **Description:** Verify that a diagnostic center can update patient records.
-    *   **Steps:**
-        1. Log in as a diagnostic center.
-        2. Navigate to the patient records section.
-        3. Select a patient and update their test results.
-    *   **Expected Result:** The system should update the patient's records successfully.
+**TC_017: Confirm Appointment Online**
+*   Title: Confirm Appointment Online
+*   Description: Verify that the system allows the patient to confirm the appointment.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Confirm the appointment.
+    3. Verify that the appointment is confirmed.
+*   Expected Result: The appointment is confirmed.
 
-**Test Case ID:** TC_018
-    *   **Title:** Upload Reports
-    *   **Description:** Verify that a diagnostic center can upload reports.
-    *   **Steps:**
-        1. Log in as a diagnostic center.
-        2. Navigate to the reports section.
-        3. Upload a report for a patient.
-    *   **Expected Result:** The system should upload the report successfully and associate it with the correct patient.
+**TC_018: Invalid Confirmation**
+*   Title: Invalid Confirmation
+*   Description: Verify that the system handles invalid confirmation inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter invalid confirmation inputs.
+    3. Verify that an error message is displayed.
+*   Expected Result: An error message is displayed.
 
-**Test Case ID:** TC_019
-    *   **Title:** Logout Functionality
-    *   **Description:** Verify that users can log out of the application.
-    *   **Steps:**
-        1. Log in as any user role (patient, doctor, diagnostic center).
-        2. Navigate to the logout option.
-        3. Click on the logout button.
-    *   **Expected Result:** The system should log out the user successfully and redirect to the login page.
+**TC_019: Boundary Value Test Case for Confirmation**
+*   Title: Boundary Value Test Case for Confirmation
+*   Description: Verify that the system handles confirmation inputs at the boundaries.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter confirmation inputs at the boundaries (e.g., minimum and maximum values).
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
 
-**Test Case ID:** TC_020
-    *   **Title:** Inactivity Timeout
-    *   **Description:** Verify that the system logs out users due to inactivity.
-    *   **Steps:**
-        1. Log in as any user role (patient, doctor, diagnostic center).
-        2. Remain inactive for the specified timeout period.
-    *   **Expected Result:** The system should log out the user automatically due to inactivity and redirect to the login page.
+**TC_020: Edge Case Test Case for Confirmation**
+*   Title: Edge Case Test Case for Confirmation
+*   Description: Verify that the system handles unusual or unexpected confirmation inputs.
+*   Steps:
+    1. Log in to the application as a patient.
+    2. Enter unusual or unexpected confirmation inputs.
+    3. Verify that the system handles the inputs correctly.
+*   Expected Result: The system handles the inputs correctly.
+**Test Cases:**
+
+**TC_001: Scalability - Valid Input**
+*   Title: Verify System Scalability with Valid Input
+*   Description: Test the system's ability to scale with valid input.
+*   Steps:
+    1. Provide valid input to the system.
+    2. Verify that the system processes the input correctly.
+*   Expected Result: The system should process the input correctly and scale accordingly.
+
+**TC_002: Scalability - Invalid Input**
+*   Title: Verify System Scalability with Invalid Input
+*   Description: Test the system's ability to handle invalid input.
+*   Steps:
+    1. Provide invalid input to the system.
+    2. Verify that the system handles the invalid input correctly.
+*   Expected Result: The system should handle the invalid input correctly and not crash.
+
+**TC_003: Scalability - Boundary Value**
+*   Title: Verify System Scalability at Boundary Values
+*   Description: Test the system's ability to handle input at boundary values.
+*   Steps:
+    1. Provide input at the minimum and maximum allowed values.
+    2. Verify that the system processes the input correctly.
+*   Expected Result: The system should process the input correctly at the boundary values.
+
+**TC_004: Verifiability - Unit Test**
+*   Title: Verify Unit Test Coverage
+*   Description: Test the unit test coverage of the system.
+*   Steps:
+    1. Run the unit tests.
+    2. Verify that the unit tests cover 100% of the code.
+*   Expected Result: The unit tests should cover 100% of the code.
+
+**TC_005: Interoperability - Android**
+*   Title: Verify Interoperability on Android
+*   Description: Test the system's interoperability on Android.
+*   Steps:
+    1. Run the system on an Android device.
+    2. Verify that the system functions correctly.
+*   Expected Result: The system should function correctly on Android.
+
+**TC_006: Interoperability - iOS**
+*   Title: Verify Interoperability on iOS
+*   Description: Test the system's interoperability on iOS.
+*   Steps:
+    1. Run the system on an iOS device.
+    2. Verify that the system functions correctly.
+*   Expected Result: The system should function correctly on iOS.
+
+**TC_007: Portability - Tablet**
+*   Title: Verify Portability on Tablet
+*   Description: Test the system's portability on a tablet.
+*   Steps:
+    1. Run the system on a tablet.
+    2. Verify that the system functions correctly.
+*   Expected Result: The system should function correctly on a tablet.
+
+**TC_008: Portability - Smartphone**
+*   Title: Verify Portability on Smartphone
+*   Description: Test the system's portability on a smartphone.
+*   Steps:
+    1. Run the system on a smartphone.
+    2. Verify that the system functions correctly.
+*   Expected Result: The system should function correctly on a smartphone.
+
+**TC_009: Reusability - Code Reuse**
+*   Title: Verify Code Reuse
+*   Description: Test the reusability of the system's code.
+*   Steps:
+    1. Identify reusable code.
+    2. Verify that the reusable code functions correctly.
+*   Expected Result: The reusable code should function correctly.
+
+**TC_010: Reusability - Test Case Reuse**
+*   Title: Verify Test Case Reuse
+*   Description: Test the reusability of the system's test cases.
+*   Steps:
+    1. Identify reusable test cases.
+    2. Verify that the reusable test cases function correctly.
+*   Expected Result: The reusable test cases should function correctly.
+
+**TC_011: Scalability - Large Input**
+*   Title: Verify System Scalability with Large Input
+*   Description: Test the system's ability to scale with large input.
+*   Steps:
+    1. Provide large input to the system.
+    2. Verify that the system processes the input correctly.
+*   Expected Result: The system should process the input correctly with large input.
+
+**TC_012: Scalability - Small Input**
+*   Title: Verify System Scalability with Small Input
+*   Description: Test the system's ability to scale with small input.
+*   Steps:
+    1. Provide small input to the system.
+    2. Verify that the system processes the input correctly.
+*   Expected Result: The system should process the input correctly with small input.
+
+**TC_013: Interoperability - Data Security**
+*   Title: Verify Interoperability with Data Security
+*   Description: Test the system's interoperability with data security.
+*   Steps:
+    1. Verify that patient data is hidden under their account.
+    2. Verify that patient data is not available to unauthorized users.
+*   Expected Result: The system should maintain data security and hide patient data under their account.
+
+**TC_014: Portability - Operating System**
+*   Title: Verify Portability across Operating Systems
+*   Description: Test the system's portability across operating systems.
+*   Steps:
+    1. Run the system on different operating systems.
+    2. Verify that the system functions correctly on each operating system.
+*   Expected Result: The system should function correctly on each operating system.
+
+**TC_015: Reusability - Function Reuse**
+*   Title: Verify Function Reuse
+*   Description: Test the reusability of the system's functions.
+*   Steps:
+    1. Identify reusable functions.
+    2. Verify that the reusable functions function correctly.
+*   Expected Result: The reusable functions should function correctly.
+
+**TC_016: Interoperability - Error Handling**
+*   Title: Verify Interoperability with Error Handling
+*   Description: Test the system's interoperability with error handling.
+*   Steps:
+    1. Simulate an error scenario.
+    2. Verify that the system handles the error correctly.
+*   Expected Result: The system should handle the error correctly.
+
+**TC_017: Portability - Error Handling**
+*   Title: Verify Portability with Error Handling
+*   Description: Test the system's portability with error handling.
+*   Steps:
+    1. Simulate an error scenario.
+    2. Verify that the system handles the error correctly on different operating systems.
+*   Expected Result: The system should handle the error correctly on each operating system.
+
+**TC_018: Reusability - Error Handling**
+*   Title: Verify Reusability with Error Handling
+*   Description: Test the system's reusability with error handling.
+*   Steps:
+    1. Simulate an error scenario.
+    2. Verify that the system handles the error correctly and reuses the error handling mechanism.
+*   Expected Result: The system should handle the error correctly and reuse the error handling mechanism.
+
+**TC_019: Scalability - Concurrent Users**
+*   Title: Verify System Scalability with Concurrent Users
+*   Description: Test the system's ability to scale with concurrent users.
+*   Steps:
+    1. Simulate concurrent users.
+    2. Verify that the system processes the input correctly.
+*   Expected Result: The system should process the input correctly with concurrent users.
+
+**TC_020: Interoperability - Data Exchange**
+*   Title: Verify Interoperability with Data Exchange
+*   Description: Test the system's interoperability with data exchange.
+*   Steps:
+    1. Verify that the system exchanges data correctly.
+    2. Verify that the system presents the exchanged data correctly.
+*   Expected Result: The system should exchange data correctly and present the exchanged data correctly.
