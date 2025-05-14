@@ -17,10 +17,10 @@ cost_collection = db["cost_tracking"]
 COST_PER_1M_TOKENS = {"Llama": 0.20, "Mistral": 0.80}
 INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_files")
-EXCEL_OUTPUT_DIR = os.getenv("EXCEL_OUTPUT_DIR", "excel_files")
+# EXCEL_OUTPUT_DIR = os.getenv("EXCEL_OUTPUT_DIR", "excel_files")
 Path(INPUT_DIR).mkdir(parents=True, exist_ok=True)
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
-Path(EXCEL_OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
+# Path(EXCEL_OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
 DEFAULT_CHUNK_SIZE = 7000
 MODEL_DISPATCHER = {
@@ -132,9 +132,9 @@ def process_and_generate_task(
             combined_test_cases, str(output_test_case_path)
         )
 
-        excel_test_case_path = (
-            Path(EXCEL_OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.xlsx"
-        )
+        # excel_test_case_path = (
+        #     Path(EXCEL_OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.xlsx"
+        # )
         csv_test_case_path = (
             Path(OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.csv"
         )
@@ -147,17 +147,17 @@ def process_and_generate_task(
             test_case_utils.txt_to_csv_llama(
                 str(output_test_case_path), str(csv_test_case_path)
             )
-        test_case_utils.format_test_cases_excel(
-            str(csv_test_case_path),
-            str(excel_test_case_path),
-            mode="numbered_in_cell",
-        )
+        # test_case_utils.format_test_cases_excel(
+        #     str(csv_test_case_path),
+        #     str(excel_test_case_path),
+        #     mode="numbered_in_cell",
+        # )
 
         # MongoDB Storage
         document = {
             "doc_name": os.path.basename(file_path),
             "doc_path": str(file_path),
-            "test_case_excel_path": str(excel_test_case_path),
+            # "test_case_excel_path": str(excel_test_case_path),
             "selected_model": model_name,
             "llm_response_testcases": combined_test_cases,
             "api_key_used": (
@@ -175,7 +175,7 @@ def process_and_generate_task(
         return {
             "message": "File Uploaded Successfully",
             "test_cases": combined_test_cases,
-            "excel_path": str(excel_test_case_path),
+            # "excel_path": str(excel_test_case_path),
             "model_used": model_name,
             "test_case_type": test_case_type,
         }

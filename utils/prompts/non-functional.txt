@@ -27,16 +27,27 @@ Format the test cases as follows:
 
 Test Cases:
 
-Test Case ID: [Unique ID (e.g., NFTC_001)]
+TCID: [A unique test case ID, e.g., NFTC_001, NFTC_002, etc.]
 
-Title: [The title of the test case]
+Test type: Non-Functional
 
-Test Case Type: non-functional
+Title: [A concise title of the test case]
 
-Description: [A concise description of the non-functional attribute being tested]
+Description: [A detailed description of the test case]
 
-Steps: [Detailed, numbered steps to execute the test case]
+Precondition: [A condition that must be true before the test case can be executed. If no precondition is required, state 'None']
 
-Expected Result: [The expected outcome of executing the test case]
+Steps: [A numbered list of detailed steps to execute the test case]
+
+Action: [The specific action performed in this test case. Extract this from the Steps.]
+
+Data: [The specific data required by the steps of this test case. If no data is needed, state 'None']
+
+Result: [The expected outcome of executing the test case]
+
+Type (P / N / in): [P for Positive, N for Negative, in for input validation]
+
+Test priority: [High, Medium, or Low]
 
 Generate 5 test cases. Only return the test cases in output and not any other text.
+Do not include any * marks in output

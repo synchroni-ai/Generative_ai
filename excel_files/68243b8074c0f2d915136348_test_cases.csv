@@ -1,0 +1,37 @@
+Test Case ID,Test Type,Title,Description,Precondition,Steps,Action,Data,Result,Type (P / N / in),Test Priority
+FTC_005,functional,Verify Appointment Booking,Verify that a patient can successfully book an appointment with a diagnostic center.,The patient must be logged in to the application.,"1. Navigate to the registration page.
+2. Fill in the registration form with valid details.
+3. Submit the registration form.
+Type (P / N / in): P
+Test priority: High
+Test type: Functional
+1. Navigate to the registration page.
+2. Fill in the registration form with invalid details (e.g., missing required fields).
+3. Submit the registration form.
+Type (P / N / in): N
+Test priority: High
+Test type: Functional
+1. Navigate to the login page.
+2. Enter valid doctor credentials (username and password).
+3. Click the login button.
+Type (P / N / in): P
+Test priority: High
+Test type: Functional
+1. Navigate to the login page.
+2. Enter invalid doctor credentials (e.g., incorrect password).
+3. Click the login button.
+Type (P / N / in): N
+Test priority: High
+Test type: Functional
+1. Navigate to the appointment booking page.
+2. Search for available time slots.
+3. Select a specific time slot.
+4. Confirm the appointment.
+Type (P / N / in): P
+Test priority: High",True,True,"The appointment should be successfully booked, and a confirmation message should be displayed along with the waiting time.",,
+,security,,,,,,,,,
+,compliance,,,,,,,,,
+,compliance,,,,,,,,,
+,compliance,,,,,,,,,
+,compliance,,,,,,,,,
+,compliance,,,,,,,,,

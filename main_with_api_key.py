@@ -22,6 +22,7 @@ from pathlib import Path
 import os
 import re
 import time
+import csv
 import uuid
 import pandas as pd
 from openpyxl import load_workbook
@@ -112,6 +113,24 @@ async def process_and_generate(
     task_results: Dict[str, AsyncResult] = {}  # Store task result objects
     all_task_ids = {}
 
+    # Store the MongoDB Document to store all the objects
+    document = {
+        "doc_name": os.path.basename(file_path),
+        "doc_path": str(file_path),
+        "selected_model": model_name,
+        "all_llm_responses_testcases": {},
+        "llm_response_testcases": "",
+        "api_key_used": f"...{api_key_to_use[-5:]}",
+        "test_case_types": test_case_types,
+    }
+    # Insert the document into MongoDB
+    try:
+        result = collection.insert_one(document)
+        document_id = result.inserted_id  # Get the inserted document's _id
+    except Exception as e:
+        print("MongoDB Insertion Error:", str(e))
+        raise HTTPException(status_code=500, detail=f"MongoDB Insertion Error: {e}")
+
     # Launch all tasks
     for test_case_type in test_case_types:
         task = process_and_generate_task.delay(
@@ -127,36 +146,52 @@ async def process_and_generate(
     # Wait for all tasks to complete
     results = {}
     all_test_cases = {}
-    all_excel_paths = {}
+
     for test_case_type, task in task_results.items():
         results[test_case_type] = task.get()  # This will block until task is complete
         all_test_cases[test_case_type] = results[test_case_type]["test_cases"]
-        all_excel_paths[test_case_type] = results[test_case_type]["excel_path"]
 
     # Construct the combined document
     combined_test_cases = "\n".join(
         [f"--- {k} ---\n{v}" for k, v in all_test_cases.items()]
     )
 
-    # Determine the excel path
-    excel_test_case_path = all_excel_paths[test_case_types[0]]
-
-    # MongoDB Storage
-    document = {
-        "doc_name": os.path.basename(file_path),
-        "doc_path": str(file_path),
-        "test_case_excel_path": excel_test_case_path,  # store one excel path
-        "selected_model": model_name,
-        "all_llm_responses_testcases": all_test_cases,  # store dictionary of llm response
-        "llm_response_testcases": combined_test_cases,
-        "api_key_used": f"...{api_key_to_use[-5:]}",
-        "test_case_types": test_case_types,  # Store test case types
-    }
-
+    # Update MongoDB with results using the ObjectId
     try:
-        collection.insert_one(document)
+        collection.update_one(
+            {"_id": document_id},  # Use the ObjectId to identify the document
+            {
+                "$set": {
+                    "all_llm_responses_testcases": all_test_cases,
+                    "llm_response_testcases": combined_test_cases,
+                }
+            },
+        )
     except Exception as e:
-        print("MongoDB Insertion Error:", str(e))
+        print("MongoDB Update Error:", str(e))
+        raise HTTPException(status_code=500, detail=f"MongoDB Update Error: {e}")
+
+    # --------------- Generate CSV files -----------------
+    # Find document in MongoDB
+    document = collection.find_one({"_id": document_id})  # Find document in mongo db
+    if not document:
+        raise HTTPException(
+            status_code=404, detail=f"Document with ID {document_id} not found"
+        )
+    # # Generate CSV files from direct LLM output
+    # csv_files = {}  # Add all paths to csv files
+    # all_llm_responses_testcases = document.get("all_llm_responses_testcases")
+    # for (
+    #     test_case_type,
+    #     llm_response_testcases,
+    # ) in (
+    #     all_llm_responses_testcases.items()
+    # ):  # Add to the CSV files based on each object
+    #     csv_file_path = os.path.join(OUTPUT_DIR, f"{test_case_type}_test_cases.csv")
+    #     # format_test_cases_csv
+    #     # Generate CSV files from direct LLM output
+    #     test_case_utils.text_to_csv(llm_response_testcases, csv_file_path)
+    #     csv_files[test_case_type] = csv_file_path
 
     return {
         "message": "File uploaded successfully. Processing started.",
@@ -164,7 +199,118 @@ async def process_and_generate(
         "api_key_being_used": f"...{api_key_to_use[-5:]}",
         "warning": warning,
         "test_case_types": test_case_types,
+        # "csv_files": csv_files,  # Return CSV file paths
     }
+
+
+@app.get("/download-csv/{document_id}")
+def download_test_cases_csv(document_id: str):
+    try:
+        doc = collection.find_one({"_id": ObjectId(document_id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        test_cases_dict = doc.get("all_llm_responses_testcases")
+        if not test_cases_dict:
+            raise HTTPException(
+                status_code=404, detail="No test cases found in document"
+            )
+
+        # Define the CSV output path
+        csv_output_path = os.path.join(
+            EXCEL_OUTPUT_DIR, f"{document_id}_test_cases.csv"
+        )
+
+        # ✅ START replacement here
+        csv_headers = [
+            "Test Case ID",
+            "Test Type",
+            "Title",
+            "Description",
+            "Precondition",
+            "Steps",
+            "Action",
+            "Data",
+            "Result",
+            "Type (P / N / in)",
+            "Test Priority",
+        ]
+
+        with open(csv_output_path, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_headers)
+            writer.writeheader()
+
+            for test_case_type, test_case_content in test_cases_dict.items():
+                for block in test_case_content.split("---"):
+                    block = block.strip()
+                    if not block:
+                        continue
+
+                    tc_id = title = desc = steps = expected = ""
+                    precondition = ""
+                    action = ""
+                    data = ""
+                    result = ""
+                    type = ""
+                    test_priority = ""
+                    collecting_steps = False
+                    collecting_steps = False
+
+                    for line in block.splitlines():
+                        line = line.strip()
+                        if line.startswith("TCID:"):
+                            tc_id = line.replace("TCID:", "").strip()
+                        elif line.startswith("Test Type:"):
+                            test_case_type = line.replace("Test Type:", "").strip()
+                        elif line.startswith("Title:"):
+                            title = line.replace("Title:", "").strip()
+                        elif line.startswith("Description:"):
+                            desc = line.replace("Description:", "").strip()
+                        elif line.startswith("Precondition:"):
+                            precondition = line.replace("Precondition:", "").strip()
+                        elif line.startswith("Steps:"):
+                            collecting_steps = True
+                        elif line.startswith("Action:"):
+                            action = True
+                        elif line.startswith("Data:"):
+                            data = True
+                        elif line.startswith("Result:"):
+                            result = line.replace("Result:", "").strip()
+                        elif line.startswith("Type (P /N /in):"):
+                            type = line.replace("Type (P /N /in)", "").strip()
+                        elif line.startswith("Test Priority:"):
+                            test_priority = line.replace("Test Priority:", "").strip()
+                            collecting_steps = False
+                        elif collecting_steps and line:
+                            steps += line + "\n"
+
+                    writer.writerow(
+                        {
+                            "Test Case ID": tc_id,
+                            "Test Type": test_case_type,
+                            "Title": title,
+                            "Description": desc,
+                            "Precondition": precondition,
+                            "Steps": steps.strip(),
+                            "Action": action,
+                            "Data": data,
+                            "Result": result,
+                            "Type (P / N / in)": type,
+                            "Test Priority": test_priority,
+                        }
+                    )
+        # ✅ END replacement here
+
+        return FileResponse(
+            csv_output_path,
+            media_type="text/csv",
+            filename=f"{document_id}_test_cases.csv",
+        )
+
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/task_status/{task_id}")
@@ -174,8 +320,6 @@ async def get_task_status(task_id: str):
         return {"status": "Completed", "result": task.result}
     elif task.state == "FAILURE":
         return {"status": "Failed", "error": str(task.info)}
-    else:
-        return {"status": task.state}
 
 
 # ----------------- MongoDB Fetch Endpoints -----------------
@@ -192,6 +336,31 @@ def get_document_by_id(document_id: str):
         if not doc:
             raise HTTPException(status_code=404, detail="Document not found")
         return serialize_document(doc)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+
+# ----------------- New Endpoint for CSV Download -----------------
+@app.get("/download/csv/{document_id}/{test_case_type}")
+async def download_test_cases_csv(document_id: str, test_case_type: str):
+    try:
+        doc = collection.find_one({"_id": ObjectId(document_id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        csv_files = doc.get("csv_files", {})  # Get all files
+        csv_path = csv_files.get(test_case_type)  # get the correct path
+
+        if not csv_path or not os.path.exists(csv_path):
+            raise HTTPException(
+                status_code=404, detail="CSV file not found for this test case type"
+            )
+
+        return FileResponse(
+            csv_path,
+            media_type="text/csv",
+            filename=f"{test_case_type}_test_cases.csv",  # Desired name
+        )
     except InvalidId:
         raise HTTPException(status_code=400, detail="Invalid document ID format")
 
@@ -224,38 +393,38 @@ def delete_documents(document_ids: List[str]):
 
 
 # ----------------- Download Excel Endpoints -----------------
-@app.get("/download/testcases/{document_id}")
-def download_test_cases_excel(document_id: str):
-    try:
-        doc = collection.find_one({"_id": ObjectId(document_id)})
-        if not doc or "test_case_excel_path" not in doc:
-            raise HTTPException(
-                status_code=404, detail="Excel file not found for test cases"
-            )
-        return FileResponse(
-            doc["test_case_excel_path"],
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename=Path(doc["test_case_excel_path"]).name,
-        )
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid document ID format")
+# @app.get("/download/testcases/{document_id}")
+# def download_test_cases_excel(document_id: str):
+#     try:
+#         doc = collection.find_one({"_id": ObjectId(document_id)})
+#         if not doc or "test_case_excel_path" not in doc:
+#             raise HTTPException(
+#                 status_code=404, detail="Excel file not found for test cases"
+#             )
+#         return FileResponse(
+#             doc["test_case_excel_path"],
+#             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+#             filename=Path(doc["test_case_excel_path"]).name,
+#         )
+#     except InvalidId:
+#         raise HTTPException(status_code=400, detail="Invalid document ID format")
 
 
-@app.get("/download/userstories/{document_id}")
-def download_user_stories_excel(document_id: str):
-    try:
-        doc = collection.find_one({"_id": ObjectId(document_id)})
-        if not doc or "user_story_excel_path" not in doc:
-            raise HTTPException(
-                status_code=404, detail="Excel file not found for user stories"
-            )
-        return FileResponse(
-            doc["user_story_excel_path"],
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            filename=Path(doc["user_story_excel_path"]).name,
-        )
-    except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid document ID format")
+# @app.get("/download/userstories/{document_id}")
+# def download_user_stories_excel(document_id: str):
+#     try:
+#         doc = collection.find_one({"_id": ObjectId(document_id)})
+#         if not doc or "user_story_excel_path" not in doc:
+#             raise HTTPException(
+#                 status_code=404, detail="Excel file not found for user stories"
+#             )
+#         return FileResponse(
+#             doc["user_story_excel_path"],
+#             media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+#             filename=Path(doc["user_story_excel_path"]).name,
+#         )
+#     except InvalidId:
+#         raise HTTPException(status_code=400, detail="Invalid document ID format")
 
 
 @app.get("/api_key_usage/{api_key}")

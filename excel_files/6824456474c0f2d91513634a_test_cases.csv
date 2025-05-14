@@ -1,0 +1,104 @@
+Test Case ID,Test Type,Title,Description,Precondition,Steps,Action,Data,Result,Type (P / N / in),Test Priority
+FTC_001,functional,Verify Patient Registration,Verify that a patient can successfully register on the application.,None,"1. Navigate to the registration page.
+2. Fill in the registration form with valid details.
+3. Submit the registration form.
+Type (P / N / in): P
+Test priority: High",True,True,"The patient should be successfully registered, and a confirmation message should be displayed.",,
+FTC_002,functional,Verify Doctor Login,Verify that a doctor can successfully log in to the application.,The doctor must be registered on the application.,"1. Navigate to the login page.
+2. Enter the registered username and password.
+3. Click on the login button.
+Type (P / N / in): P
+Test priority: High",True,True,"The doctor should be successfully logged in, and the dashboard should be displayed.",,
+FTC_003,functional,Verify Invalid Login Attempt,Verify that the system handles invalid login attempts gracefully.,None,"1. Navigate to the login page.
+2. Enter an incorrect username and/or password.
+3. Click on the login button.
+Type (P / N / in): N
+Test priority: Medium",True,True,"An error message should be displayed, and the user should not be logged in.",,
+FTC_004,functional,Verify Appointment Booking,Verify that a patient can successfully book an appointment with a diagnostic center.,The patient must be logged in.,"1. Navigate to the appointment booking page.
+2. Search for available time slots.
+3. Select a time slot and confirm the appointment.
+Type (P / N / in): P
+Test priority: High",True,True,"The appointment should be successfully booked, and a confirmation message should be displayed.",,
+FTC_005,functional,Verify Viewing Doctor Qualifications,Verify that a user can search and view doctor qualifications using filters.,None,"1. Navigate to the doctor qualifications page.
+2. Apply filters to search for specific qualifications.
+3. View the list of doctors matching the filters.
+Type (P / N / in): P
+Test priority: Medium",True,True,The list of doctors matching the filter criteria should be displayed.,,
+STC_001,security,Validate Patient Login with Correct Credentials,Verify that a patient can successfully log in with valid credentials.,None,"1. Navigate to the login page.
+2. Enter valid username and password.
+3. Click on the login button.
+Type (P / N / in): P
+Test priority: High",True,True,The system should grant access to the patient dashboard.,,
+STC_002,security,Attempt Login with Invalid Credentials,Verify that the system prevents login with invalid credentials.,None,"1. Navigate to the login page.
+2. Enter an invalid username and/or password.
+3. Click on the login button.
+Type (P / N / in): N
+Test priority: High",True,True,The system should display an error message and deny access.,,
+STC_003,security,Test SQL Injection on Login Page,Verify that the system is resistant to SQL injection attacks on the login page.,None,"1. Navigate to the login page.
+2. Enter SQL injection payload in the username and/or password fields (e.g., ' OR '1'='1).
+3. Click on the login button.
+Type (P / N / in): N
+Test priority: High",True,True,"The system should display an error message and deny access, without executing the SQL injection payload.",,
+STC_004,security,Test Session Hijacking,Verify that the system is resistant to session hijacking attacks.,A valid patient session is active.,"1. Capture the session ID of the active patient session.
+2. Use a different browser or incognito window to attempt to access the patient dashboard using the captured session ID.
+3. Perform actions that require authentication, such as viewing appointment details.
+Type (P / N / in): N
+Test priority: Medium",True,True,"The system should deny access and invalidate the session, or prompt for re-authentication.",,
+STC_005,security,Test Data Exposure in URL Parameters,Verify that sensitive data is not exposed in URL parameters.,A patient is logged in and has access to their appointment details.,"1. Navigate to the appointment details page.
+2. Observe the URL parameters in the address bar.
+3. Attempt to modify the URL parameters to access other patients' data.
+Type (P / N / in): N
+Test priority: Medium",True,True,The system should not expose sensitive data in URL parameters and should deny access to other patients' data.,,
+CTC_005,compliance,Verify Data Integrity During Downtime,Ensure that the system's database remains intact and data is not lost during downtime.,The system is operational.,"1. Log in as a patient.
+2. Navigate to the profile section.
+3. Attempt to access another patient's profile.
+Type (P / N / in): N
+Test priority: High
+Test type: Compliance
+1. Navigate to the registration page.
+2. Enter a password that does not meet the required criteria (e.g., less than 8 characters, no special characters).
+Type (P / N / in): N
+Test priority: High
+Test type: Compliance
+1. Log in as a doctor.
+2. Navigate to the appointments section.
+3. Select an appointment and cancel it.
+4. Verify that the patient receives a notification about the cancellation.
+Type (P / N / in): P
+Test priority: Medium
+Test type: Compliance
+1. Log in as a patient.
+2. Remain inactive for the specified timeout period (e.g., 15 minutes).
+3. Attempt to perform an action that requires authentication.
+Type (P / N / in): P
+Test priority: Medium
+Test type: Compliance
+1. Simulate a system downtime.
+2. Attempt to access the application during downtime.
+3. Restore the system and verify data integrity.
+Type (P / N / in): P
+Test priority: High",True,True,The system should flag missing records and ensure that no data is lost during downtime.,,
+PTC_001,performance,Load Test - Patient Registration,Simulate multiple patients registering on the application simultaneously to assess the system's performance under normal conditions.,None,"1. Simulate 100 virtual users.
+2. Each user navigates to the registration page.
+3. Each user fills out and submits the registration form.
+Type (P / N / in): P
+Test priority: High",True,True,"The system should handle all registrations within an acceptable response time (e.g., < 5 seconds per registration).",,
+PTC_002,performance,Stress Test - Doctor Appointment Booking,Push the system beyond its limits by simulating a large number of patients booking appointments simultaneously.,1000 virtual patients and 10 virtual doctors are available in the system.,"1. Simulate 1000 virtual patients.
+2. Each patient searches for a doctor.
+3. Each patient books an appointment with the available doctors.
+Type (P / N / in): P
+Test priority: High",True,True,"The system should handle the load without crashing, but performance may degrade. Identify the breaking point.",,
+PTC_003,performance,Endurance Test - Diagnostic Center Report Upload,Evaluate the system's ability to sustain a prolonged load of report uploads by diagnostic centers.,10 virtual diagnostic centers are available in the system.,"1. Simulate 10 virtual diagnostic centers.
+2. Each center uploads reports continuously for 24 hours.
+3. Monitor the system's performance and resource utilization.
+Type (P / N / in): P
+Test priority: Medium",True,True,The system should sustain the load without significant performance degradation or failures.,,
+PTC_004,performance,Scalability Test - Increasing Number of Users,Determine the system's ability to handle an increasing number of concurrent users.,The system is stable with 100 concurrent users.,"1. Start with 100 concurrent users.
+2. Gradually increase the number of users by 100 every 30 minutes (e.g., 100, 200, 300, etc.).
+3. Monitor the system's performance and resource utilization.
+Type (P / N / in): P
+Test priority: High",True,True,"The system should handle the increasing load gracefully, with performance degradation being acceptable up to a certain point.",,
+PTC_005,performance,Load Test - Patient Login,Simulate multiple patients logging into the application simultaneously to assess the system's performance under normal conditions.,500 virtual patients are registered in the system.,"1. Simulate 500 virtual patients.
+2. Each patient logs into the application.
+Type (P / N / in): P
+Test priority: High",True,True,"The system should handle all logins within an acceptable response time (e.g., < 3 seconds per login).",,

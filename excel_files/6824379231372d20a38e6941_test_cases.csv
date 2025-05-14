@@ -1,0 +1,27 @@
+Test Case ID,Test Type,Title,Description,Precondition,Steps,Action,Data,Result,Type (P / N / in),Test Priority
+FTC_001,functional,Patient Registration with Valid Details,Verify that a patient can successfully register with valid details.,None,"1. Navigate to the registration page.
+2. Fill in all required fields with valid data.
+3. Submit the registration form.
+Type (P / N / in): P
+Test priority: High",True,True,The system should successfully register the patient and display a confirmation message.,,
+FTC_002,functional,Patient Login with Invalid Credentials,Verify that the system handles invalid login credentials gracefully.,None,"1. Navigate to the login page.
+2. Enter an incorrect username or password.
+3. Attempt to log in.
+Type (P / N / in): N
+Test priority: High",True,True,The system should display an error message indicating incorrect credentials.,,
+FTC_003,functional,Search Doctor by Specialty,Verify that a patient can search for a doctor by specialty.,The system should have doctors registered with different specialties.,"1. Navigate to the doctor search page.
+2. Enter a valid specialty in the search field.
+3. Submit the search query.
+Type (P / N / in): P
+Test priority: Medium",True,True,The system should display a list of doctors matching the entered specialty.,,
+FTC_004,functional,Book Appointment with Invalid Time Slot,Verify that the system handles booking an appointment with an invalid time slot.,The system should have valid time slots available for booking.,"1. Navigate to the appointment booking page.
+2. Select an invalid time slot.
+3. Attempt to book the appointment.
+Type (P / N / in): N
+Test priority: Medium",True,True,The system should display an error message indicating the time slot is invalid.,,
+FTC_005,functional,View and Manage Appointments,Verify that a doctor can view and manage their appointments.,The doctor should have appointments scheduled.,"1. Log in as a doctor.
+2. Navigate to the appointments management page.
+3. View the list of appointments.
+4. Attempt to update or cancel an appointment.
+Type (P / N / in): P
+Test priority: High",True,True,The system should display the list of appointments and allow the doctor to update or cancel them.,,

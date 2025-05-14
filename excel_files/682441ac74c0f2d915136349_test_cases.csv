@@ -1,0 +1,78 @@
+Test Case ID,Test Type,Title,Description,Precondition,Steps,Action,Data,Result,Type (P / N / in),Test Priority
+FTC_001,functional,Verify Patient Registration,Verify that a patient can successfully register on the application.,None,"1. Navigate to the registration page.
+2. Fill in the registration form with valid details.
+3. Submit the registration form.
+Type (P / N / in): P
+Test priority: High",True,True,"The patient should be successfully registered, and a confirmation message should be displayed.",,
+FTC_002,functional,Verify Doctor Login,Verify that a doctor can successfully log in to the application.,The doctor must be registered.,"1. Navigate to the login page.
+2. Enter valid username and password.
+3. Click the login button.
+Type (P / N / in): P
+Test priority: High",True,True,"The doctor should be successfully logged in, and the dashboard should be displayed.",,
+FTC_003,functional,Verify Booking an Appointment,Verify that a patient can successfully book an appointment with a doctor.,The patient must be logged in.,"1. Navigate to the appointment booking page.
+2. Search for a doctor and select a specific time slot.
+3. Confirm the appointment.
+Type (P / N / in): P
+Test priority: High",True,True,"The appointment should be successfully booked, and a confirmation message should be displayed.",,
+FTC_004,functional,Verify Invalid Login,Verify that the system handles invalid login credentials gracefully.,None,"1. Navigate to the login page.
+2. Enter invalid username and/or password.
+3. Click the login button.
+Type (P / N / in): N
+Test priority: Medium",True,True,An error message should be displayed indicating that the login failed.,,
+FTC_005,functional,Verify Boundary Value for Password Length,Verify that the system enforces the password length requirement.,None,"1. Navigate to the registration page.
+2. Fill in the registration form with a password that is exactly at the boundary value (e.g., minimum length).
+3. Submit the registration form.
+Type (P / N / in): in
+Test priority: Medium",True,True,The registration should be successful if the password meets the length requirement.,,
+STC_001,security,Validate User Login with Correct Credentials,Verify that a user can successfully log in with valid credentials.,The user is registered in the system.,"1. Navigate to the login page.
+2. Enter valid username and password.
+3. Click on the login button.
+Type (P / N / in): P
+Test priority: High",True,True,The user should be successfully logged in and redirected to the dashboard.,,
+STC_002,security,Prevent Login with Invalid Credentials,Verify that the system prevents login with invalid credentials.,The user is not registered in the system.,"1. Navigate to the login page.
+2. Enter invalid username and password.
+3. Click on the login button.
+Type (P / N / in): N
+Test priority: High",True,True,The system should display an error message and prevent login.,,
+STC_003,security,SQL Injection Attack Prevention,Verify that the system is resistant to SQL injection attacks.,The user is on the login page.,"1. Navigate to the login page.
+2. Enter SQL injection payload in the username and password fields (e.g., ' OR '1'='1).
+3. Click on the login button.
+Type (P / N / in): N
+Test priority: High",True,True,The system should display an error message and prevent login.,,
+STC_004,security,Session Hijacking Prevention,Verify that the system prevents session hijacking by invalidating sessions on logout.,The user is logged in.,"1. Log in with valid credentials.
+2. Note the session ID.
+3. Log out from the application.
+4. Attempt to access the application using the noted session ID.
+Type (P / N / in): N
+Test priority: Medium",True,True,The system should invalidate the session and prevent access.,,
+STC_005,security,Data Breach Prevention through Unauthorized Access,Verify that unauthorized users cannot access sensitive data.,The user is logged in as a patient.,"1. Log in as a patient.
+2. Attempt to access doctor-specific functionalities (e.g., manage appointments, view test reports).
+Type (P / N / in): N
+Test priority: High",True,True,The system should display an error message and prevent access to unauthorized functionalities.,,
+CTC_001,compliance,Verify Patient Data Privacy,Ensure that patient data is securely stored and only accessible to authorized users.,None,"1. Log in as a patient.
+2. Navigate to the profile section.
+3. Attempt to access another patient's data.
+Type (P / N / in): N
+Test priority: High",True,True,The system should deny access and display an error message.,,
+CTC_002,compliance,Validate Password Requirements,Verify that the system enforces strong password policies.,None,"1. Navigate to the registration page.
+2. Attempt to create an account with a weak password (e.g., ""12345"").
+Type (P / N / in): N
+Test priority: High",True,True,The system should display an error message indicating that the password does not meet the requirements.,,
+CTC_003,compliance,Ensure Data Integrity During Appointment Booking,Verify that the system accurately processes and stores appointment data.,A patient is logged in.,"1. Search for a doctor and select an available time slot.
+2. Book the appointment.
+3. Verify the appointment details in the patient's profile.
+Type (P / N / in): P
+Test priority: High",True,True,The appointment details should be accurately displayed in the patient's profile.,,
+CTC_004,compliance,Verify Inactivity Timeout,Ensure that the system logs out users after a period of inactivity.,A user is logged in.,"1. Remain inactive for the specified timeout period (e.g., 15 minutes).
+2. Attempt to perform an action that requires authentication.
+Type (P / N / in): P
+Test priority: Medium",True,True,The system should prompt the user to log in again.,,
+CTC_005,compliance,Test Data Classification and Protection,Verify that all data is protectively marked and stored according to classification levels.,A user is logged in.,"1. Navigate to the section where sensitive data is stored (e.g., patient reports).
+2. Attempt to download or view the data.
+Type (P / N / in): P
+Test priority: High",True,True,"The data should be marked and stored securely, and only accessible to authorized users.",,
+,performance,,,,,,,,,
+,performance,,,,,,,,,
+,performance,,,,,,,,,
+,performance,,,,,,,,,
+,performance,,,,,,,,,

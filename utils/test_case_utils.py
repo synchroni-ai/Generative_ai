@@ -237,3 +237,92 @@ def format_test_cases_excel(
         raise ValueError("Invalid mode. Use 'numbered_in_cell' or 'step_per_row'.")
 
     print("File saved successfully as:", output_excel_file)
+
+
+import re
+import csv
+
+
+def text_to_csv(text_file_path, csv_file_path):
+    """
+    Converts a text file containing test cases to a CSV file.
+
+    Args:
+        text_file_path: Path to the text file.
+        csv_file_path: Path to the output CSV file.
+    """
+
+    with open(text_file_path, "r", encoding="utf-8") as textfile:
+        text = textfile.read()
+    test_cases = []
+    # Split the output into individual test cases
+    test_case_splits = re.split(r"TCID:\s*TC_\d+", text)[1:]  # Split by TCID
+    for test_case_text in test_case_splits:
+        test_case = {}
+        # Extract all the fields
+        tcid_match = re.search(r"TCID:\s*(TC_\d+)", test_case_text)
+        test_case["TCID"] = tcid_match.group(1) if tcid_match else ""
+
+        test_type_match = re.search(r"Test type:\s*([\w-]+)", test_case_text)
+        test_case["Test type"] = test_type_match.group(1) if test_type_match else ""
+
+        title_match = re.search(r"Title:\s*(.+)", test_case_text)
+        test_case["Title"] = title_match.group(1).strip() if title_match else ""
+
+        description_match = re.search(r"Description:\s*(.+)", test_case_text)
+        test_case["Description"] = (
+            description_match.group(1).strip() if description_match else ""
+        )
+
+        precondition_match = re.search(r"Precondition:\s*(.+)", test_case_text)
+        test_case["Precondition"] = (
+            precondition_match.group(1).strip() if precondition_match else ""
+        )
+
+        steps_match = re.search(r"Steps:\s*(.+)", test_case_text, re.DOTALL)
+        test_case["Steps"] = steps_match.group(1).strip() if steps_match else ""
+
+        action_match = re.search(r"Action:\s*(.+)", test_case_text)
+        test_case["Action"] = action_match.group(1).strip() if action_match else ""
+
+        data_match = re.search(r"Data:\s*(.+)", test_case_text)
+        test_case["Data"] = data_match.group(1).strip() if data_match else ""
+
+        result_match = re.search(r"Result:\s*(.+)", test_case_text)
+        test_case["Result"] = result_match.group(1).strip() if result_match else ""
+
+        type_match = re.search(r"Type \(P / N / in\):\s*([PNin])", test_case_text)
+        test_case["Type (P / N / in)"] = (
+            type_match.group(1).strip() if type_match else ""
+        )
+
+        priority_match = re.search(r"Test priority:\s*(.+)", test_case_text)
+        test_case["Test priority"] = (
+            priority_match.group(1).strip() if priority_match else ""
+        )
+
+        test_cases.append(test_case)
+
+    column_names = [
+        "TCID",
+        "Test type",
+        "Title",
+        "Description",
+        "Precondition",
+        "Steps",
+        "Action",
+        "Data",
+        "Result",
+        "Type (P / N / in)",
+        "Test priority",
+    ]
+
+    with open(csv_file_path, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=column_names)
+        writer.writeheader()
+        for test_case in test_cases:
+            writer.writerow(test_case)
+
+
+# Example Usage
+# text_to_csv("compliance_test_cases.txt", "compliance_test_cases.csv")
