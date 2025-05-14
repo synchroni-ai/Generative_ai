@@ -641,22 +641,50 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
     return elements;
   };
 
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const response = await axios.get("http://gen-ai.synchroni.xyz:8000/documents/");
-        setDocuments(response.data); // Assuming response.data is an array
-        console.log("Fetched data:", response.data);
-      } catch (error) {
-        console.error("Error fetching documents:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-  
-    fetchDocuments();
-  }, []);
-  
+//  useEffect(() => {
+//   const fetchDocuments = async () => {
+//     try {
+//       const response = await axios.get("http://gen-ai.synchroni.xyz:8000/documents/");
+//       const sortedDocs = [...response.data].sort((a, b) => {
+//         // 🔄 Option 1: If your API has `created_at` field (ISO format)
+//         return new Date(b.created_at) - new Date(a.created_at);
+
+//         // 🔄 Option 2: If you're using MongoDB and no created_at field is available
+//         // return b._id.localeCompare(a._id); // or just b._id - a._id if numeric
+//       });
+
+//       setDocuments(sortedDocs);
+//       console.log("Fetched and sorted data:", sortedDocs);
+//     } catch (error) {
+//       console.error("Error fetching documents:", error);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   fetchDocuments();
+// }, []);
+
+useEffect(() => {
+  const fetchDocuments = async () => {
+    try {
+      const response = await axios.get("http://gen-ai.synchroni.xyz:8000/documents/");
+      
+      // ⬇️ Sort newest documents first using _id (default in MongoDB)
+      const sortedDocs = [...response.data].sort((a, b) => (b._id > a._id ? 1 : -1));
+      
+      setDocuments(sortedDocs);
+      console.log("Sorted documents:", sortedDocs);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchDocuments();
+}, []);
+
   return (
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <Header onLogout={handleLogout} />
