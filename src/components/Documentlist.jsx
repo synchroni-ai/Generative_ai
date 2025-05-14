@@ -229,7 +229,6 @@ import React, { useState, useEffect } from "react";
 import {
   Button,
   Box,
-  Typography,
   Container,
   Table,
   TableHead,
@@ -237,19 +236,18 @@ import {
   TableRow,
   TableCell,
   TableContainer,
-  Paper,
-  Drawer,
-  IconButton,
-  CircularProgress
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import CloseIcon from "@mui/icons-material/Close";
+import { Search } from 'react-feather'; // Add this at the top
 import { Skeleton } from "@mui/material";
 import axios from "axios";
 import Header from "./Header";
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import IconButton from '@mui/material/IconButton';
 import UploadModal from "./UploadModal";
 import { TablePagination } from "@mui/material";
 import TestCaseDrawer from "./TestCaseDrawer";
+import GenerateDrawer from "./GenerateDrawer"; // adjust the path accordingly
 import "./../asessts/css/documentlist.css";
 
 const Documentlist = () => {
@@ -260,9 +258,12 @@ const Documentlist = () => {
   const [testCaseData, setTestCaseData] = useState("");
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(0);
 const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
-
+const [generateDrawerOpen, setGenerateDrawerOpen] = React.useState(false);
+const [generateData, setGenerateData] = React.useState(null);
+const [selectedDocumentName, setSelectedDocumentName] = useState('');
 
   const toggleDrawer = (open) => () => setDrawerOpen(open);
   const handleUploadClick = () => setModalOpen(true);
@@ -315,48 +316,63 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
     flushList();
     return elements;
   };
-
-  useEffect(() => {
-    const fetchDocuments = async () => {
-      try {
-        const response = await axios.get("https://gen-ai.synchroni.xyz/backend/documents/");
-        // const response = await axios.get("http://192.168.0.173:8000/backend/documents/");
-        setDocuments(response.data.reverse()); // Assuming response.data is an array
-        console.log("Fetched data:", response.data);
-      } catch (error) {
-        console.error("Error fetching documents:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchDocuments = async () => {
+    try {
+    const response = await axios.get("https://gen-backend.synchroni.xyz/documents/");
+      // const response = await axios.get("http://192.168.0.173:8000/documents/");
+      setDocuments(response.data.reverse());
+      console.log("Fetched data:", response.data);
+    } catch (error) {
+      console.error("Error fetching documents:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
   
+  useEffect(() => {
     fetchDocuments();
   }, []);
   
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <Header onLogout={handleLogout} />
-      <Box sx={{ mt: 10, px: 2}}>
-        <Box sx={{ position: "absolute", top: 80, right: 20}}>
-          <Button
-            // variant="contained"
-            onClick={handleUploadClick}
-            sx={{ textTransform: "none", fontWeight: "bold", color: "white", backgroundColor: "#000080",borderRadius:"10px",padding:"6px 16px",marginRight:"20px" }}
-          >
-            New Document
-          </Button>
-        </Box>
+    <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column",overflowY:"hidden" }}>
+      {/* <Header onLogout={handleLogout} /> */}
+      <Box sx={{ mt: 10, px: 5,overflowY:"auto",height:"89vh",scrollbarWidth:'thin' }}>
+      <Box sx={{  display: "flex", alignItems: "center",justifyContent:'end',marginRight:"20px" }}>
+  <Box className="search-container" sx={{ position: "relative", mr: 2, width: "250px" }}>
+    <input
+      type="text"
+      placeholder="Search topics..."
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+    />
+    <Search className="basic-header-search-icon" />
+  </Box>
 
+  <Button
+    onClick={handleUploadClick}
+    sx={{
+      textTransform: "none",
+      fontWeight: "bold",
+      color: "white",
+      backgroundColor: "#000080",
+      borderRadius: "10px",
+      padding: "6px 16px",
+    }}
+  >
+    New Document
+  </Button>
+</Box>
         <Container maxWidth="xl" sx={{ mt: 8 }}>
         {loading ? (
   <TableContainer sx={{ width: "100%", border: "1px solid #e6e6e6", borderRadius: "10px", borderBottom: "none" }}>
     <Table>
       <TableHead>
         <TableRow>
-          <TableCell sx={{ fontWeight: "bold" }}>Serial No</TableCell>
-          <TableCell sx={{ fontWeight: "bold" }}>doc_name</TableCell>
-          <TableCell sx={{ fontWeight: "bold" }}>doc_path</TableCell>
-          <TableCell sx={{ fontWeight: "bold" }}>llm_response_latency</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>SNo.</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>Document Name</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>Document Path</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>Completion Latency</TableCell>
+          <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
         </TableRow>
       </TableHead>
       <TableBody>
@@ -374,42 +390,76 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
             <TableCell>
               <Skeleton variant="rectangular" width="60%" height={20} />
             </TableCell>
+            <TableCell>
+              <Skeleton variant="rectangular" width="60%" height={20} />
+            </TableCell>
           </TableRow>
         ))}
       </TableBody>
     </Table>
   </TableContainer>
 ) : (
-            <TableContainer  sx={{ width: "100%",border:"1px solid #e6e6e6",borderRadius:"10px",borderBottom:"none" }}>
-              <Table aria-label="documents table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell sx={{ fontWeight: "bold" }}>Serial No</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>doc_name</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>doc_path</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>llm_response_latency</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                {documents.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((doc, index) => (
-                    <TableRow key={doc._id}>
-<TableCell>{page * rowsPerPage + index + 1}</TableCell>
-                    <TableCell
-                        sx={{ cursor: "pointer", color: "#1976d2", textDecoration: "underline" }}
-                        onClick={() => {
-                          setTestCaseData(doc.llm_response_testcases);
-                          setDrawerOpen(true);
-                        }}
-                      >
-                        {doc.doc_name}
-                      </TableCell>
-                      <TableCell>{doc.doc_path}</TableCell>
-                      <TableCell>{doc.llm_response_latency}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <TableContainer sx={{ width: "100%", border: "1px solid #e6e6e6", borderRadius: "10px", borderBottom: "none" }}>
+  <Table aria-label="documents table">
+    <TableHead>
+      <TableRow>
+        <TableCell sx={{ fontWeight: "bold" }}>SNo</TableCell>
+        <TableCell sx={{ fontWeight: "bold" }}>Document Name</TableCell>
+        <TableCell sx={{ fontWeight: "bold" }}>Document Path</TableCell>
+        <TableCell sx={{ fontWeight: "bold" }}>Completion Latency</TableCell>
+        <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell> {/* New Column */}
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {documents
+        .filter((doc) =>
+          doc.doc_name.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        .map((doc, index) => (
+          <TableRow key={doc._id}>
+            <TableCell>{page * rowsPerPage + index + 1}</TableCell>
+            <TableCell
+              sx={{ cursor: "pointer", color: "#1976d2", textDecoration: "underline" }}
+              onClick={() => {
+                setTestCaseData(doc.llm_response_testcases);
+                setDrawerOpen(true);
+              }}
+            >
+              {doc.doc_name}
+            </TableCell>
+            <TableCell>{doc.doc_path}</TableCell>
+            <TableCell>{doc.llm_response_latency}</TableCell>
+<TableCell sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+  <span
+  style={{ fontSize: '14px', textDecoration: 'underline', color: '#1976d2', cursor: 'pointer' }}
+  onClick={() => {
+        setSelectedDocumentName(doc.doc_name); // ✅ Set the selected document name
+    setGenerateDrawerOpen(true);
+  }}
+>
+  Generate
+</span>
+  <IconButton
+    size="small"
+    disableRipple
+    disableFocusRipple
+    disableTouchRipple
+    sx={{
+      '&:hover': {
+        backgroundColor: 'transparent',
+      },
+      padding: 0,
+    }}
+  >
+    <MoreVertIcon sx={{ fontSize: 18 }} />
+  </IconButton>
+</TableCell>
+          </TableRow>
+        ))}
+    </TableBody>
+  </Table>
+</TableContainer>
           )}
           <TablePagination
   rowsPerPageOptions={[5, 10, 25]}
@@ -435,7 +485,12 @@ const [rowsPerPage, setRowsPerPage] = useState(5); // or 10 or anything else
   parseFormattedText={parseFormattedText}
 />
 
-      <UploadModal open={modalOpen} onClose={handleModalClose} />
+<GenerateDrawer
+  open={generateDrawerOpen}
+  onClose={() => setGenerateDrawerOpen(false)}
+  documentName={selectedDocumentName} // ✅ Correctly scoped and passed
+/>
+      <UploadModal open={modalOpen} onClose={handleModalClose} fetchDocuments={fetchDocuments}/>
     </Box>
   );
 };

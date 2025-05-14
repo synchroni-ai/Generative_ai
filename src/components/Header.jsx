@@ -38,7 +38,8 @@ const Header = ({ onLogout }) => {
         backgroundColor: "#fff",
         boxShadow: "none",
         zIndex: 1300,
-        borderBottom:"2px solid #f5f5f5"
+        borderBottom:"2px solid #f5f5f5",
+        overflowY:"hidden"
       }}
     >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>

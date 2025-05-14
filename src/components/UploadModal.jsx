@@ -212,10 +212,11 @@ import {
 import axios from "axios";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 
-const UploadModal = ({ open, onClose }) => {
+const UploadModal = ({ open, onClose,fetchDocuments }) => {
   const [file, setFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [uploadCompleted, setUploadCompleted] = useState(false);
 
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
@@ -227,6 +228,44 @@ const UploadModal = ({ open, onClose }) => {
     }
   };
 
+  // const handleUpload = async () => {
+  //   if (!file) {
+  //     alert("Please select a file to upload.");
+  //     return;
+  //   }
+  
+  //   console.log("Starting upload for:", file.name);
+  
+  //   setUploading(true);
+  //   setProgress(0);
+  
+  //   const formData = new FormData();
+  //   formData.append("file", file);
+  
+  //   try {
+  //     // const response = await axios.post("https://gen-ai.synchroni.xyz/backend/process_and_generate/",
+  //     const response = await axios.post("http://192.168.0.173:8000/process_and_generate/",
+  //       formData,
+  //       {
+  //         // 🚫 Do NOT set Content-Type manually
+  //         onUploadProgress: (progressEvent) => {
+  //           const percent = Math.round(
+  //             (progressEvent.loaded * 100) / progressEvent.total
+  //           );
+  //           setProgress(percent);
+  //           console.log(`Upload progress: ${percent}%`);
+  //         }
+  //       }
+  //     );
+  
+  //     console.log("Upload complete. Server response:", response.data);
+  //   } catch (error) {
+  //     console.error("Upload failed:", error);
+  //     alert("An error occurred during file upload.");
+  //     setUploading(false);
+  //   }
+  // };
+  
   const handleUpload = async () => {
     if (!file) {
       alert("Please select a file to upload.");
@@ -237,31 +276,53 @@ const UploadModal = ({ open, onClose }) => {
   
     setUploading(true);
     setProgress(0);
+    setUploadCompleted(false); // reset it before starting new upload
+
   
     const formData = new FormData();
     formData.append("file", file);
   
     try {
-      const response = await axios.post("https://gen-ai.synchroni.xyz/backend/process_and_generate/",
-      // const response = await axios.post("http://192.168.0.173:8000/backend/process_and_generate/",
+           const response = await axios.post("https://gen-backend.synchroni.xyz/process_and_generate/",
+      // const response = await axios.post("http://192.168.0.173:8000/process_and_generate/",
         formData,
         {
-          // 🚫 Do NOT set Content-Type manually
           onUploadProgress: (progressEvent) => {
-            const percent = Math.round(
+            // 🔥 Place it exactly here!
+            let percent = Math.round(
               (progressEvent.loaded * 100) / progressEvent.total
             );
+  
+            // 🔥 Cap the progress at 95% until server confirms
+            if (percent >= 100) {
+              percent = 95;
+            }
+  
             setProgress(percent);
             console.log(`Upload progress: ${percent}%`);
           }
-        }
-      );
+      }
+    );
+
+      
   
       console.log("Upload complete. Server response:", response.data);
+  
+      // ✅ Call fetchDocuments after upload success
+      if (response.status === 200) {
+        // ✅ Force progress to 100%
+        setProgress(100);
+        // ✅ Mark upload as completed
+        setUploadCompleted(true);
+        // ✅ Fetch documents
+        fetchDocuments();
+      }
+  
     } catch (error) {
       console.error("Upload failed:", error);
       alert("An error occurred during file upload.");
       setUploading(false);
+      onClose();
     }
   };
   
@@ -396,7 +457,7 @@ const UploadModal = ({ open, onClose }) => {
           <Button
             variant="outlined"
             onClick={() => handleClose(true)}
-            disabled={progress < 100}
+            disabled={!uploadCompleted}  // ✅ Only enable if backend confirmed success
             sx={{backgroundColor:"#000080",color:"white",
               "&.Mui-disabled": {
         color: "white",
