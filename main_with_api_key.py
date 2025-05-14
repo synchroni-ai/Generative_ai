@@ -12,6 +12,9 @@ from fastapi import (
     WebSocket,
 )
 from fastapi.responses import JSONResponse, FileResponse
+
+
+
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List, Dict
 from dotenv import load_dotenv
@@ -25,6 +28,7 @@ import time
 import uuid
 import pandas as pd
 from openpyxl import load_workbook
+import csv
 
 # Import your custom modules
 from utils import data_ingestion, test_case_utils, user_story_utils
@@ -70,9 +74,12 @@ async def process_and_generate(
     chunk_size: Optional[int] = Query(default=None),
     cache_key: Optional[str] = Query(default=None),
     api_key: Optional[str] = Form(None),
-    test_case_types: List[str] = Query(["functional"]),  # Changed to Query
+    test_case_types: str = Form("functional"),  # Accept comma-separated string
 ):
-    # Validate test_case_type
+    # Convert comma-separated test_case_types to a list
+    test_case_types_list = [t.strip() for t in test_case_types.split(",")]
+ 
+    # Validate test_case_types
     valid_test_case_types = [
         "functional",
         "non-functional",
@@ -81,26 +88,24 @@ async def process_and_generate(
         "boundary",
         "compliance",
     ]
-    for test_case_type in test_case_types:
+    for test_case_type in test_case_types_list:
         if test_case_type not in valid_test_case_types:
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid test_case_type: {test_case_type}. Must be one of {valid_test_case_types}",
             )
-
+ 
     # Use default if user key not provided
     api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
-
-    if not api_key:
-        warning = (
-            "Using default API key. Consider providing your own to avoid shared limits."
-        )
-    else:
-        warning = None
-
+    warning = (
+        "Using default API key. Consider providing your own to avoid shared limits."
+        if not api_key
+        else None
+    )
+ 
     file_name = file.filename
     file_path = Path(INPUT_DIR) / file_name
-
+ 
     # Save the uploaded file
     try:
         contents = await file.read()
@@ -108,12 +113,12 @@ async def process_and_generate(
             f.write(contents)
     finally:
         await file.close()
-
-    task_results: Dict[str, AsyncResult] = {}  # Store task result objects
+ 
+    task_results: Dict[str, AsyncResult] = {}
     all_task_ids = {}
-
-    # Launch all tasks
-    for test_case_type in test_case_types:
+ 
+    # Launch Celery tasks
+    for test_case_type in test_case_types_list:
         task = process_and_generate_task.delay(
             str(file_path),
             model_name,
@@ -123,49 +128,49 @@ async def process_and_generate(
         )
         task_results[test_case_type] = task
         all_task_ids[test_case_type] = task.id
-
+ 
     # Wait for all tasks to complete
     results = {}
     all_test_cases = {}
     all_excel_paths = {}
     for test_case_type, task in task_results.items():
-        results[test_case_type] = task.get()  # This will block until task is complete
+        results[test_case_type] = task.get()  # Blocking wait
         all_test_cases[test_case_type] = results[test_case_type]["test_cases"]
         all_excel_paths[test_case_type] = results[test_case_type]["excel_path"]
-
-    # Construct the combined document
+ 
+    # Combine test case strings
     combined_test_cases = "\n".join(
         [f"--- {k} ---\n{v}" for k, v in all_test_cases.items()]
     )
-
-    # Determine the excel path
-    excel_test_case_path = all_excel_paths[test_case_types[0]]
-
-    # MongoDB Storage
+ 
+    # Use the Excel path from the first test case type
+    excel_test_case_path = all_excel_paths[test_case_types_list[0]]
+ 
+    # MongoDB document
     document = {
         "doc_name": os.path.basename(file_path),
         "doc_path": str(file_path),
-        "test_case_excel_path": excel_test_case_path,  # store one excel path
+        "test_case_excel_path": excel_test_case_path,
         "selected_model": model_name,
-        "all_llm_responses_testcases": all_test_cases,  # store dictionary of llm response
+        "all_llm_responses_testcases": all_test_cases,
         "llm_response_testcases": combined_test_cases,
         "api_key_used": f"...{api_key_to_use[-5:]}",
-        "test_case_types": test_case_types,  # Store test case types
+        "test_case_types": test_case_types_list,
     }
-
+ 
     try:
         collection.insert_one(document)
     except Exception as e:
         print("MongoDB Insertion Error:", str(e))
-
+ 
     return {
         "message": "File uploaded successfully. Processing started.",
         "task_ids": all_task_ids,
         "api_key_being_used": f"...{api_key_to_use[-5:]}",
         "warning": warning,
-        "test_case_types": test_case_types,
+        "test_case_types": test_case_types_list,
     }
-
+ 
 
 @app.get("/task_status/{task_id}")
 async def get_task_status(task_id: str):
@@ -224,6 +229,136 @@ def delete_documents(document_ids: List[str]):
 
 
 # ----------------- Download Excel Endpoints -----------------
+
+@app.get("/download-csv/{document_id}")
+def download_test_cases_csv(document_id: str):
+    try:
+        doc = collection.find_one({"_id": ObjectId(document_id)})
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found")
+
+        test_cases_dict = doc.get("all_llm_responses_testcases")
+        if not test_cases_dict:
+            raise HTTPException(status_code=404, detail="No test cases found in document")
+
+        csv_output_path = os.path.join(EXCEL_OUTPUT_DIR, f"{document_id}_test_cases.csv")
+        
+        # MODIFICATION 1: Remove "Expected Result" from headers
+        csv_headers = [
+            "TCID", "Test type", "Title", "Description", "Precondition",
+            "Steps", "Action", "Data", "Result", "Type (P / N / in)",
+            "Test priority" # "Expected Result" removed
+        ]
+
+        with open(csv_output_path, "w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=csv_headers, quoting=csv.QUOTE_ALL)
+            writer.writeheader()
+
+            for test_case_type_key, test_case_content_for_type in test_cases_dict.items():
+                content_str = str(test_case_content_for_type).strip()
+                if not content_str:
+                    continue
+
+                current_content_lines = content_str.splitlines()
+                if current_content_lines and \
+                   current_content_lines[0].strip().startswith("---") and \
+                   current_content_lines[0].strip().endswith("---"):
+                    current_content_lines.pop(0)
+                while current_content_lines and not current_content_lines[0].strip():
+                    current_content_lines.pop(0)
+                if current_content_lines and \
+                   current_content_lines[0].strip().lower() == "test cases:":
+                    current_content_lines.pop(0)
+                while current_content_lines and not current_content_lines[0].strip():
+                    current_content_lines.pop(0)
+                content_to_split = "\n".join(current_content_lines).strip()
+
+                individual_tc_blocks = []
+                if content_to_split:
+                    split_pattern = r'(?=^(?:\*\*(?:TC|PTC)_\d+\*\*|TCID:|Test Case ID:)\s*)'
+                    potential_blocks = re.split(split_pattern, content_to_split, flags=re.MULTILINE)
+                    processed_blocks = [b.strip() for b in potential_blocks if b.strip()]
+
+                    if processed_blocks:
+                        first_block_content = processed_blocks[0]
+                        is_first_block_a_tc = re.match(r'^(?:\*\*(?:TC|PTC)_\d+\*\*|TCID:|Test Case ID:)', first_block_content.lstrip(), re.IGNORECASE)
+                        if not is_first_block_a_tc and len(processed_blocks) > 1:
+                            individual_tc_blocks = processed_blocks[1:]
+                        else:
+                            individual_tc_blocks = processed_blocks
+                
+                if not individual_tc_blocks and content_to_split:
+                    if re.match(r'^(?:\*\*(?:TC|PTC)_\d+\*\*|TCID:|Test Case ID:)', content_to_split.lstrip(), re.IGNORECASE):
+                        individual_tc_blocks.append(content_to_split)
+                    else:
+                        continue
+
+                for block_index, block in enumerate(individual_tc_blocks):
+                    # Initialize fields only with current headers
+                    fields = {header: "N/A" for header in csv_headers}
+                    fields["Test type"] = test_case_type_key 
+
+                    collecting_steps = False
+                    current_steps_list = []
+                    lines_in_block = block.splitlines()
+                    
+                    first_line_processed_for_tcid = False
+                    if lines_in_block:
+                        first_line_stripped = lines_in_block[0].strip()
+                        tcid_standalone_match = re.match(r'^\*\*((?:TC|PTC)_\d+)\*\*\s*$', first_line_stripped)
+                        if tcid_standalone_match:
+                            fields["TCID"] = tcid_standalone_match.group(1)
+                            first_line_processed_for_tcid = True
+
+                    for line_idx, line_content in enumerate(lines_in_block):
+                        if first_line_processed_for_tcid and line_idx == 0:
+                            continue
+                        line = line_content.strip()
+                        if not line: continue
+
+                        key_value_match = re.match(r'^\**([^:]+):\**\s*(.*)', line)
+                        
+                        if key_value_match:
+                            key = key_value_match.group(1).strip().lower()
+                            value = key_value_match.group(2).strip()
+                            collecting_steps = False 
+
+                            if key == "tcid" or key == "test case id": fields["TCID"] = value
+                            elif key == "test type" or key == "test case type": fields["Test type"] = value
+                            elif key == "title": fields["Title"] = value
+                            elif key == "description": fields["Description"] = value
+                            elif key == "precondition": fields["Precondition"] = value
+                            elif key == "action": fields["Action"] = value
+                            elif key == "data": fields["Data"] = value
+                            elif key == "result": fields["Result"] = value
+                            elif key == "type (p / n / in)": fields["Type (P / N / in)"] = value
+                            elif key == "test priority": fields["Test priority"] = value
+                            # MODIFICATION 2: "expected result" parsing removed
+                            # elif key == "expected result":
+                            #     fields["Expected Result"] = value if value else "N/A" 
+                            elif key == "steps":
+                                collecting_steps = True
+                                if value: current_steps_list.append(value)
+                        elif collecting_steps:
+                            current_steps_list.append(line) 
+                    
+                    fields["Steps"] = " ".join(current_steps_list).strip()
+                    
+                    for f_key in fields: 
+                        if fields[f_key] == "": fields[f_key] = "N/A"
+                    
+                    writer.writerow(fields)
+
+        return FileResponse(csv_output_path, media_type="text/csv", filename=f"{document_id}_test_cases.csv")
+
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+    except Exception as e:
+        import traceback
+        print(f"An error occurred: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"An internal server error occurred: {str(e)}")
+    
 @app.get("/download/testcases/{document_id}")
 def download_test_cases_excel(document_id: str):
     try:
