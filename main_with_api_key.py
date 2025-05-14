@@ -13,7 +13,7 @@ from fastapi import (
 )
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional, List
+from typing import Optional, List, Dict
 from dotenv import load_dotenv
 from pymongo import MongoClient
 from bson import ObjectId
@@ -45,7 +45,7 @@ def serialize_document(doc):
 
 # ----------------- Directories Setup -----------------
 TEST_CASE_PROMPT_FILE_PATH = os.getenv("MISTRAL_TEST_CASE_PROMPT_FILE_PATH")
-USER_STORY_PROMPT_FILE_PATH = os.getenv("MISTRAL_USER_STORY_PROMPT_FILE_PATH")
+USER_STORY_PROMPT_FILE_PATH = os.getenv("MISTRAL_TEST_CASE_PROMPT_FILE_PATH")
 INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_files")
 EXCEL_OUTPUT_DIR = os.getenv("EXCEL_OUTPUT_DIR", "excel_files")
@@ -70,15 +70,23 @@ async def process_and_generate(
     chunk_size: Optional[int] = Query(default=None),
     cache_key: Optional[str] = Query(default=None),
     api_key: Optional[str] = Form(None),
-    test_case_type: str = Form("functional"),  # New parameter, default to "functional"
+    test_case_types: List[str] = Query(["functional"]),  # Changed to Query
 ):
     # Validate test_case_type
-    valid_test_case_types = ["functional", "non-functional"]
-    if test_case_type not in valid_test_case_types:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid test_case_type. Must be one of {valid_test_case_types}",
-        )
+    valid_test_case_types = [
+        "functional",
+        "non-functional",
+        "security",
+        "performance",
+        "boundary",
+        "compliance",
+    ]
+    for test_case_type in test_case_types:
+        if test_case_type not in valid_test_case_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid test_case_type: {test_case_type}. Must be one of {valid_test_case_types}",
+            )
 
     # Use default if user key not provided
     api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
@@ -101,22 +109,61 @@ async def process_and_generate(
     finally:
         await file.close()
 
-    # Start the Celery task
-    task = process_and_generate_task.delay(
-        str(file_path),
-        model_name,
-        chunk_size,
-        cache_key,
-        api_key_to_use,
-        test_case_type,  # Pass test_case_type to the task
+    task_results: Dict[str, AsyncResult] = {}  # Store task result objects
+    all_task_ids = {}
+
+    # Launch all tasks
+    for test_case_type in test_case_types:
+        task = process_and_generate_task.delay(
+            str(file_path),
+            model_name,
+            chunk_size,
+            api_key_to_use,
+            test_case_type,
+        )
+        task_results[test_case_type] = task
+        all_task_ids[test_case_type] = task.id
+
+    # Wait for all tasks to complete
+    results = {}
+    all_test_cases = {}
+    all_excel_paths = {}
+    for test_case_type, task in task_results.items():
+        results[test_case_type] = task.get()  # This will block until task is complete
+        all_test_cases[test_case_type] = results[test_case_type]["test_cases"]
+        all_excel_paths[test_case_type] = results[test_case_type]["excel_path"]
+
+    # Construct the combined document
+    combined_test_cases = "\n".join(
+        [f"--- {k} ---\n{v}" for k, v in all_test_cases.items()]
     )
+
+    # Determine the excel path
+    excel_test_case_path = all_excel_paths[test_case_types[0]]
+
+    # MongoDB Storage
+    document = {
+        "doc_name": os.path.basename(file_path),
+        "doc_path": str(file_path),
+        "test_case_excel_path": excel_test_case_path,  # store one excel path
+        "selected_model": model_name,
+        "all_llm_responses_testcases": all_test_cases,  # store dictionary of llm response
+        "llm_response_testcases": combined_test_cases,
+        "api_key_used": f"...{api_key_to_use[-5:]}",
+        "test_case_types": test_case_types,  # Store test case types
+    }
+
+    try:
+        collection.insert_one(document)
+    except Exception as e:
+        print("MongoDB Insertion Error:", str(e))
 
     return {
         "message": "File uploaded successfully. Processing started.",
-        "task_id": task.id,
+        "task_ids": all_task_ids,
         "api_key_being_used": f"...{api_key_to_use[-5:]}",
         "warning": warning,
-        "test_case_type": test_case_type,
+        "test_case_types": test_case_types,
     }
 
 

@@ -9,8 +9,14 @@ celery_app = Celery(
     include=["task_with_api_key"],
 )
 
-celery_app.conf.update(
-    task_routes={
-        "task_with_api_key.process_and_generate_task": {"queue": "celery"},
-    },
-)
+# No changes needed in celery_app.conf.update because we are calling tasks dynamically
+# celery_app.conf.update(
+#     task_routes={
+#         "task_with_api_key.process_and_generate_functional_task": {"queue": "celery"},
+#         "task_with_api_key.process_and_generate_non_functional_task": {"queue": "celery"},
+#         "task_with_api_key.process_and_generate_security_task": {"queue": "celery"},
+#         "task_with_api_key.process_and_generate_performance_task": {"queue": "celery"},
+#         "task_with_api_key.process_and_generate_boundary_task": {"queue": "celery"},
+#         "task_with_api_key.process_and_generate_compliance_task": {"queue": "celery"},
+#     },
+# )
