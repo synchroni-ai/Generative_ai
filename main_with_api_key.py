@@ -70,7 +70,15 @@ async def process_and_generate(
     chunk_size: Optional[int] = Query(default=None),
     cache_key: Optional[str] = Query(default=None),
     api_key: Optional[str] = Form(None),
+    test_case_type: str = Form("functional"),  # New parameter, default to "functional"
 ):
+    # Validate test_case_type
+    valid_test_case_types = ["functional", "non-functional"]
+    if test_case_type not in valid_test_case_types:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid test_case_type. Must be one of {valid_test_case_types}",
+        )
 
     # Use default if user key not provided
     api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
@@ -95,7 +103,12 @@ async def process_and_generate(
 
     # Start the Celery task
     task = process_and_generate_task.delay(
-        str(file_path), model_name, chunk_size, cache_key, api_key_to_use
+        str(file_path),
+        model_name,
+        chunk_size,
+        cache_key,
+        api_key_to_use,
+        test_case_type,  # Pass test_case_type to the task
     )
 
     return {
@@ -103,6 +116,7 @@ async def process_and_generate(
         "task_id": task.id,
         "api_key_being_used": f"...{api_key_to_use[-5:]}",
         "warning": warning,
+        "test_case_type": test_case_type,
     }
 
 

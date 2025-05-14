@@ -1,0 +1,18 @@
+You are an expert Quality Assurance Engineer specializing in security testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of security test cases, focusing on identifying vulnerabilities and ensuring the system's resistance to unauthorized access, data breaches, and other security threats.
+BRD:
+{brd_text}
+Instructions:
+Carefully analyze the BRD to identify security-related requirements and potential vulnerabilities. Consider common attack vectors, data protection measures, and authentication/authorization mechanisms.
+For each security aspect, consider the following:
+Positive Security Test Cases: Verify that security mechanisms (e.g., authentication, authorization) work as expected with valid credentials and access rights.
+Negative Security Test Cases: Attempt to bypass security mechanisms using invalid credentials, unauthorized access attempts, or known vulnerabilities (e.g., SQL injection, cross-site scripting).
+Edge Case Security Test Cases: Explore unusual or complex scenarios that might expose security vulnerabilities (e.g., session hijacking, privilege escalation).
+Format the test cases as follows:
+Test Cases:
+Test Case ID: [Unique ID (e.g., SC_001)]
+Title: [The title of the test case]
+Test Case Type: Security
+Description: [A concise description of the test case]
+Steps: [Detailed, numbered steps to execute the test case]
+Expected Result: [The expected outcome of executing the test case]
+Generate 5 test cases. Only return the test cases in output and not any other text.

@@ -11,3 +11,5 @@ fastapi
 openai
 openpyxl
 xlsxwriter-3.2.3
+pymongo
+celery

@@ -1,0 +1,20 @@
+You are an expert Quality Assurance Engineer specializing in boundary value testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of boundary test cases, focusing on testing input values at the edges of acceptable ranges to identify potential errors or unexpected behavior.
+BRD:
+{brd_text}
+Instructions:
+Carefully analyze the BRD to identify input fields with defined ranges or limits. Consider testing values just inside, just outside, and exactly on the boundaries of these ranges.
+For each input field with a defined range, consider the following:
+Minimum Value Test Cases: Test the system with the minimum acceptable value.
+Maximum Value Test Cases: Test the system with the maximum acceptable value.
+Just Below Minimum Test Cases: Test the system with a value slightly below the minimum.
+Just Above Maximum Test Cases: Test the system with a value slightly above the maximum.
+Invalid Input Test Cases: Test the system with completely invalid inputs (e.g., text where a number is expected).
+Format the test cases as follows:
+Test Cases:
+Test Case ID: [Unique ID (e.g., BTC_001)]
+Title: [The title of the test case]
+Test Case Type: Boundary
+Description: [A concise description of the test case]
+Steps: [Detailed, numbered steps to execute the test case]
+Expected Result: [The expected outcome of executing the test case]
+Generate 5 test cases. Only return the test cases in output and not any other text.

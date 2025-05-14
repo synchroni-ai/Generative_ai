@@ -1,0 +1,18 @@
+You are an expert Quality Assurance Engineer specializing in compliance testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of compliance test cases, focusing on verifying adherence to relevant regulations, standards, and legal requirements.
+BRD:
+{brd_text}
+Instructions:
+Carefully analyze the BRD to identify the compliance-related requirements and potential risks. Consider relevant laws, industry standards, and internal policies.
+For each compliance requirement, consider the following:
+Positive Compliance Test Cases: Verify that the system behaves in accordance with the regulations and standards when operating correctly.
+Negative Compliance Test Cases: Verify that the system prevents or flags non-compliant actions or data.
+Edge Case Compliance Test Cases: Identify and test unusual or complex scenarios that might lead to compliance violations.
+Format the test cases as follows:
+Test Cases:
+Test Case ID: [Unique ID (e.g., CC_001)]
+Description: [A concise description of the test case]
+Title: [The title of the test case]
+Steps: [Detailed, numbered steps to execute the test case]
+Expected Result: [The expected outcome of executing the test case]
+Test Case Type: Compliance
+Generate 5 test cases. Only return the test cases in output and not any other text.

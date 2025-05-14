@@ -4,7 +4,7 @@ import re
 import os
 
 
-def generate_test_cases(brd_text, llm_function, prompt_file_path):
+def generate_test_cases(brd_text, generation_function, test_case_prompt):
     """
     Generates test cases from the given BRD text using the specified LLM and prompt.
 
@@ -16,15 +16,15 @@ def generate_test_cases(brd_text, llm_function, prompt_file_path):
     Returns:
         The generated test cases as a string, or None if an error occurs.
     """
+
     try:
-        with open(prompt_file_path, "r") as f:
-            prompt_template = f.read()
-        prompt = prompt_template.format(brd_text=brd_text)
-        test_cases, total_tokens = llm_function(prompt)
-        return test_cases, total_tokens
+        # Format the prompt with the chunk text
+        formatted_prompt = test_case_prompt.format(brd_text=brd_text)
+        response, tokens = generation_function(formatted_prompt)
+        return response.strip(), tokens
     except Exception as e:
-        print(f"Error generating test cases: {e}")
-        return None, 0
+        print(f"Error generating test cases: {str(e)}")
+        return "", 0
 
 
 def store_test_cases_to_text_file(test_cases_text, output_path="test_cases.txt"):
