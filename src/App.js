@@ -1,99 +1,65 @@
-// import React, { useEffect } from "react";
-// import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+
+
+// import React from "react";
+// import { BrowserRouter, Routes, Route } from "react-router-dom";
 // import LoginPage from "./components/Loginpage";
-// import Dashboard from "./components/Dashboard";
+// import Dashboard from "./components/./Documentlist";
+// // ... import other components
+// import TokenChecker from "./components/./TokenChecker"; // Make sure the path is correct
 
-// const App = () => {
-
-//   useEffect(() => {
-//     const tokenExpiry = localStorage.getItem("tokenExpiry");
-//     const currentTime = new Date().getTime();
-
-//     if (tokenExpiry && currentTime > tokenExpiry) {
-//       // If the token has expired, log the user out
-//       localStorage.removeItem("token");
-//       localStorage.removeItem("tokenExpiry");
-//       localStorage.removeItem("isLoggedIn");
-//       window.location.href = "/"; // Redirect to login page
-//     }
-//   }, []);
-
+// function App() {
 //   return (
-//     <Router>
-//       <Routes>
-//         <Route path="/" element={<LoginPage />} />
-//         <Route path="/dashboard" element={<Dashboard />} />
-//       </Routes>
-//     </Router>
-//   );
-// };
-
-// export default App;
-
-
-// import React, { useEffect } from "react";
-// import { BrowserRouter as Router, Route, Routes, useLocation, useNavigate } from "react-router-dom";
-// import LoginPage from "./components/Loginpage";
-// import Dashboard from "./components/Dashboard";
-
-// const TokenChecker = ({ children }) => {
-//   const location = useLocation();
-//   const navigate = useNavigate();
-
-//   useEffect(() => {
-//     const tokenExpiry = localStorage.getItem("tokenExpiry");
-//     const currentTime = new Date().getTime();
-
-//     if (tokenExpiry && currentTime > tokenExpiry) {
-//       // Token expired
-//       localStorage.removeItem("token");
-//       localStorage.removeItem("tokenExpiry");
-//       localStorage.removeItem("isLoggedIn");
-
-//       if (location.pathname !== "/") {
-//         navigate("/"); // Redirect to login page
-//       }
-//     }
-//   }, [location, navigate]);
-
-//   return children;
-// };
-
-// const App = () => {
-//   return (
-//     <Router>
+//     <BrowserRouter>
 //       <TokenChecker>
 //         <Routes>
 //           <Route path="/" element={<LoginPage />} />
 //           <Route path="/dashboard" element={<Dashboard />} />
 //         </Routes>
 //       </TokenChecker>
-//     </Router>
+//     </BrowserRouter>
 //   );
-// };
+// }
 
 // export default App;
 
 
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
 import LoginPage from "./components/Loginpage";
-import Dashboard from "./components/./Dashboard";
-// ... import other components
-import TokenChecker from "./components/./TokenChecker"; // Make sure the path is correct
+import Dashboard from "./components/Documentlist";
+import TokenChecker from "./components/TokenChecker";
+import Header from "./components/Header"; // ✅ Make sure this path is correct
 
-function App() {
+// This wrapper lets us access hooks like useNavigate inside Header placement logic
+const AppWrapper = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    navigate("/");
+  };
+
+  // Optional: Only show header if not on login page
+  const showHeader = location.pathname !== "/";
+
   return (
-    <BrowserRouter>
+    <>
+      {showHeader && <Header onLogout={handleLogout} />}
       <TokenChecker>
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
-          {/* Add your protected routes here */}
         </Routes>
       </TokenChecker>
-    </BrowserRouter>
+    </>
   );
-}
+};
+
+const App = () => (
+  <BrowserRouter>
+    <AppWrapper />
+  </BrowserRouter>
+);
 
 export default App;

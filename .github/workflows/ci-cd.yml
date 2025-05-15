@@ -1,0 +1,60 @@
+name: Full Stack CI/CD Deployment
+
+on:
+  push:
+    branches:
+      - main  # Corrected branch name (was 'mian')
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # ---- FRONTEND DEPLOYMENT ----
+      - name: Set up Node.js
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        if: github.ref == 'refs/heads/main'
+        run: npm install
+
+      - name: Build Frontend
+        if: github.ref == 'refs/heads/main'
+        run: CI=false npm run build
+
+      - name: Remove Previous Build on Server
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_HOST_GEN }}
+          username: ${{ secrets.SERVER_USER_GEN }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_GEN }}
+          script: |
+            sudo rm -rf /home/ubuntu/frontend/Generative_ai/build
+
+      - name: Transfer New Build to Server
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.SERVER_HOST_GEN }}
+          username: ${{ secrets.SERVER_USER_GEN }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_GEN }}
+          source: "build/*"
+          target: "/home/ubuntu/frontend/Generative_ai/"
+
+      - name: Restart Nginx
+        if: github.ref == 'refs/heads/main'
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SERVER_HOST_GEN }}
+          username: ${{ secrets.SERVER_USER_GEN }}
+          key: ${{ secrets.SSH_PRIVATE_KEY_GEN }}
+          script: |
+            sudo systemctl restart nginx
