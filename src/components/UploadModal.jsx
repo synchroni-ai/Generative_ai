@@ -283,7 +283,7 @@ const UploadModal = ({ open, onClose,fetchDocuments }) => {
     formData.append("file", file);
   
     try {
-           const response = await axios.post("https://gen-backend.synchroni.xyz/process_and_generate/",
+           const response = await axios.post("https://gen-backend.synchroni.xyz/upload_document/",
       // const response = await axios.post("http://192.168.0.173:8000/process_and_generate/",
         formData,
         {
