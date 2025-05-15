@@ -267,13 +267,11 @@ import {
   Paper,
   CircularProgress,
 } from "@mui/material";
+import axios from "axios";
 import CloseIcon from "@mui/icons-material/Close";
 import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import Papa from "papaparse";
 
-// Simulated CSV input
-const csvData = `"TCID","Test type","Title","Description","Precondition","Steps","Action","Data","Result","Type","Test priority"
-"BTC_001","Boundary","Validate Minimum Password Length","Test the system with the minimum acceptable password length.","None","1. Navigate to the login page. 2. Enter a username. 3. Enter a password with the minimum length (assuming the minimum length is 8 characters, e.g., ""Password""). 4. Click on the login button.","Entering a password with the minimum length.","Username: testuser, Password: ""Password""","The system should accept the password and allow login.","P","High"`;
 
 const GenerateDrawer = ({ open, onClose, documentName, taskId   }) => {
   const [parsedData, setParsedData] = useState([]);
@@ -281,58 +279,106 @@ const GenerateDrawer = ({ open, onClose, documentName, taskId   }) => {
  const [loading, setLoading] = useState(true);
   const socketRef = useRef(null);
 const [error, setError] = useState(false);
+const [documentId, setDocumentId] = useState(null);
+        console.log("Documensst ID received:", documentId);
+
  useEffect(() => {
-    if (!taskId) return;
+  if (!taskId) return;
 
-    const socketUrl = `wss://gen-backend.synchroni.xyz/ws/task_status?task_id=${taskId}`;
-    socketRef.current = new WebSocket(socketUrl);
+  setLoading(true);
+  setError(false);
+  setDocumentId(null);
+  setParsedData([]);
+  setHeaders([]);
 
-    socketRef.current.onopen = () => {
-      console.log("✅ WebSocket connected");
-      setError(false);
-    };
+  const socketUrl = `wss://gen-backend.synchroni.xyz/ws/task_status?task_id=${taskId}`;
+  socketRef.current = new WebSocket(socketUrl);
 
-    socketRef.current.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      console.log("📨 WebSocket message received:", data);
+  socketRef.current.onopen = () => {
+    console.log("✅ WebSocket connected");
+    setError(false);
+  };
 
-      if (data.status === "SUCCESS" && data.result?.results) {
-        const allRows = data.result.results.map((item) => {
-          const lines = item.test_cases.split("\n").filter((line) => line.includes(":"));
-          const row = {};
-          lines.forEach((line) => {
-            const [key, ...rest] = line.split(":");
-            row[key.trim()] = rest.join(":").trim();
-          });
-          return row;
+  socketRef.current.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    console.log("📨 WebSocket message received:", data);
+
+    if (data.status === "SUCCESS" && data.result?.results) {
+      const allRows = data.result.results.map((item) => {
+        const lines = item.test_cases.split("\n").filter((line) => line.includes(":"));
+        const row = {};
+        lines.forEach((line) => {
+          const [key, ...rest] = line.split(":");
+          row[key.trim()] = rest.join(":").trim();
         });
+        return row;
+      });
 
-        if (allRows.length > 0) {
-          setHeaders(Object.keys(allRows[0]));
-          setParsedData(allRows);
-        }
-        setLoading(false);
-      } else if (data.status === "FAILURE") {
-        console.error("❌ Task failed:", data.result?.message);
-        setError(true);
-        setLoading(false);
+      if (allRows.length > 0) {
+        const filteredHeaders = Object.keys(allRows[0]).filter(
+          (key) => key.toLowerCase() !== "test cases" && key.toLowerCase() !== "test_cases"
+        );
+        setHeaders(filteredHeaders);
+        setParsedData(
+          allRows.map((row) => {
+            const filteredRow = { ...row };
+            delete filteredRow["Test Cases"];
+            delete filteredRow["test_cases"];
+            return filteredRow;
+          })
+        );
       }
-    };
 
-    socketRef.current.onerror = (event) => {
-      console.error("🛑 WebSocket error:", event);
+      if (data.result?.combined_test_case_document?._id) {
+        console.log("Document ID received:", data.result._id);
+        setDocumentId(data.result.combined_test_case_document._id);
+      }
+
+      setLoading(false);
+    } else if (data.status === "FAILURE") {
+      console.error("❌ Task failed:", data.result?.message);
       setError(true);
       setLoading(false);
-    };
+    }
+  };
 
-    socketRef.current.onclose = () => {
-      console.log("🔌 WebSocket connection closed");
-    };
+  socketRef.current.onerror = (event) => {
+    console.error("🛑 WebSocket error:", event);
+    setError(true);
+    setLoading(false);
+  };
 
-    return () => {
-      socketRef.current?.close();
-    };
-  }, [taskId]);
+  socketRef.current.onclose = () => {
+    console.log("🔌 WebSocket connection closed");
+  };
+
+  return () => {
+    socketRef.current?.close();
+  };
+}, [taskId]);
+
+
+  const handleDownloadCSV = async () => {
+  if (!documentId) return;
+  console.log("Downloading CSV for documentId:", documentId);  // <-- added log here
+
+  try {
+    const response = await axios.get(`https://gen-backend.synchroni.xyz/download-csv/${documentId}`, {
+      responseType: 'blob', // Important for file download
+    });
+
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `${documentName || "test-cases"}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("Error downloading CSV:", error);
+  }
+};
+
 
 
   return (
@@ -369,25 +415,37 @@ const [error, setError] = useState(false);
         }}
       >
         <Box sx={{ fontSize: "18px", fontWeight: 600 }}>Generate Test Cases</Box>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton onClick={() => {}}>
-            <FileDownloadIcon />
-          </IconButton>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </Box>
-      </Box>
 
         {/* Document Name */}
       {documentName && (
-        <Box sx={{ p: 2, fontWeight: 600, fontSize: "16px", color: "#333" }}>
-          Document: <span style={{ color: "#1976d2" }}>{documentName}</span>
-        </Box>
-      )}
+  <Box
+    sx={{
+      display: "flex",
+      alignItems: "center",
+      p: 2,
+    }}
+  >
+    <Box sx={{ fontWeight: 600, fontSize: "16px", color: "#333",marginRight:"20px" }}>
+      Document: <span>{documentName}</span>
+    </Box>
+    <IconButton onClick={handleDownloadCSV}  disabled={!documentId} sx={{ mt: "2px" }} // 👈 moves the icon 2px down
+>
+      <FileDownloadIcon />
+    </IconButton>
+  </Box>
+)}
+
 
       {/* Table Section */}
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 2  ,height: '500px', // same height as your scrollable area for consistency
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+  }}>
         {parsedData.length === 0 ? (
           <CircularProgress />
         ) : (
@@ -412,7 +470,6 @@ const [error, setError] = useState(false);
             <Table sx={{ minWidth: 650 }} size="small" >
               <TableHead>
                 <TableRow>
-                            <TableCell sx={{ fontWeight: 600 }}>S.No</TableCell> {/* Serial Number Header */}
                   {headers.map((header) => (
                     <TableCell key={header} sx={{ fontWeight: 600 }}>
                       {header}
@@ -423,7 +480,6 @@ const [error, setError] = useState(false);
               <TableBody>
                 {parsedData.map((row, index) => (
                   <TableRow key={index}>
-                              <TableCell>{index + 1}</TableCell> {/* Serial Number */}
                     {headers.map((key) => (
                       <TableCell key={key}>{row[key]}</TableCell>
                     ))}
