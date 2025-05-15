@@ -2,7 +2,7 @@ import React from "react";
 import {
   Drawer,
   Box,
-  IconButton
+  IconButton,Button
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
@@ -17,11 +17,12 @@ const TestCaseDrawer = ({ open, onClose, data, activeTab, setActiveTab, parseFor
         sx: {
           width: "70%",
           padding: "0px 23px",
-          height: "93%",
+          height: "92%",
           top: "64px",
           transition: "transform 2s ease-in-out",
           transform: "translate(50%, 0%)",
-          borderRadius: "20px",
+          borderRadius: "20px 0px 0px 20px",
+          scrollbarWidth:"thin"
         },
       }}
     >
@@ -56,9 +57,20 @@ const TestCaseDrawer = ({ open, onClose, data, activeTab, setActiveTab, parseFor
               </Box>
             </Box>
           </Box>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
+         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+      {/* <Button 
+      sx={{    color: 'white',
+        backgroundColor:'#000080',
+        textTransform:'none',
+        borderRadius:'10px',
+        padding:'4px 16px !important'
+    }} >
+        Export
+      </Button> */}
+      <IconButton onClick={onClose}>
+        <CloseIcon />
+      </IconButton>
+    </Box>
         </Box>
       </Box>
 
