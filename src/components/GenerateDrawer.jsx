@@ -253,7 +253,7 @@
 
 
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef  } from "react";
 import {
   Drawer,
   Box,
@@ -273,23 +273,67 @@ import Papa from "papaparse";
 
 // Simulated CSV input
 const csvData = `"TCID","Test type","Title","Description","Precondition","Steps","Action","Data","Result","Type","Test priority"
-"BTC_001","Boundary","Validate Minimum Password Length","Test the system with the minimum acceptable password length.","None","1. Navigate to the login page. 2. Enter a username. 3. Enter a password with the minimum length (assuming the minimum length is 8 characters, e.g., ""Password""). 4. Click on the login button.","Entering a password with the minimum length.","Username: testuser, Password: ""Password""","The system should accept the password and allow login.","P","High"
-"BTC_002","Boundary","Validate Maximum Password Length","Test the system with the maximum acceptable password length.","None","1. Navigate to the login page. 2. Enter a username. 3. Enter a password with the maximum length (assuming the maximum length is 20 characters, e.g., ""Password123456789012345""). 4. Click on the login button.","Entering a password with the maximum length.","Username: testuser, Password: ""Password123456789012345""","The system should accept the password and allow login.","P","High"`;
+"BTC_001","Boundary","Validate Minimum Password Length","Test the system with the minimum acceptable password length.","None","1. Navigate to the login page. 2. Enter a username. 3. Enter a password with the minimum length (assuming the minimum length is 8 characters, e.g., ""Password""). 4. Click on the login button.","Entering a password with the minimum length.","Username: testuser, Password: ""Password""","The system should accept the password and allow login.","P","High"`;
 
-const GenerateDrawer = ({ open, onClose, documentName  }) => {
+const GenerateDrawer = ({ open, onClose, documentName, taskId   }) => {
   const [parsedData, setParsedData] = useState([]);
   const [headers, setHeaders] = useState([]);
+ const [loading, setLoading] = useState(true);
+  const socketRef = useRef(null);
+const [error, setError] = useState(false);
+ useEffect(() => {
+    if (!taskId) return;
 
-  useEffect(() => {
-    if (csvData) {
-      const result = Papa.parse(csvData, {
-        header: true,
-        skipEmptyLines: true,
-      });
-      setParsedData(result.data);
-      setHeaders(result.meta.fields);
-    }
-  }, [csvData]);
+    const socketUrl = `wss://gen-backend.synchroni.xyz/ws/task_status?task_id=${taskId}`;
+    socketRef.current = new WebSocket(socketUrl);
+
+    socketRef.current.onopen = () => {
+      console.log("✅ WebSocket connected");
+      setError(false);
+    };
+
+    socketRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      console.log("📨 WebSocket message received:", data);
+
+      if (data.status === "SUCCESS" && data.result?.results) {
+        const allRows = data.result.results.map((item) => {
+          const lines = item.test_cases.split("\n").filter((line) => line.includes(":"));
+          const row = {};
+          lines.forEach((line) => {
+            const [key, ...rest] = line.split(":");
+            row[key.trim()] = rest.join(":").trim();
+          });
+          return row;
+        });
+
+        if (allRows.length > 0) {
+          setHeaders(Object.keys(allRows[0]));
+          setParsedData(allRows);
+        }
+        setLoading(false);
+      } else if (data.status === "FAILURE") {
+        console.error("❌ Task failed:", data.result?.message);
+        setError(true);
+        setLoading(false);
+      }
+    };
+
+    socketRef.current.onerror = (event) => {
+      console.error("🛑 WebSocket error:", event);
+      setError(true);
+      setLoading(false);
+    };
+
+    socketRef.current.onclose = () => {
+      console.log("🔌 WebSocket connection closed");
+    };
+
+    return () => {
+      socketRef.current?.close();
+    };
+  }, [taskId]);
+
 
   return (
     <Drawer
