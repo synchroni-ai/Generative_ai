@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()  # Load environment variables from .env file
 
 
-def generate_with_together(prompt, temperature=0.3, max_tokens=2000):
+def generate_with_together(prompt, temperature=0.3, max_tokens=2000, api_key=None):
     """
     Calls the Together AI API to generate text based on a prompt.
     Reads API key from environment variables.
@@ -19,7 +19,7 @@ def generate_with_together(prompt, temperature=0.3, max_tokens=2000):
     Returns:
         The generated text, or an error message if the API call fails.
     """
-    api_key = os.getenv("TOGETHER_API_KEY")
+    api_key = api_key or os.getenv("TOGETHER_API_KEY")
     model_name = os.getenv("MISTRAL_MODEL")
 
     if not api_key:

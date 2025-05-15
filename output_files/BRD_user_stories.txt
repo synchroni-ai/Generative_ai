@@ -1,1 +1,161 @@
-API Error: Error code: 429 - {'error': {'message': 'Request too large for gpt-4 in organization org-emN2pg82r1JVEDm6uOEjEYEC on tokens per min (TPM): Limit 10000, Requested 12320. The input or output tokens must be reduced in order to run successfully. Visit https://platform.openai.com/account/rate-limits to learn more.', 'type': 'tokens', 'param': None, 'code': 'rate_limit_exceeded'}}
+**User Stories:**
+
+* **User Story ID:** US_001
+  * **Title:** User Registration
+  * **Description:** As a customer, I want to create an account with my name, contact number, and email address, so that I can access personalized features and track my orders.
+  * **Acceptance Criteria:**
+    * The system allows users to register with the required information.
+    * The system sends a confirmation email upon successful registration.
+    * The system validates the email format and contact number.
+
+* **User Story ID:** US_002
+  * **Title:** Product Search
+  * **Description:** As a customer, I want to search for products using keywords, so that I can quickly find items I am interested in.
+  * **Acceptance Criteria:**
+    * The system provides a search bar for keyword input.
+    * The system displays relevant search results.
+    * The system supports filters for category, price, and discounts.
+
+* **User Story ID:** US_003
+  * **Title:** Product Filtering
+  * **Description:** As a customer, I want to filter products by category, price, and discounts, so that I can narrow down my search results.
+  * **Acceptance Criteria:**
+    * The system provides filter options for category, price, and discounts.
+    * The system updates the search results in real-time based on the applied filters.
+    * The system allows users to clear filters and reset the search results.
+
+* **User Story ID:** US_004
+  * **Title:** Add to Cart
+  * **Description:** As a customer, I want to add products to my shopping cart, so that I can purchase multiple items in a single transaction.
+  * **Acceptance Criteria:**
+    * The system allows users to add products to the cart.
+    * The system displays the cart contents and the total price.
+    * The system updates the cart when items are added or removed.
+
+* **User Story ID:** US_005
+  * **Title:** Edit Cart Quantity
+  * **Description:** As a customer, I want to edit the quantity of items in my cart, so that I can adjust the number of items I want to purchase.
+  * **Acceptance Criteria:**
+    * The system allows users to change the quantity of items in the cart.
+    * The system updates the total price based on the quantity changes.
+    * The system provides options to remove items from the cart.
+
+* **User Story ID:** US_006
+  * **Title:** Guest Checkout
+  * **Description:** As a customer, I want the option to checkout as a guest, so that I can make a purchase without creating an account.
+  * **Acceptance Criteria:**
+    * The system provides a guest checkout option.
+    * The system allows guests to enter shipping and payment information.
+    * The system processes the order and sends a confirmation email to the guest.
+
+* **User Story ID:** US_007
+  * **Title:** Manage Product Listings
+  * **Description:** As an admin, I want to add, delete, and edit product listings, so that I can keep the product catalog up-to-date.
+  * **Acceptance Criteria:**
+    * The system allows admins to add new products with details such as name, description, price, and images.
+    * The system allows admins to delete existing products.
+    * The system allows admins to edit product details.
+
+* **User Story ID:** US_008
+  * **Title:** Manage Stock Levels
+  * **Description:** As an admin, I want to automatically update stock levels based on purchases, so that I can track inventory accurately.
+  * **Acceptance Criteria:**
+    * The system updates stock levels in real-time when orders are placed.
+    * The system sends alerts when stock levels are low.
+    * The system provides a dashboard for admins to view stock levels.
+
+* **User Story ID:** US_009
+  * **Title:** Manage Orders
+  * **Description:** As an admin, I want to manage orders by accepting, deleting, and updating order details, so that I can process orders efficiently.
+  * **Acceptance Criteria:**
+    * The system allows admins to view and manage orders.
+    * The system allows admins to update order status (e.g., pending, shipped, delivered).
+    * The system sends notifications to customers when order status changes.
+
+* **User Story ID:** US_010
+  * **Title:** Order History and Tracking
+  * **Description:** As a customer, I want to view my order history and track the status of my orders, so that I can stay informed about my purchases.
+  * **Acceptance Criteria:**
+    * The system provides a section for customers to view their order history.
+    * The system allows customers to track the status of their orders.
+    * The system sends notifications to customers about order updates.
+
+* **User Story ID:** US_011
+  * **Title:** Manage Blogs
+  * **Description:** As a fashion designer, I want to create, edit, and delete blog posts, so that I can share my fashion insights and engage with customers.
+  * **Acceptance Criteria:**
+    * The system allows fashion designers to create new blog posts with text, images, and videos.
+    * The system allows fashion designers to edit existing blog posts.
+    * The system allows fashion designers to delete blog posts.
+
+* **User Story ID:** US_012
+  * **Title:** View and Review Blogs
+  * **Description:** As a customer, I want to view and leave feedback on blog posts, so that I can engage with fashion designers and share my thoughts.
+  * **Acceptance Criteria:**
+    * The system allows customers to view blog posts.
+    * The system allows customers to leave comments and ratings on blog posts.
+    * The system notifies fashion designers about new comments and ratings.
+
+* **User Story ID:** US_013
+  * **Title:** Manage Discounts
+  * **Description:** As an admin, I want to set up discounts and promotions, so that I can attract customers and boost sales.
+  * **Acceptance Criteria:**
+    * The system allows admins to create and manage discount codes.
+    * The system allows admins to set expiration dates for discounts.
+    * The system applies discounts to eligible products during checkout.
+
+* **User Story ID:** US_014
+  * **Title:** Personalized Recommendations
+  * **Description:** As a customer, I want to receive personalized product recommendations based on my browsing history, so that I can discover items that interest me.
+  * **Acceptance Criteria:**
+    * The system analyzes customer data and browsing history.
+    * The system suggests tailored product recommendations.
+    * The system updates recommendations based on customer interactions.
+
+* **User Story ID:** US_015
+  * **Title:** Social Media Integration
+  * **Description:** As a customer, I want to share my favorite products and blog posts on social media, so that I can engage with my social network and promote the brand.
+  * **Acceptance Criteria:**
+    * The system provides social sharing buttons for products and blog posts.
+    * The system allows customers to share content on popular social media platforms.
+    * The system tracks social media shares and engagement.
+
+* **User Story ID:** US_016
+  * **Title:** Customization Options
+  * **Description:** As a customer, I want to personalize my purchases by choosing custom colors, designs, or features, so that I can own unique items.
+  * **Acceptance Criteria:**
+    * The system allows customers to customize select products.
+    * The system provides options for custom colors, designs, or features.
+    * The system displays a preview of the customized product.
+
+* **User Story ID:** US_017
+  * **Title:** Fashion Quiz
+  * **Description:** As a customer, I want to take interactive quizzes to assess my style preferences and receive personalized recommendations, so that I can discover new fashion trends.
+  * **Acceptance Criteria:**
+    * The system provides a fashion quiz with questions about style preferences.
+    * The system analyzes quiz responses to provide personalized recommendations.
+    * The system updates recommendations based on customer feedback.
+
+* **User Story ID:** US_018
+  * **Title:** Style Guides
+  * **Description:** As a customer, I want to access curated collections, trend forecasts, and styling tips from fashion experts, so that I can stay informed about the latest fashion trends.
+  * **Acceptance Criteria:**
+    * The system provides a section for style guides and trend forecasts.
+    * The system allows customers to view curated collections and styling tips.
+    * The system updates style guides regularly.
+
+* **User Story ID:** US_019
+  * **Title:** Size Recommender
+  * **Description:** As a customer, I want to receive size recommendations based on my body measurements and past purchases, so that I can select the right size and reduce returns.
+  * **Acceptance Criteria:**
+    * The system collects body measurements and past purchase data.
+    * The system provides size recommendations for clothing and accessories.
+    * The system updates recommendations based on customer feedback.
+
+* **User Story ID:** US_020
+  * **Title:** Fashion Events Calendar
+  * **Description:** As a customer, I want to view a calendar of upcoming fashion events, so that I can stay informed about industry happenings and plan my participation.
+  * **Acceptance Criteria:**
+    * The system provides a calendar of upcoming fashion events.
+    * The system allows customers to view event details and locations.
+    * The system sends reminders about upcoming events.

@@ -85,38 +85,3 @@ def store_processed_text(cleaned_text, num_tokens, processing_time, metadata=Non
         "metadata": metadata or {},  # Ensure metadata is a dictionary
     }
     return stored_data
-
-
-# if __name__ == "__main__":
-#     # Example usage
-#     pdf_path = "C:/Users/admin/Desktop/test_case_generation_poc/utils/BRD.pdf"
-#     text, pdf_processing_time = load_pdf_text(pdf_path)
-
-#     if text:
-#         cleaned_text = clean_text(text)
-#         num_tokens = count_tokens(cleaned_text)
-
-#         if num_tokens is not None:
-#             metadata = {
-#                 "pdf_file_path": pdf_path,
-#                 "encoding": "cl100k_base",  # Specify encoding for tracking
-#                 "additional_info": "This is some extra information about the BRD",
-#             }
-#             stored_data = store_processed_text(
-#                 cleaned_text, num_tokens, pdf_processing_time, metadata
-#             )
-
-#             # Now you can access the cleaned text, token count, and processing time
-#             print(
-#                 "Cleaned Text (first 100 chars):",
-#                 stored_data["cleaned_text"][:100] + "...",
-#             )
-#             print("Number of Tokens:", stored_data["num_tokens"])
-#             print("PDF Processing Time:", stored_data["processing_time"], "seconds")
-#             print("Metadata:", stored_data["metadata"])
-
-#             #  Further processing with LLM (using stored_data["cleaned_text"])
-#         else:
-#             print("Could not count tokens.")
-#     else:
-#         print("Could not load PDF text.")

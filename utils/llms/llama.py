@@ -5,7 +5,8 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
 
-def generate_with_llama(prompt, temperature=0.3, max_tokens=2000):
+
+def generate_with_llama(prompt, temperature=0.3, max_tokens=2500, api_key=None):
     """
     Calls the Together AI API to generate text based on a prompt.
     Reads API key and model name from environment variables.
@@ -17,8 +18,8 @@ def generate_with_llama(prompt, temperature=0.3, max_tokens=2000):
     Returns:
         The generated text, or an error message if the API call fails.
     """
-    api_key = os.getenv("TOGETHER_API_KEY")
-    model_name = os.getenv("LLAMA_MODEL")  # Changed here to use LLaMA model name
+    api_key = api_key or os.getenv("TOGETHER_API_KEY")
+    model_name = os.getenv("LLAMA_MODEL")
 
     if not api_key:
         return "Error: TOGETHER_API_KEY environment variable not set."
@@ -45,7 +46,10 @@ def generate_with_llama(prompt, temperature=0.3, max_tokens=2000):
         data=json.dumps(payload),
     )
 
+    usage = response.json().get("usage", {})
+    total_tokens = usage.get("total_tokens", 0)
+
     if response.status_code == 200:
-        return response.json()["choices"][0]["message"]["content"]
+        return response.json()["choices"][0]["message"]["content"], total_tokens
     else:
-        return f"API Error: {response.status_code}\n{response.text}"
+        return f"API Error: {response.status_code}\n{response.text}", 0
