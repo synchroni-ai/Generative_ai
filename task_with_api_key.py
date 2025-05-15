@@ -71,9 +71,9 @@ def process_document(
 
 @celery_app.task(bind=True, name="task_with_api_key.process_and_generate_task")
 def process_and_generate_task(
-    self, file_path, model_name, chunk_size, api_key, test_case_type
+    self, file_path, model_name, chunk_size, api_key, test_case_types
 ):
-    print(f"🎯 Celery task started: {file_path} ({test_case_type})")
+    print(f"🎯 Celery task started: {file_path} ({test_case_types})")
 
     try:
         if model_name not in MODEL_DISPATCHER:
@@ -82,102 +82,109 @@ def process_and_generate_task(
             )
 
         generation_function = MODEL_DISPATCHER[model_name]
+        chunks, cleaned_text = process_document(file_path, model_name, chunk_size)
 
-        # Load Test Case Prompt
-        prompt_dir = Path("utils/prompts")
-        prompt_file = f"{test_case_type}.txt"
-        prompt_path = prompt_dir / prompt_file
-
-        if not prompt_path.exists():
-            raise HTTPException(
-                status_code=500,
-                detail=f"Prompt file not found: {prompt_path}",
-            )
-
-        with open(prompt_path, "r") as f:
-            test_case_prompt = f.read()
-
-        chunks, cleaned_text = process_document(
-            file_path, model_name, chunk_size
-        )  # Call the process_document function
-
-        # Generate Test Cases
-        all_test_cases = []
-        test_case_tokens = 0
-
-        for idx, chunk_text in enumerate(chunks, start=1):
-            try:
-                test_case_text, tokens = test_case_utils.generate_test_cases(
-                    chunk_text,
-                    generation_function,
-                    test_case_prompt=test_case_prompt,
-                )
-                if test_case_text:
-                    all_test_cases.append(test_case_text)
-                    test_case_tokens += tokens
-            except Exception as e:
-                print(
-                    f"Error generating test cases for chunk {idx} ({test_case_type}): {e}"
-                )
-                continue
-
-        combined_test_cases = "\n".join(all_test_cases)
-
-        # Save Outputs
         base_stem = Path(file_path).stem
-        output_test_case_path = (
-            Path(OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.txt"
-        )
-        test_case_utils.store_test_cases_to_text_file(
-            combined_test_cases, str(output_test_case_path)
-        )
+        all_results = []  # for response
+        all_combined_test_cases = ""  # for storing all test cases in one field
 
-        excel_test_case_path = (
-            Path(EXCEL_OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.xlsx"
-        )
-        csv_test_case_path = (
-            Path(OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.csv"
-        )
+        for test_case_type in test_case_types:
+            prompt_dir = Path("utils/prompts")
+            prompt_path = prompt_dir / f"{test_case_type}.txt"
 
-        if model_name == "Mistral":
-            test_case_utils.txt_to_csv_mistral(
-                str(output_test_case_path), str(csv_test_case_path)
+            if not prompt_path.exists():
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Prompt file not found: {prompt_path}",
+                )
+
+            with open(prompt_path, "r") as f:
+                test_case_prompt = f.read()
+
+            all_test_cases = []
+            test_case_tokens = 0
+
+            for idx, chunk_text in enumerate(chunks, start=1):
+                try:
+                    test_case_text, tokens = test_case_utils.generate_test_cases(
+                        chunk_text,
+                        generation_function,
+                        test_case_prompt=test_case_prompt,
+                    )
+                    if test_case_text:
+                        all_test_cases.append(test_case_text)
+                        test_case_tokens += tokens
+                except Exception as e:
+                    print(
+                        f"Error generating test cases for chunk {idx} ({test_case_type}): {e}"
+                    )
+                    continue
+
+            combined_test_cases = "\n".join(all_test_cases)
+            all_combined_test_cases += f"\n\n### {test_case_type.upper()} TEST CASES ###\n\n{combined_test_cases}"
+
+            # Save to text file
+            output_test_case_path = Path(OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.txt"
+            test_case_utils.store_test_cases_to_text_file(
+                combined_test_cases, str(output_test_case_path)
             )
-        else:
-            test_case_utils.txt_to_csv_llama(
-                str(output_test_case_path), str(csv_test_case_path)
-            )
-        test_case_utils.format_test_cases_excel(
-            str(csv_test_case_path),
-            str(excel_test_case_path),
-            mode="numbered_in_cell",
-        )
 
-        # MongoDB Storage
-        document = {
+            # Convert to CSV
+            csv_test_case_path = Path(OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.csv"
+            if model_name == "Mistral":
+                test_case_utils.txt_to_csv_mistral(
+                    str(output_test_case_path), str(csv_test_case_path)
+                )
+            else:
+                test_case_utils.txt_to_csv_llama(
+                    str(output_test_case_path), str(csv_test_case_path)
+                )
+
+            # Save individual test case type to MongoDB
+            individual_document = {
+                "doc_name": os.path.basename(file_path),
+                "doc_path": str(file_path),
+                "selected_model": model_name,
+                "llm_response_testcases": combined_test_cases,
+                "api_key_used": (
+                    f"Token ending with ...{api_key[-5:]}" if api_key else "Default API Key"
+                ),
+                "test_case_type": test_case_type
+            }
+
+            try:
+                collection.insert_one(individual_document)
+            except Exception as e:
+                print("MongoDB Insertion Error (individual):", str(e))
+
+            all_results.append({
+                "test_case_type": test_case_type,
+                "test_cases": combined_test_cases,
+            })
+
+        # Save combined test cases into a single field
+        combined_document = {
             "doc_name": os.path.basename(file_path),
             "doc_path": str(file_path),
-            "test_case_excel_path": str(excel_test_case_path),
             "selected_model": model_name,
-            "llm_response_testcases": combined_test_cases,
             "api_key_used": (
                 f"Token ending with ...{api_key[-5:]}" if api_key else "Default API Key"
             ),
-            "test_case_type": test_case_type,  # Store test case type
-            "test_case_prompt": test_case_prompt,  # Store prompt for reference
+            "all_test_cases": all_combined_test_cases.strip()
         }
 
         try:
-            collection.insert_one(document)
+            result = collection.insert_one(combined_document)
+            combined_document["_id"] = str(result.inserted_id)  # Attach ID to the response
         except Exception as e:
-            print("MongoDB Insertion Error:", str(e))
+            print("MongoDB Insertion Error (combined):", str(e))
+            result = None
 
         return {
-            "message": "File Uploaded Successfully",
-            "test_cases": combined_test_cases,
-            "excel_path": str(excel_test_case_path),
+            "message": "All test cases generated successfully.",
             "model_used": model_name,
-            "test_case_type": test_case_type,
+            "results": all_results,
+            "combined_test_case_document": combined_document
         }
 
     except Exception as e:
