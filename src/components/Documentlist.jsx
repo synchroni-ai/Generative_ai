@@ -275,6 +275,7 @@ const [taskId, setTaskId] = useState('');
   };
 
   const parseFormattedText = (text) => {
+      if (!text || typeof text !== 'string') return null; // <-- Prevent error if undefined/null
     const lines = text.split("\n");
     const elements = [];
     let listItems = [];
@@ -397,7 +398,7 @@ const [taskId, setTaskId] = useState('');
                     <TableCell sx={{ fontWeight: "bold" }}>SNo.</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>Document Name</TableCell>
                     <TableCell sx={{ fontWeight: "bold" }}>Document Path</TableCell>
-                    <TableCell sx={{ fontWeight: "bold" }}>Completion Latency</TableCell>
+                    {/* <TableCell sx={{ fontWeight: "bold" }}>Completion Latency</TableCell> */}
                     <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
                   </TableRow>
                 </TableHead>
@@ -413,9 +414,9 @@ const [taskId, setTaskId] = useState('');
                       <TableCell>
                         <Skeleton variant="rectangular" width="90%" height={20} />
                       </TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <Skeleton variant="rectangular" width="60%" height={20} />
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>
                         <Skeleton variant="rectangular" width="60%" height={20} />
                       </TableCell>
@@ -446,7 +447,7 @@ const [taskId, setTaskId] = useState('');
                       <TableRow key={doc._id}>
                         <TableCell>{page * rowsPerPage + index + 1}</TableCell>
                         <TableCell
-                          sx={{ cursor: "pointer", color: "#1976d2", textDecoration: "underline" }}
+                          // sx={{ cursor: "pointer", color: "#1976d2", textDecoration: "underline" }}
                           onClick={() => {
                             setTestCaseData(doc.llm_response_testcases);
                             setDrawerOpen(true);
@@ -487,7 +488,11 @@ const [taskId, setTaskId] = useState('');
           <TablePagination
             rowsPerPageOptions={[5, 10, 25]}
             component="div"
-            count={documents.length}
+count={
+  documents.filter((doc) =>
+    doc.file_name?.toLowerCase().includes(searchTerm?.toLowerCase())
+  ).length
+}
             rowsPerPage={rowsPerPage}
             page={page}
             onPageChange={(event, newPage) => setPage(newPage)}
@@ -499,14 +504,14 @@ const [taskId, setTaskId] = useState('');
         </Container>
       </Box>
 
-      <TestCaseDrawer
+      {/* <TestCaseDrawer
         open={drawerOpen}
         onClose={toggleDrawer(false)}
         data={testCaseData}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         parseFormattedText={parseFormattedText}
-      />
+      /> */}
 
       <GenerateDrawer
         open={generateDrawerOpen}
