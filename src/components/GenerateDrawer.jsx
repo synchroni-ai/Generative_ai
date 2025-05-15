@@ -299,48 +299,59 @@ const [documentId, setDocumentId] = useState(null);
     setError(false);
   };
 
-  socketRef.current.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    console.log("📨 WebSocket message received:", data);
+ socketRef.current.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+  console.log("📨 WebSocket message received:", data);
 
-    if (data.status === "SUCCESS" && data.result?.results) {
-      const allRows = data.result.results.map((item) => {
-        const lines = item.test_cases.split("\n").filter((line) => line.includes(":"));
+  if (data.status === "SUCCESS" && data.result?.results) {
+    const allRows = [];
+
+    data.result.results.forEach((item) => {
+      const testCaseBlocks = (item.test_cases || "").split('---').map(block => block.trim()).filter(Boolean);
+
+      testCaseBlocks.forEach((block) => {
+        const lines = block.split("\n").filter((line) => line.includes(":"));
         const row = {};
+
         lines.forEach((line) => {
           const [key, ...rest] = line.split(":");
           row[key.trim()] = rest.join(":").trim();
         });
-        return row;
+
+        row["Test Case Type"] = item.test_case_type; // Optional: add context
+        allRows.push(row);
       });
+    });
 
-      if (allRows.length > 0) {
-        const filteredHeaders = Object.keys(allRows[0]).filter(
-          (key) => key.toLowerCase() !== "test cases" && key.toLowerCase() !== "test_cases"
-        );
-        setHeaders(filteredHeaders);
-        setParsedData(
-          allRows.map((row) => {
-            const filteredRow = { ...row };
-            delete filteredRow["Test Cases"];
-            delete filteredRow["test_cases"];
-            return filteredRow;
-          })
-        );
-      }
+    if (allRows.length > 0) {
+      const filteredHeaders = Object.keys(allRows[0]).filter(
+        (key) => key.toLowerCase() !== "test cases" && key.toLowerCase() !== "test_cases"
+      );
 
-      if (data.result?.combined_test_case_document?._id) {
-        console.log("Document ID received:", data.result._id);
-        setDocumentId(data.result.combined_test_case_document._id);
-      }
-
-      setLoading(false);
-    } else if (data.status === "FAILURE") {
-      console.error("❌ Task failed:", data.result?.message);
-      setError(true);
-      setLoading(false);
+      setHeaders(filteredHeaders);
+      setParsedData(
+        allRows.map((row) => {
+          const filteredRow = { ...row };
+          delete filteredRow["Test Cases"];
+          delete filteredRow["test_cases"];
+          return filteredRow;
+        })
+      );
     }
-  };
+
+    if (data.result?.combined_test_case_document?._id) {
+      console.log("Document ID received:", data.result._id);
+      setDocumentId(data.result.combined_test_case_document._id);
+    }
+
+    setLoading(false);
+  } else if (data.status === "FAILURE") {
+    console.error("❌ Task failed:", data.result?.message);
+    setError(true);
+    setLoading(false);
+  }
+};
+
 
   socketRef.current.onerror = (event) => {
     console.error("🛑 WebSocket error:", event);
@@ -397,6 +408,7 @@ const [documentId, setDocumentId] = useState(null);
           transform: "translate(50%, 0%)",
           borderRadius: "20px 0px 0px 20px",
           overflow: "auto",
+          overflowY:"hidden"
         },
       }}
     >
