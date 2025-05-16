@@ -28,15 +28,15 @@ jobs:
 
       - name: Run Flake8 (lint check)
         run: |
-          flake8 core utils *.py || true
+          flake8 core utils *.py || false
 
       - name: Run Black (format check)
         run: |
-          black --check core utils *.py || true
+          black --check core utils *.py || false
 
       - name: Run Pytest (basic unit tests)
         run: |
-          pytest || true
+          pytest || false
 
       - name: Add sonar-project.properties
         run: |
