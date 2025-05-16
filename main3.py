@@ -11,9 +11,13 @@ from fastapi import (
     status,
     WebSocket,
     APIRouter,
+    WebSocketDisconnect,
 )
 from fastapi.responses import JSONResponse, FileResponse
-
+from utils.jwt_auth import (
+    create_jwt_token,
+)
+from pydantic import BaseModel
 
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List, Dict
@@ -29,6 +33,9 @@ import uuid
 import pandas as pd
 from openpyxl import load_workbook
 import csv
+import asyncio  # For WebSocket polling sleep
+from starlette.websockets import WebSocketState  # For checking WebSocket state
+
 
 # Import your custom modules
 from utils import data_ingestion, test_case_utils, user_story_utils
@@ -199,6 +206,23 @@ def get_all_documents():
     return [serialize_document(doc) for doc in documents]
 
 
+@app.get("/documents/{document_id}")
+def get_document_by_id(document_id: str):
+    try:
+        doc_object_id = ObjectId(document_id)
+    except InvalidId:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid document ID format"
+        )
+
+    doc = collection.find_one({"_id": doc_object_id})
+    if not doc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Document not found"
+        )
+    return serialize_document(doc)
+
+
 # ----------------- Delete Documents Endpoint -----------------
 @app.delete("/delete-documents")
 def delete_documents(document_ids: List[str]):
@@ -302,6 +326,186 @@ def get_api_key_cost(api_key: str):
     }
 
 
-@app.websocket("/ws/task_status")
-async def websocket_task_status(websocket: WebSocket, task_id: str = Query(...)):
-    await websocket_endpoint(websocket, task_id)
+# @app.websocket("/ws/task_status")
+# async def websocket_task_status(websocket: WebSocket, task_id: str = Query(...)):
+#     await websocket_endpoint(websocket, task_id)
+
+
+# JWT Configuration (should match what create_jwt_token uses)
+SECRET_KEY = os.getenv("SECRET_KEY")
+ALGORITHM = "HS256"  # Ensure this matches the algorithm in create_jwt_token
+
+if not SECRET_KEY:
+    print(
+        "WARNING: SECRET_KEY environment variable is not set. JWT authentication for WebSockets will fail."
+    )
+    # raise ValueError("SECRET_KEY environment variable is required for JWT.") # Or handle more gracefully
+
+
+@app.websocket("/ws/task_status/{task_id}")
+async def ws_task_status_endpoint(websocket: WebSocket, task_id: str):
+    token = websocket.query_params.get("token")
+
+    if (
+        not SECRET_KEY
+    ):  # Should be checked at startup, but good to have a runtime check for WS
+        await websocket.accept()  # Accept to send an error, then close
+        await websocket.send_json(
+            {
+                "status": "error",
+                "message": "Server configuration error: JWT secret not set.",
+            }
+        )
+        await websocket.close(code=status.WS_1011_INTERNAL_ERROR)
+        return
+
+    if not token:
+        # Optionally, accept and send an error message before closing
+        await websocket.accept()
+        await websocket.send_json(
+            {"status": "error", "message": "Authentication token missing."}
+        )
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    try:
+        from jose import jwt, JWTError
+
+        # Moved import here to ensure SECRET_KEY check happens first
+
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: Optional[str] = payload.get("sub")
+        if not username:
+            await websocket.accept()
+            await websocket.send_json(
+                {"status": "error", "message": "Invalid token: Subject missing."}
+            )
+            await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+            return
+    except JWTError as e:
+        await websocket.accept()
+        await websocket.send_json(
+            {"status": "error", "message": f"Authentication failed: {str(e)}"}
+        )
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
+        return
+
+    await websocket.accept()
+    await websocket.send_json(
+        {
+            "status": "connected",
+            "message": f"Authenticated as {username}. Monitoring task {task_id}.",
+        }
+    )
+
+    task_monitor = AsyncResult(task_id)
+    try:
+        while True:
+            task_state = task_monitor.state
+            response_data = {"task_id": task_id, "status": task_state}
+
+            if task_state == "PENDING":
+                response_data["info"] = "Task is waiting to be processed."
+            elif task_state == "STARTED":
+                response_data["info"] = "Task has started."
+            elif task_state == "PROGRESS":
+                response_data["progress"] = (
+                    task_monitor.info
+                )  # Celery task must use self.update_state(meta=...)
+            elif task_state == "SUCCESS":
+                response_data["result"] = task_monitor.result
+                await websocket.send_json(response_data)
+                break  # Task finished
+            elif task_state == "FAILURE":
+                response_data["error"] = str(task_monitor.info)  # Exception info
+                await websocket.send_json(response_data)
+                break  # Task finished
+            elif task_state == "RETRY":
+                response_data["info"] = "Task is being retried."
+                response_data["error"] = str(task_monitor.info)
+
+            await websocket.send_json(response_data)
+
+            if (
+                task_monitor.ready()
+            ):  # Final check if task is completed (SUCCESS, FAILURE)
+                # Ensure final state is sent if loop condition missed it
+                if task_state not in [
+                    "SUCCESS",
+                    "FAILURE",
+                ]:  # e.g. if it became ready between state check and send
+                    final_state = task_monitor.state
+                    final_response = {"task_id": task_id, "status": final_state}
+                    if final_state == "SUCCESS":
+                        final_response["result"] = task_monitor.result
+                    elif final_state == "FAILURE":
+                        final_response["error"] = str(task_monitor.info)
+                    await websocket.send_json(final_response)
+                break
+
+            await asyncio.sleep(2)  # Poll Celery every 2 seconds
+
+    except WebSocketDisconnect:
+        print(f"Client {username} (task: {task_id}) disconnected.")
+    except Exception as e:
+        print(
+            f"Unexpected error in WebSocket for task {task_id} (User: {username}): {type(e).__name__} - {e}"
+        )
+        import traceback
+
+        traceback.print_exc()
+
+        # Only attempt to send error if the socket is still connected
+        if websocket.client_state == WebSocketState.CONNECTED:
+            try:
+                await websocket.send_json(
+                    {
+                        "status": "error",
+                        "message": "An unexpected error occurred on the server.",
+                    }
+                )
+            except Exception:
+                pass  # Avoid crashing if socket is already closed
+
+    finally:
+        if websocket.client_state == WebSocketState.CONNECTED:
+            try:
+                await websocket.close(code=status.WS_1001_GOING_AWAY)
+            except RuntimeError:
+                pass  # WebSocket is already closed
+        print(
+            f"WebSocket connection for task {task_id} (User: {username}) definitively closed."
+        )
+
+
+# --- JWT Token Generation Endpoints ---
+# It's good practice to have POST for actions that might create/retrieve sensitive data like tokens
+class TokenRequest(BaseModel):
+    username: str
+    password: str
+
+
+@app.post("/get_token", tags=["Authentication"])
+async def get_token_post(request: TokenRequest):
+    if not request.username or not request.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username and password required",
+        )
+
+    # Simulated credential check - replace with real DB/user auth
+    if request.username != "admin" or request.password != "admin123":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials"
+        )
+
+    token_data = {"sub": request.username}
+    try:
+        token = create_jwt_token(token_data)
+        return {"access_token": token, "token_type": "bearer"}
+    except Exception as e:
+        print(f"Error generating token: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Could not generate token.",
+        )
