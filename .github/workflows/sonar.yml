@@ -41,10 +41,10 @@ jobs:
             jest @testing-library/react @testing-library/jest-dom
 
       - name: Run ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx || false
 
       - name: Run Prettier Check
-        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
+        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || false
 
       # Run tests
       - name: Run tests
