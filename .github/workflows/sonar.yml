@@ -17,11 +17,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+         - name: Get Developer Info
+           id: dev_info
+           run: |
+            DEVELOPER_NAME=$(git log -1 --pretty=format:'%an')
+            echo "developer=$DEVELOPER_NAME" >> $GITHUB_ENV
+
       # Set up Node.js environment
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
+
+          - name: Install dependencies
+        run: |
+          npm install
+          npm install --save-dev \
+            eslint@8.57.0 eslint-config-react-app babel-eslint \
+            eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y eslint-plugin-import \
+            @babel/plugin-transform-private-methods @babel/plugin-transform-private-property-in-object \
+            @babel/plugin-transform-class-properties @babel/plugin-proposal-private-property-in-object \
+            jest @testing-library/react @testing-library/jest-dom
+
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
+
+      - name: Run Prettier Check
+        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
 
       # Install dependencies and fix missing Babel plugin
       - name: Install dependencies
