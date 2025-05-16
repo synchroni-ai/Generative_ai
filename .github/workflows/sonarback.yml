@@ -13,17 +13,49 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      #  Checkout repository
+      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      #  Debug: Check directory structure
+      # Get Developer Info
+      - name: Get Developer Info
+        id: dev_info
+        run: |
+          DEVELOPER_NAME=$(git log -1 --pretty=format:'%an')
+          echo "developer=$DEVELOPER_NAME" >> $GITHUB_ENV
+
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          npm install
+          npm install --save-dev \
+            eslint@8.57.0 eslint-config-react-app babel-eslint \
+            eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y eslint-plugin-import \
+            @babel/plugin-transform-private-methods @babel/plugin-transform-private-property-in-object \
+            @babel/plugin-transform-class-properties @babel/plugin-proposal-private-property-in-object \
+            jest @testing-library/react @testing-library/jest-dom
+
+      # Run ESLint
+      - name: Run ESLint
+        run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
+
+      # Run Prettier Check
+      - name: Run Prettier Check
+        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
+
+      # Debug: Check directory structure
       - name: Debug Directory Structure
         run: |
           pwd
           ls -la
 
-      #  Add sonar-project.properties file (Corrected)
+      # Add sonar-project.properties file
       - name: Configure SonarQube
         run: |
           echo "sonar.projectKey=Genback-ai" > sonar-project.properties
@@ -31,10 +63,10 @@ jobs:
           echo "sonar.projectVersion=1.0" >> sonar-project.properties
           echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
           echo "sonar.sources=." >> sonar-project.properties
-          echo "sonar.inclusions=**/*.py,**/*.yml,**/*.txt,**/*.md" >> sonar-project.properties
-          echo "sonar.exclusions=**/__pycache__/**,**/*.pdf" >> sonar-project.properties
+          echo "sonar.inclusions=**/*.py,**/*.yml,**/*.txt,**/*.md,**/*.js,**/*.jsx" >> sonar-project.properties
+          echo "sonar.exclusions=**/__pycache__/**,**/*.pdf,node_modules/**" >> sonar-project.properties
 
-      #  Run SonarQube Scan
+      # Run SonarQube Scan
       - name: SonarQube Scan
         uses: sonarsource/sonarqube-scan-action@v1.0.0
         env:
@@ -43,15 +75,18 @@ jobs:
         with:
           args: -Dsonar.projectKey=Genback-ai
 
-      #  Check SonarQube Quality Gate Status
+      # Check SonarQube Quality Gate Status
       - name: Verify SonarQube Quality Gate
         run: |
           echo "Checking SonarQube Quality Gate Status..."
-          sleep 10  # Wait for SonarQube to process the results
-          
+          sleep 10
+
           STATUS=$(curl -s -u ${{ secrets.SONAR_TOKEN_GENBACKAI }}: \
             "https://sonarq.synchroni.xyz/api/qualitygates/project_status?projectKey=Genback-ai" | jq -r '.projectStatus.status')
+
           echo "Quality Gate Status: $STATUS"
+          echo "status=$STATUS" >> $GITHUB_ENV
+
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "SonarQube Quality Gate Failed! Blocking merge."
             exit 1
@@ -59,17 +94,22 @@ jobs:
             echo "SonarQube Quality Gate Passed!"
           fi
 
-      #  Send Notification to Teams
+      # Send Notification to Teams
       - name: Send Notification to Teams
         run: |
           SONARQUBE_REPORT_URL="https://sonarq.synchroni.xyz/dashboard?id=Genback-ai"
-          
+
           curl -H "Content-Type: application/json" -d '{
+            "@type": "MessageCard",
+            "@context": "http://schema.org/extensions",
+            "summary": "SonarQube Scan Completed",
+            "themeColor": "0076D7",
             "title": "SonarQube Scan Completed",
-            "text": "SonarQube scan completed for Genback-ai. Click the link below to view the report.",
+            "text": "SonarQube scan completed for Genback-ai. Click below to view the report.",
             "sections": [
               {
-                "text": "Quality Gate: '"$STATUS"'"
+                "activityTitle": "Quality Gate Result",
+                "text": "'"${{ env.status }}"'"
               }
             ],
             "potentialAction": [
