@@ -33,17 +33,17 @@ jobs:
       # Run Flake8 (Linting)
       - name: Run Flake8
         run: |
-          flake8 . || true
+          flake8 . || false
 
       # Run Black (Formatter Check)
       - name: Run Black
         run: |
-          black --check . || true
+          black --check . || false
 
       # Run Tests with Pytest
       - name: Run Tests
         run: |
-          pytest || true
+          pytest || false
 
       # Debug: Check directory structure
       - name: Debug Directory Structure
