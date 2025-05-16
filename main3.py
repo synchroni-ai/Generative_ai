@@ -45,7 +45,11 @@ cost_collection = db["cost_tracking"]
 
 def serialize_document(doc):
     doc["_id"] = str(doc["_id"])
-    return doc
+    return {
+        # "_id": str(doc["_id"]),
+        "file_name": doc.get("file_name"),
+        "status": doc.get("status"),
+    }
 
 
 # ----------------- Directories Setup -----------------
@@ -94,7 +98,7 @@ async def upload_document(file: UploadFile = File(...)):
     document_data = {
         "file_name": file_name,
         "file_path": str(file_path),
-        "status": "uploaded",
+        "status": -1,  # Document uploaded but not processed
     }
 
     result = collection.insert_one(document_data)
@@ -164,21 +168,19 @@ async def generate_test_cases(
         },
     )
 
-    # ✅ Trigger Celery task with document_id
+    # Trigger Celery task with document_id
     task = process_and_generate_task.delay(
         str(file_path),
         model_name,
         chunk_size,
         api_key_to_use,
         test_case_types_list,
-        file_id,  # ✅ this is used as document_id inside celery
+        file_id,  # this is used as document_id inside celery
     )
 
-    # # ✅ Optionally save task_id for tracking
-    # collection.update_one(
-    #     {"_id": ObjectId(file_id)},
-    #     {"$set": {"last_task_id": task.id}}
-    # )
+    collection.update_one(
+        {"_id": ObjectId(file_id)}, {"$set": {"last_task_id": task.id}}
+    )
 
     return {
         "message": "✅ Test case generation task started.",
@@ -190,15 +192,11 @@ async def generate_test_cases(
     }
 
 
-@app.get("/task_status/{task_id}")
-async def get_task_status(task_id: str):
-    task = AsyncResult(task_id)
-    if task.state == "SUCCESS":
-        return {"status": "Completed", "result": task.result}
-    elif task.state == "FAILURE":
-        return {"status": "Failed", "error": str(task.info)}
-    else:
-        return {"status": task.state}
+# ----------------- MongoDB Fetch Endpoints -----------------
+@app.get("/documents/")
+def get_all_documents():
+    documents = list(collection.find())
+    return [serialize_document(doc) for doc in documents]
 
 
 # ----------------- Delete Documents Endpoint -----------------
@@ -228,7 +226,7 @@ def delete_documents(document_ids: List[str]):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ----------------- Download Excel Endpoints -----------------
+# ----------------- Show Test Cases-----------------
 router = APIRouter()
 
 

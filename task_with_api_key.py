@@ -68,6 +68,7 @@ def process_and_generate_task(
     self, file_path, model_name, chunk_size, api_key, test_case_types, document_id
 ):
     print(f"🎯 Celery task started: {file_path} ({test_case_types})")
+    task_id = self.request.id  # Get the Celery task ID
 
     try:
         if model_name not in MODEL_DISPATCHER:
@@ -142,6 +143,7 @@ def process_and_generate_task(
             )
 
             # Update progress in MongoDB after each test case type
+            progress_message = f"{test_case_type} test cases generated"
             try:
                 collection.update_one(
                     {"_id": ObjectId(document_id)},
@@ -150,13 +152,19 @@ def process_and_generate_task(
                             "test_cases": test_cases_by_type,
                             "status": 0,
                         },  # still processing
-                        "$push": {"progress": f"{test_case_type} test cases generated"},
+                        "$push": {"progress": progress_message},
                     },
                 )
             except Exception as e:
                 print(
                     f"MongoDB update error (progress after {test_case_type}): {str(e)}"
                 )
+
+            # Send update to WebSocket
+            self.update_state(
+                state="PROGRESS",
+                meta={"status": "processing", "progress": progress_message},
+            )
 
         # Final update: status=1 done, update progress with completion message
         try:
@@ -167,12 +175,19 @@ def process_and_generate_task(
         except Exception as e:
             print("MongoDB update error (final):", str(e))
 
-        return {
+        final_result = {
             "message": "All test cases generated and stored successfully.",
             "model_used": model_name,
             "results": all_results,
             "document_id": document_id,
         }
 
+        self.update_state(state="SUCCESS", meta=final_result)  # Send final result
+
+        return final_result
+
     except Exception as e:
+        self.update_state(
+            state="FAILURE", meta={"error": str(e)}
+        )  # send failure through websocket
         raise self.retry(exc=e)

@@ -2,6 +2,7 @@ from fastapi import WebSocket, WebSocketDisconnect
 from celery.result import AsyncResult
 import asyncio
 import json
+from fastapi import Query
 
 
 async def websocket_endpoint(websocket: WebSocket, task_id: str):
@@ -21,16 +22,20 @@ async def websocket_endpoint(websocket: WebSocket, task_id: str):
                 "status": task.state,
                 "result": None,
                 "error": None,
+                "progress": None,  # include progress
             }
 
             if task.state == "SUCCESS":
-                response["result"] = task.result
+                response["result"] = task.info
                 await websocket.send_json(response)
                 break
             elif task.state == "FAILURE":
                 response["error"] = str(task.info)
                 await websocket.send_json(response)
                 break
+            elif task.state == "PROGRESS":
+                response["progress"] = task.info.get("progress")  # Get progress data
+                await websocket.send_json(response)
             else:
                 # PENDING or other states
                 await websocket.send_json(response)
