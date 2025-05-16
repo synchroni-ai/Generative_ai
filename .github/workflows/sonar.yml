@@ -17,11 +17,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-         - name: Get Developer Info
-           id: dev_info
-           run: |
-            DEVELOPER_NAME=$(git log -1 --pretty=format:'%an')
-            echo "developer=$DEVELOPER_NAME" >> $GITHUB_ENV
+      - name: Get Developer Info
+        id: dev_info
+        run: |
+          DEVELOPER_NAME=$(git log -1 --pretty=format:'%an')
+          echo "developer=$DEVELOPER_NAME" >> $GITHUB_ENV
 
       # Set up Node.js environment
       - name: Set up Node.js
@@ -29,7 +29,8 @@ jobs:
         with:
           node-version: 18
 
-          - name: Install dependencies
+      # Install dependencies
+      - name: Install dependencies
         run: |
           npm install
           npm install --save-dev \
@@ -44,12 +45,6 @@ jobs:
 
       - name: Run Prettier Check
         run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
-
-      # Install dependencies and fix missing Babel plugin
-      - name: Install dependencies
-        run: |
-          npm install
-          npm install --save-dev @babel/plugin-proposal-private-property-in-object
 
       # Run tests
       - name: Run tests
@@ -74,18 +69,19 @@ jobs:
           SONAR_HOST_URL: https://sonarq.synchroni.xyz
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN_GenAI }}
         with:
-          args: -Dsonar.projectKey=Gen-ai -Dsonar.projectBaseDir=src
+          args: -Dsonar.projectKey=Gen-ai -Dsonar.projectBaseDir=.
 
       # Check SonarQube Quality Gate Status
       - name: Verify SonarQube Quality Gate
         run: |
           echo "Checking SonarQube Quality Gate Status..."
-          sleep 10  # Wait for SonarQube to process the results
-          
+          sleep 10
+
           STATUS=$(curl -s -u ${{ secrets.SONAR_TOKEN_GenAI }}: \
             "https://sonarq.synchroni.xyz/api/qualitygates/project_status?projectKey=Gen-ai" | jq -r '.projectStatus.status')
 
           echo "Quality Gate Status: $STATUS"
+          echo "status=$STATUS" >> $GITHUB_ENV
 
           if [[ "$STATUS" == "ERROR" ]]; then
             echo "SonarQube Quality Gate Failed! Blocking merge."
@@ -98,13 +94,18 @@ jobs:
       - name: Send Notification to Teams
         run: |
           SONARQUBE_REPORT_URL="https://sonarq.synchroni.xyz/dashboard?id=Gen-ai"
-          
+
           curl -H "Content-Type: application/json" -d '{
+            "@type": "MessageCard",
+            "@context": "http://schema.org/extensions",
+            "summary": "SonarQube Scan Completed",
+            "themeColor": "0076D7",
             "title": "SonarQube Scan Completed",
-            "text": "SonarQube scan completed for Gen-ai. Click the link below to view the report.",
+            "text": "SonarQube scan completed for Gen-ai. Click below to view the report.",
             "sections": [
               {
-                "text": "Quality Gate: '"$STATUS"'"
+                "activityTitle": "Quality Gate Result",
+                "text": "'"${{ env.status }}"'"
               }
             ],
             "potentialAction": [
