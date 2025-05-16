@@ -1,7 +1,8 @@
 from celery_worker import celery_app
-from utils import data_ingestion, test_case_utils, user_story_utils
+from utils import data_ingestion, test_case_utils
 from utils.llms import Mistral, openai, llama
 from fastapi import HTTPException
+from bson import ObjectId
 import uuid
 import os
 import re
@@ -45,14 +46,7 @@ def split_text_into_chunks(text, chunk_size=7000):
     return chunks
 
 
-def serialize_document(doc):
-    doc["_id"] = str(doc["_id"])
-    return doc
-
-
-def process_document(
-    file_path, model_name, chunk_size
-):  # Added process_document as a general function
+def process_document(file_path, model_name, chunk_size):
     brd_text, _ = data_ingestion.load_pdf_text(str(file_path))
     if not brd_text:
         raise HTTPException(status_code=500, detail="Failed to extract text from PDF.")
@@ -71,7 +65,7 @@ def process_document(
 
 @celery_app.task(bind=True, name="task_with_api_key.process_and_generate_task")
 def process_and_generate_task(
-    self, file_path, model_name, chunk_size, api_key, test_case_types
+    self, file_path, model_name, chunk_size, api_key, test_case_types, document_id
 ):
     print(f"🎯 Celery task started: {file_path} ({test_case_types})")
 
@@ -85,8 +79,18 @@ def process_and_generate_task(
         chunks, cleaned_text = process_document(file_path, model_name, chunk_size)
 
         base_stem = Path(file_path).stem
-        all_results = []  # for response
-        all_combined_test_cases = ""  # for storing all test cases in one field
+        all_results = []
+        all_combined_test_cases = ""
+        test_cases_by_type = {}
+
+        # Initialize progress array in MongoDB (empty list) and status = 0 (processing)
+        try:
+            collection.update_one(
+                {"_id": ObjectId(document_id)},
+                {"$set": {"status": 0, "progress": []}},
+            )
+        except Exception as e:
+            print("MongoDB update error (init):", str(e))
 
         for test_case_type in test_case_types:
             prompt_dir = Path("utils/prompts")
@@ -123,68 +127,51 @@ def process_and_generate_task(
             combined_test_cases = "\n".join(all_test_cases)
             all_combined_test_cases += f"\n\n### {test_case_type.upper()} TEST CASES ###\n\n{combined_test_cases}"
 
-            # Save to text file
-            output_test_case_path = Path(OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.txt"
-            test_case_utils.store_test_cases_to_text_file(
-                combined_test_cases, str(output_test_case_path)
-            )
-
-            # Convert to CSV
-            csv_test_case_path = Path(OUTPUT_DIR) / f"{base_stem}_test_cases_{test_case_type}.csv"
-            if model_name == "Mistral":
-                test_case_utils.txt_to_csv_mistral(
-                    str(output_test_case_path), str(csv_test_case_path)
-                )
-            else:
-                test_case_utils.txt_to_csv_llama(
-                    str(output_test_case_path), str(csv_test_case_path)
-                )
-
-            # Save individual test case type to MongoDB
-            individual_document = {
-                "doc_name": os.path.basename(file_path),
-                "doc_path": str(file_path),
-                "selected_model": model_name,
-                "llm_response_testcases": combined_test_cases,
-                "api_key_used": (
-                    f"Token ending with ...{api_key[-5:]}" if api_key else "Default API Key"
-                ),
-                "test_case_type": test_case_type
+            # Append to dictionary
+            embedded_id = str(uuid.uuid4())
+            test_cases_by_type[test_case_type] = {
+                "_id": embedded_id,
+                "content": combined_test_cases,
             }
 
+            all_results.append(
+                {
+                    "test_case_type": test_case_type,
+                    "test_cases": combined_test_cases,
+                }
+            )
+
+            # Update progress in MongoDB after each test case type
             try:
-                collection.insert_one(individual_document)
+                collection.update_one(
+                    {"_id": ObjectId(document_id)},
+                    {
+                        "$set": {
+                            "test_cases": test_cases_by_type,
+                            "status": 0,
+                        },  # still processing
+                        "$push": {"progress": f"{test_case_type} test cases generated"},
+                    },
+                )
             except Exception as e:
-                print("MongoDB Insertion Error (individual):", str(e))
+                print(
+                    f"MongoDB update error (progress after {test_case_type}): {str(e)}"
+                )
 
-            all_results.append({
-                "test_case_type": test_case_type,
-                "test_cases": combined_test_cases,
-            })
-
-        # Save combined test cases into a single field
-        combined_document = {
-            "doc_name": os.path.basename(file_path),
-            "doc_path": str(file_path),
-            "selected_model": model_name,
-            "api_key_used": (
-                f"Token ending with ...{api_key[-5:]}" if api_key else "Default API Key"
-            ),
-            "all_test_cases": all_combined_test_cases.strip()
-        }
-
+        # Final update: status=1 done, update progress with completion message
         try:
-            result = collection.insert_one(combined_document)
-            combined_document["_id"] = str(result.inserted_id)  # Attach ID to the response
+            collection.update_one(
+                {"_id": ObjectId(document_id)},
+                {"$set": {"status": 1, "progress": ["All test cases generated"]}},
+            )
         except Exception as e:
-            print("MongoDB Insertion Error (combined):", str(e))
-            result = None
+            print("MongoDB update error (final):", str(e))
 
         return {
-            "message": "All test cases generated successfully.",
+            "message": "All test cases generated and stored successfully.",
             "model_used": model_name,
             "results": all_results,
-            "combined_test_case_document": combined_document
+            "document_id": document_id,
         }
 
     except Exception as e:

@@ -2,6 +2,14 @@ import pandas as pd
 import csv
 import re
 import os
+from typing import List, Dict, Any
+
+from bson import ObjectId
+from fastapi import HTTPException
+from pymongo.collection import Collection
+
+CSV_OUTPUT_DIR = "output/csv_files"
+os.makedirs(CSV_OUTPUT_DIR, exist_ok=True)
 
 
 def generate_test_cases(brd_text, generation_function, test_case_prompt):
@@ -27,213 +35,145 @@ def generate_test_cases(brd_text, generation_function, test_case_prompt):
         return "", 0
 
 
-def store_test_cases_to_text_file(test_cases_text, output_path="test_cases.txt"):
-    """
-    Stores the generated test cases to a text file.
-
-    Args:
-        test_cases_text: The generated test cases as a string.
-        output_path: The path to the output text file (default: "test_cases.txt").
-
-    Returns:
-        The path to the output text file, or None if an error occurs.
-    """
-    try:
-        with open(output_path, "w", encoding="utf-8") as f:
-            f.write(test_cases_text)  # Simply write the entire text to the file
-        return output_path
-    except Exception as e:
-        print(f"Error writing to text file: {e}")
-        return None
+CSV_HEADERS = [
+    # "Category",
+    "TCID",
+    "Test type",
+    "Title",
+    "Description",
+    "Precondition",
+    "Steps",
+    "Action",
+    "Data",
+    "Result",
+    "Type (P / N / in)",
+    "Test priority",
+]
 
 
-def txt_to_csv_mistral(input_file, output_file):
-    with open(input_file, "r", encoding="utf-8") as file:
-        content = file.read()
+def parse_test_cases_to_csv(document_id: str, collection: Collection) -> str:
+    doc = collection.find_one({"_id": ObjectId(document_id)})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Document not found")
 
-    # Split based on each Test Case
-    test_cases = re.split(r"\*\*Test Case ID:\*\*", content)[1:]
+    test_cases_dict = doc.get("test_cases")
+    if not test_cases_dict or not isinstance(test_cases_dict, dict):
+        raise HTTPException(status_code=404, detail="No test cases found in document")
 
-    rows = []
-    for case in test_cases:
-        # Extract fields using regex
-        tc_id_match = re.search(r"(\w+)", case)
-        title_match = re.search(r"\*\*Title:\*\*\s*(.*)", case)
-        desc_match = re.search(r"\*\*Description:\*\*\s*(.*)", case)
-        steps_match = re.search(
-            r"\*\*Steps:\*\*\s*((?:.|\n)*?)\*\*Expected Result:\*\*", case
-        )
-        expected_result_match = re.search(r"\*\*Expected Result:\*\*\s*(.*)", case)
+    csv_output_path = os.path.join(CSV_OUTPUT_DIR, f"{document_id}_test_cases.csv")
 
-        tc_id = tc_id_match.group(1).strip() if tc_id_match else ""
-        title = title_match.group(1).strip() if title_match else ""
-        description = desc_match.group(1).strip() if desc_match else ""
-        steps = (
-            steps_match.group(1).strip().replace("\n", " ").replace("    ", "")
-            if steps_match
-            else ""
-        )
-        expected_result = (
-            expected_result_match.group(1).strip() if expected_result_match else ""
-        )
+    all_parsed_rows = []
 
-        rows.append([tc_id, title, description, steps, expected_result])
+    with open(csv_output_path, "w", newline="", encoding="utf-8") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=CSV_HEADERS, quoting=csv.QUOTE_ALL)
+        writer.writeheader()
 
-    # Write to CSV
-    with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(
-            ["Test Case ID", "Title", "Description", "Steps", "Expected Result"]
-        )
-        writer.writerows(rows)
+        for category, tc_entry in test_cases_dict.items():
+            content_str = str(tc_entry.get("content", "")).strip()
+            if not content_str:
+                continue
 
-    print(f"CSV file '{output_file}' created successfully.")
+            lines = content_str.splitlines()
+            while lines and not lines[0].strip():
+                lines.pop(0)
+            if lines and lines[0].strip().lower() == "test cases:":
+                lines.pop(0)
 
+            content_to_split = "\n".join(lines).strip()
+            individual_tc_blocks = []
 
-# def csv_to_excel(csv_file, excel_file):
-#     df = pd.read_csv(csv_file)
-#     df.to_excel(excel_file, index=False)
-#     print(f"Excel file '{excel_file}' created successfully.")
-
-
-def txt_to_csv_llama(input_file, output_file):
-    try:
-        with open(input_file, "r", encoding="utf-8") as file:
-            content = file.read()
-
-        # Split the text into test cases using **TC_ as a delimiter
-        test_cases = re.split(r"\*\*TC_", content)
-        test_cases = [tc.strip() for tc in test_cases if tc.strip()]
-
-        output = []
-
-        for case in test_cases:
-            # Add back TC_ at the start
-            case = "TC_" + case
-
-            # Check if the case starts with a valid TC_\d+ pattern
-            id_match = re.match(r"(TC_\d+):", case)
-            if not id_match:
-                continue  # Skip invalid test cases (e.g., **Test Cases:**)
-
-            tc_id = id_match.group(1)
-
-            # Extract Title
-            title_match = re.search(r"\*\s*Title:\s*(.+)", case)
-            title = title_match.group(1).strip() if title_match else ""
-
-            # Extract Description
-            description_match = re.search(r"\*\s*Description:\s*(.+)", case)
-            description = (
-                description_match.group(1).strip() if description_match else ""
-            )
-
-            # Extract Steps
-            steps_match = re.search(
-                r"\*\s*Steps:\s*(.+?)\*\s*Expected Result:", case, re.DOTALL
-            )
-            steps = ""
-            if steps_match:
-                steps_block = steps_match.group(1).strip()
-                steps_lines = re.findall(r"\d+\.\s*(.+)", steps_block)
-                steps = "\n".join(
-                    [
-                        f"Step {i+1}: {step.strip()}"
-                        for i, step in enumerate(steps_lines)
-                    ]
+            if content_to_split:
+                split_pattern = r"(?=^(?:\*\*(?:TC|PTC|FTC|BTC|STC|NFTC|CTC)_\d+\*\*|TCID:|Test Case ID:)\s*)"
+                potential_blocks = re.split(
+                    split_pattern, content_to_split, flags=re.MULTILINE
                 )
+                processed_blocks = [b.strip() for b in potential_blocks if b.strip()]
 
-            # Extract Expected Result
-            expected_match = re.search(r"\*\s*Expected Result:\s*(.+)", case)
-            expected_result = expected_match.group(1).strip() if expected_match else ""
+                if processed_blocks:
+                    first_block_content = processed_blocks[0]
+                    is_first_block_a_tc = re.match(
+                        r"^(?:\*\*(?:TC|PTC|FTC|BTC|STC|NFTC|CTC)_\d+\*\*|TCID:|Test Case ID:)",
+                        first_block_content.lstrip(),
+                        re.IGNORECASE,
+                    )
+                    if not is_first_block_a_tc and len(processed_blocks) > 1:
+                        individual_tc_blocks = processed_blocks[1:]
+                    else:
+                        individual_tc_blocks = processed_blocks
 
-            output.append([tc_id, title, description, steps, expected_result])
+            if not individual_tc_blocks and content_to_split:
+                if re.match(
+                    r"^(?:\*\*(?:TC|PTC|FTC|BTC|STC|NFTC|CTC)_\d+\*\*|TCID:|Test Case ID:)",
+                    content_to_split.lstrip(),
+                    re.IGNORECASE,
+                ):
+                    individual_tc_blocks.append(content_to_split)
 
-        # Write to CSV
-        with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(
-                ["Test Case ID", "Title", "Description", "Steps", "Expected Result"]
-            )
-            writer.writerows(output)
+            for block in individual_tc_blocks:
+                fields = {header: "N/A" for header in CSV_HEADERS}
+                # fields["Category"] = category
+                collecting_steps = False
+                current_steps_list = []
 
-        print(f"✅ CSV file '{output_file}' created successfully.")
+                lines_in_block = block.splitlines()
+                first_line_processed_for_tcid = False
 
-    except FileNotFoundError:
-        print(f"Error: Input file '{input_file}' not found.")
-    except OSError as e:
-        print(f"Error: Could not write to output file: {e}")
-    except re.error as e:
-        print(f"Error: Regular expression error: {e}")
-    except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+                if lines_in_block:
+                    first_line_stripped = lines_in_block[0].strip()
+                    tcid_standalone_match = re.match(
+                        r"^\*\*((?:TC|PTC|FTC|BTC|STC|NFTC|CTC)_\d+)\*\*\s*$",
+                        first_line_stripped,
+                    )
+                    if tcid_standalone_match:
+                        fields["TCID"] = tcid_standalone_match.group(1)
+                        first_line_processed_for_tcid = True
 
+                for line_idx, line_content in enumerate(lines_in_block):
+                    if first_line_processed_for_tcid and line_idx == 0:
+                        continue
 
-def format_test_cases_excel(
-    input_csv_path: str, output_excel_file: str, mode: str = "numbered_in_cell"
-):
-    """
-    Format the 'Steps' column in a test case CSV and export to Excel.
+                    line = line_content.strip()
+                    if not line:
+                        continue
 
-    Parameters:
-    - input_csv_path: Path to the input CSV file
-    - output_excel_file: Excel file will be saved
-    - mode: 'numbered_in_cell' or 'step_per_row'
-    """
+                    key_value_match = re.match(r"^\**([^:]+):\**\s*(.*)", line)
+                    if key_value_match:
+                        key = key_value_match.group(1).strip().lower()
+                        value = key_value_match.group(2).strip()
+                        collecting_steps = False
 
-    # Load the CSV
-    df = pd.read_csv(input_csv_path)
+                        mapping = {
+                            "tcid": "TCID",
+                            "test case id": "TCID",
+                            "test type": "Test type",
+                            "test case type": "Test type",
+                            "title": "Title",
+                            "description": "Description",
+                            "precondition": "Precondition",
+                            "action": "Action",
+                            "data": "Data",
+                            "result": "Result",
+                            "type (p / n / in)": "Type (P / N / in)",
+                            "test priority": "Test priority",
+                            "steps": "Steps",
+                        }
 
-    if "Steps" not in df.columns:
-        raise ValueError("The input CSV must contain a 'Steps' column.")
+                        if key in mapping:
+                            if key == "steps":
+                                collecting_steps = True
+                                if value:
+                                    current_steps_list.append(value)
+                            else:
+                                fields[mapping[key]] = value
+                    elif collecting_steps:
+                        current_steps_list.append(line)
 
-    def clean_and_split_steps(steps):
-        if pd.isna(steps):
-            return []
-        steps = str(steps).strip().rstrip("*").strip()
-        return [
-            step.strip() for step in re.split(r"\s*\d+\.\s*", steps) if step.strip()
-        ]
+                fields["Steps"] = " ".join(current_steps_list).strip()
+                for f_key in fields:
+                    if fields[f_key] == "":
+                        fields[f_key] = "N/A"
 
-    if mode == "numbered_in_cell":
+                writer.writerow(fields)
+                all_parsed_rows.append(fields)
 
-        def format_steps(steps):
-            steps_list = clean_and_split_steps(steps)
-            return "\n".join(f"Step {i+1}: {step}" for i, step in enumerate(steps_list))
-
-        df["Steps"] = df["Steps"].apply(format_steps)
-        # Remove all '*' from all string fields
-        df = df.applymap(lambda x: x.replace("*", "") if isinstance(x, str) else x)
-
-        # Renumber test case IDs sequentially
-        df["Test Case ID"] = [f"TC_{i+1:03d}" for i in range(len(df))]
-
-        with pd.ExcelWriter(output_excel_file, engine="xlsxwriter") as writer:
-            df.to_excel(writer, index=False, sheet_name="TestCases")
-
-            worksheet = writer.sheets["TestCases"]
-            wrap_format = writer.book.add_format({"text_wrap": True, "valign": "top"})
-            steps_col_idx = df.columns.get_loc("Steps")
-            worksheet.set_column(steps_col_idx, steps_col_idx, 50, wrap_format)
-
-    elif mode == "step_per_row":
-        expanded_rows = []
-
-        for _, row in df.iterrows():
-            steps_list = clean_and_split_steps(row["Steps"])
-            for i, step in enumerate(steps_list):
-                new_row = (
-                    row.copy()
-                    if i == 0
-                    else pd.Series([""] * len(row), index=row.index)
-                )
-                new_row["Steps"] = f"Step {i+1}: {step}"
-                expanded_rows.append(new_row)
-
-        expanded_df = pd.DataFrame(expanded_rows)
-        expanded_df.to_excel(output_excel_file, index=False)
-
-    else:
-        raise ValueError("Invalid mode. Use 'numbered_in_cell' or 'step_per_row'.")
-
-    print("File saved successfully as:", output_excel_file)
+    return csv_output_path, all_parsed_rows
