@@ -176,16 +176,14 @@ async def generate_test_cases(
     )
 
     # Trigger Celery task with document_id
-    task = process_and_generate_task.apply_async(kwargs={
-        "file_id_str": file_id,
-        "file_path_str": str(file_path),
-        "model_name_str": model_name,
-        "chunk_size_val": chunk_size,
-        "api_key_str": api_key_to_use,
-        "test_case_types_list": test_case_types_list,
-        # Optional:
-        # "username_str": username
-    })
+    task = process_and_generate_task.apply_async(args=[
+        str(file_path),         # file_path
+        model_name,             # model_name
+        chunk_size,             # chunk_size
+        api_key_to_use,         # api_key
+        test_case_types_list,   # test_case_types
+        file_id,                # document_id
+    ])
 
     collection.update_one(
         {"_id": ObjectId(file_id)}, {"$set": {"last_task_id": task.id}}
