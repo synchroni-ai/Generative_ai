@@ -17,37 +17,33 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Get Developer Info
-      - name: Get Developer Info
-        id: dev_info
-        run: |
-          DEVELOPER_NAME=$(git log -1 --pretty=format:'%an')
-          echo "developer=$DEVELOPER_NAME" >> $GITHUB_ENV
-
-      # Set up Node.js environment
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: 18
+          python-version: '3.11'  # Adjust as needed
 
       # Install dependencies
       - name: Install dependencies
         run: |
-          npm install
-          npm install --save-dev \
-            eslint@8.57.0 eslint-config-react-app babel-eslint \
-            eslint-plugin-react eslint-plugin-react-hooks eslint-plugin-jsx-a11y eslint-plugin-import \
-            @babel/plugin-transform-private-methods @babel/plugin-transform-private-property-in-object \
-            @babel/plugin-transform-class-properties @babel/plugin-proposal-private-property-in-object \
-            jest @testing-library/react @testing-library/jest-dom
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install flake8 black pytest
 
-      # Run ESLint
-      - name: Run ESLint
-        run: npx eslint . --ext .js,.jsx,.ts,.tsx || true
+      # Run Flake8 (Linting)
+      - name: Run Flake8
+        run: |
+          flake8 . || true
 
-      # Run Prettier Check
-      - name: Run Prettier Check
-        run: npx prettier --check "**/*.{js,jsx,ts,tsx,json,css,md}" || true
+      # Run Black (Formatter Check)
+      - name: Run Black
+        run: |
+          black --check . || true
+
+      # Run Tests with Pytest
+      - name: Run Tests
+        run: |
+          pytest || true
 
       # Debug: Check directory structure
       - name: Debug Directory Structure
@@ -63,8 +59,8 @@ jobs:
           echo "sonar.projectVersion=1.0" >> sonar-project.properties
           echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
           echo "sonar.sources=." >> sonar-project.properties
-          echo "sonar.inclusions=**/*.py,**/*.yml,**/*.txt,**/*.md,**/*.js,**/*.jsx" >> sonar-project.properties
-          echo "sonar.exclusions=**/__pycache__/**,**/*.pdf,node_modules/**" >> sonar-project.properties
+          echo "sonar.inclusions=**/*.py,**/*.yml,**/*.txt,**/*.md" >> sonar-project.properties
+          echo "sonar.exclusions=**/__pycache__/**,**/*.pdf" >> sonar-project.properties
 
       # Run SonarQube Scan
       - name: SonarQube Scan
