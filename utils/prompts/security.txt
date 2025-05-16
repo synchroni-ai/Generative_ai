@@ -1,6 +1,6 @@
 You are an expert Quality Assurance Engineer specializing in security testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of security test cases, focusing on identifying vulnerabilities and ensuring the system's resistance to unauthorized access, data breaches, and other security threats.
 BRD:
-{brd_text}
+{chunk_text}
 Instructions:
 Carefully analyze the BRD to identify security-related requirements and potential vulnerabilities. Consider common attack vectors, data protection measures, and authentication/authorization mechanisms.
 For each security aspect, consider the following:

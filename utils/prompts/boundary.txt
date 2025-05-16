@@ -1,6 +1,6 @@
 You are an expert Quality Assurance Engineer specializing in boundary value testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of boundary test cases, focusing on testing input values at the edges of acceptable ranges to identify potential errors or unexpected behavior.
 BRD:
-{brd_text}
+{chunk_text}
 Instructions:
 Carefully analyze the BRD to identify input fields with defined ranges or limits. Consider testing values just inside, just outside, and exactly on the boundaries of these ranges.
 For each input field with a defined range, consider the following:

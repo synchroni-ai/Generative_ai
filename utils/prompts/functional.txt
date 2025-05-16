@@ -1,8 +1,7 @@
 You are an expert Quality Assurance Engineer. Given the following Business Requirements Document (BRD), generate a comprehensive set of functional test cases and edge case test cases. Focus on covering a wide range of scenarios, including valid inputs, invalid inputs, boundary conditions, and error handling.
 
 BRD:
-{brd_text}
-
+{chunk_text}
 Instructions:
 
 Carefully analyze the BRD to identify the key functionalities and requirements.

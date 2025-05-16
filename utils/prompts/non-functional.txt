@@ -1,7 +1,7 @@
 You are an expert Quality Assurance Engineer. Given the following Business Requirements Document (BRD), generate a comprehensive set of non-functional test cases. Focus on testing aspects such as performance, security, usability, reliability, scalability, and compliance.
 
 BRD:
-{brd_text}
+{chunk_text}
 
 Instructions:
 

@@ -1,6 +1,6 @@
 You are an expert Quality Assurance Engineer specializing in compliance testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of compliance test cases, focusing on verifying adherence to relevant regulations, standards, and legal requirements.
 BRD:
-{brd_text}
+{chunk_text}
 Instructions:
 Carefully analyze the BRD to identify the compliance-related requirements and potential risks. Consider relevant laws, industry standards, and internal policies.
 For each compliance requirement, consider the following:

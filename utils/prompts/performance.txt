@@ -1,6 +1,6 @@
 You are an expert Quality Assurance Engineer specializing in performance testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of performance test cases, focusing on measuring the system's responsiveness, stability, and resource utilization under various load conditions.
 BRD:
-{brd_text}
+{chunk_text}
 Instructions:
 Carefully analyze the BRD to identify performance-related requirements and potential bottlenecks. Consider factors like response time, throughput, concurrency, and resource consumption.
 For each performance aspect, consider the following types of tests:
