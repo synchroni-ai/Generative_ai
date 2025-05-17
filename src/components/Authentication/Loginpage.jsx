@@ -7,13 +7,13 @@ import {
   Button
 } from "@mui/material";
 import { motion } from "framer-motion";
-import logo from "../asessts/images/logo.png";
+import logo from "../../asessts/images/logo.png";
 // import sideImage from "../asessts/images/left1.png";
-import sideImage from "../asessts/images/left2.png";
+import sideImage from "../../asessts/images/left2.png";
 // import sideImage from "../asessts/images/left3.png";
 import { useNavigate } from "react-router-dom";
 import { CircularProgress } from '@mui/material';
-import "./../asessts/css/login.css";
+import "./../../asessts/css/login.css";
 
 const LoginPage = () => {
   // const [togglePassword, setTogglePassword] = useState(false);

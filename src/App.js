@@ -1,34 +1,9 @@
-
-
-// import React from "react";
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import LoginPage from "./components/Loginpage";
-// import Dashboard from "./components/./Documentlist";
-// // ... import other components
-// import TokenChecker from "./components/./TokenChecker"; // Make sure the path is correct
-
-// function App() {
-//   return (
-//     <BrowserRouter>
-//       <TokenChecker>
-//         <Routes>
-//           <Route path="/" element={<LoginPage />} />
-//           <Route path="/dashboard" element={<Dashboard />} />
-//         </Routes>
-//       </TokenChecker>
-//     </BrowserRouter>
-//   );
-// }
-
-// export default App;
-
-
 import React from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import LoginPage from "./components/Loginpage";
-import Dashboard from "./components/Documentlist";
-import TokenChecker from "./components/TokenChecker";
-import Header from "./components/Header"; // ✅ Make sure this path is correct
+import LoginPage from "./components/Authentication/Loginpage";
+import Dashboard from "./components/DocumentList/Documentlist";
+import TokenChecker from "./components/Authentication/TokenChecker";
+import Header from "./Layout/Header"; // ✅ Make sure this path is correct
 
 // This wrapper lets us access hooks like useNavigate inside Header placement logic
 const AppWrapper = () => {
