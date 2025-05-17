@@ -42,7 +42,8 @@ from utils import data_ingestion, test_case_utils, user_story_utils
 from utils.llms import Mistral, openai, llama
 from utils import test_case_utils
 from core.websocket import websocket_endpoint
-
+from datetime import datetime,timezone  
+from zoneinfo import ZoneInfo 
 
 mongo_client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017/"))
 db = mongo_client["Gen_AI"]
@@ -54,10 +55,13 @@ def serialize_document(doc):
     doc["_id"] = str(doc["_id"])
     return {
         # "_id": str(doc["_id"]),
+        "file_id": str(doc["_id"]),
         "file_name": doc.get("file_name"),
+        "file_path": doc.get("file_path"),
         "status": doc.get("status"),
+        "selected_model": doc.get("selected_model", None),
     }
-
+IST = ZoneInfo("Asia/Kolkata")
 
 # ----------------- Directories Setup -----------------
 TEST_CASE_PROMPT_FILE_PATH = os.getenv("MISTRAL_TEST_CASE_PROMPT_FILE_PATH")
@@ -100,12 +104,15 @@ async def upload_document(file: UploadFile = File(...)):
             f.write(contents)
     finally:
         await file.close()
+    upload_time = datetime.now(IST)
+
 
     # Insert file metadata into MongoDB
     document_data = {
         "file_name": file_name,
         "file_path": str(file_path),
         "status": -1,  # Document uploaded but not processed
+        "timestamp": upload_time
     }
 
     result = collection.insert_one(document_data)
@@ -116,6 +123,7 @@ async def upload_document(file: UploadFile = File(...)):
         "file_name": file_name,
         "file_path": str(file_path),
         "file_id": file_id,
+        "timestamp": upload_time.isoformat()
     }
 
 
@@ -200,6 +208,11 @@ async def generate_test_cases(
 
 
 # ----------------- MongoDB Fetch Endpoints -----------------
+# @app.get("/documents/")
+# def get_all_documents():
+#     documents = list(collection.find())
+#     return [serialize_document(doc) for doc in documents]
+
 @app.get("/documents/")
 def get_all_documents():
     documents = list(collection.find())
@@ -324,12 +337,6 @@ def get_api_key_cost(api_key: str):
         "tokens_used": record.get("tokens_used", 0),
         "cost_usd": round(record.get("cost_usd", 0.0), 4),
     }
-
-
-# @app.websocket("/ws/task_status")
-# async def websocket_task_status(websocket: WebSocket, task_id: str = Query(...)):
-#     await websocket_endpoint(websocket, task_id)
-
 
 # JWT Configuration (should match what create_jwt_token uses)
 SECRET_KEY = os.getenv("SECRET_KEY")
