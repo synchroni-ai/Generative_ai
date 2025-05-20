@@ -1,3 +1,5 @@
+# test_cases_utils.py
+
 import pandas as pd
 import csv
 import re
@@ -46,7 +48,7 @@ CSV_HEADERS = [
     "Action",
     "Data",
     "Result",
-    "Type (P / N / in)",
+    "Test Nature", # MODIFIED HERE
     "Test priority",
 ]
 
@@ -153,7 +155,8 @@ def parse_test_cases_to_csv(document_id: str, collection: Collection) -> str:
                             "action": "Action",
                             "data": "Data",
                             "result": "Result",
-                            "type (p / n / in)": "Type (P / N / in)",
+                            "test nature": "Test Nature", # MODIFIED HERE (key and value)
+                            "type (p / n / in)": "Test Nature", # Keep old key for backward compatibility if needed, or remove
                             "test priority": "Test priority",
                             "steps": "Steps",
                         }
