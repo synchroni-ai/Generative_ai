@@ -143,99 +143,90 @@ async def upload_document(file: UploadFile = File(...)):
 async def generate_test_cases(
     file_id: str = Form(...),
     model_name: Optional[str] = Form("Mistral"),
-    chunk_size: Optional[int] = Query(default=None), # chunk_size is Query, not Form
-    # cache_key: Optional[str] = Query(default=None), # cache_key not used in task, consider removing or implementing
+    chunk_size: Optional[int] = Query(default=None),
+    cache_key: Optional[str] = Query(default=None),
     api_key: Optional[str] = Form(None),
-    test_case_types: Optional[str] = Form("all"),
+    test_case_types: Optional[str] = Form("all"),  # ✅ Accepts 'all' or comma-separated string like "functional,security"
 ):
+    # ✅ Step 1: Fetch the document from MongoDB
     try:
-        doc_object_id = ObjectId(file_id)
-    except InvalidId:
+        document = collection.find_one({"_id": ObjectId(file_id)})
+    except Exception:
         raise HTTPException(status_code=400, detail="Invalid file_id format.")
-
-    document = collection.find_one({"_id": doc_object_id})
+ 
     if not document:
-        raise HTTPException(
-            status_code=404, detail="Document not found in the database."
-        )
-
+        raise HTTPException(status_code=404, detail="Document not found in the database.")
+ 
+    # ✅ Step 2: Ensure file path exists
     file_path = Path(document.get("file_path"))
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found on disk.")
-
-    # Parse and validate test_case_types
-    raw_test_case_types_list = [t.strip().lower() for t in test_case_types.split(",")]
-    
-    actual_test_case_types_to_generate = []
-    if "all" in raw_test_case_types_list:
-        # Filter out 'all' itself if other specific types are also mentioned.
-        # If 'all' is the only one, then use VALID_TEST_CASE_TYPES (excluding 'all').
-        specific_types = [t for t in raw_test_case_types_list if t != "all"]
-        if specific_types:
-             # User specified 'all' and other types; check if other types are valid
-            for test_case_type in specific_types:
-                if test_case_type not in [v for v in VALID_TEST_CASE_TYPES if v != "all"]:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"Invalid test_case_type: {test_case_type}. Must be one of {[v for v in VALID_TEST_CASE_TYPES if v != 'all']} or 'all'.",
-                    )
-            actual_test_case_types_to_generate = list(set(specific_types)) # Use unique specific types
-        else:
-            actual_test_case_types_to_generate = [v for v in VALID_TEST_CASE_TYPES if v != "all"]
+ 
+    # ✅ Step 3: Parse and validate `test_case_types`
+    if test_case_types.strip().lower() == "all":
+        # If user requested all test cases, set full list
+        test_case_types_to_send = "all"
+        test_case_types_list = VALID_TEST_CASE_TYPES
     else:
-        for test_case_type in raw_test_case_types_list:
-            if test_case_type not in [v for v in VALID_TEST_CASE_TYPES if v != "all"]:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid test_case_type: {test_case_type}. Must be one of {[v for v in VALID_TEST_CASE_TYPES if v != 'all']} or 'all'.",
-                )
-        actual_test_case_types_to_generate = list(set(raw_test_case_types_list))
-
-
+        # ✅ Split and validate comma-separated input
+        test_case_types_list = [t.strip().lower() for t in test_case_types.split(",")]
+ 
+        # ✅ Check for any invalid test case types
+        invalid_types = [t for t in test_case_types_list if t not in VALID_TEST_CASE_TYPES]
+        if invalid_types:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid test_case_type(s): {invalid_types}. Must be one of {VALID_TEST_CASE_TYPES} or 'all'.",
+            )
+ 
+        # ✅ Convert back to comma-separated string for Celery compatibility
+        test_case_types_to_send = ",".join(test_case_types_list)
+ 
+    # ✅ Step 4: Fallback to default API key if user hasn't supplied one
     api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
-    if not api_key_to_use:
-         raise HTTPException(status_code=400, detail="API key is required. Provide it in the request or set TOGETHER_API_KEY env variable.")
-
     warning = (
-        "Using default API key from environment. Consider providing your own to avoid shared limits."
-        if not api_key and os.getenv("TOGETHER_API_KEY")
-        else None
+        "Using default API key. Consider providing your own to avoid shared limits."
+        if not api_key else None
     )
-
+ 
+    # ✅ Step 5: Set status = 0 (processing) in MongoDB
     collection.update_one(
-        {"_id": doc_object_id},
+        {"_id": ObjectId(file_id)},
         {
             "$set": {
-                "status": 0, # Processing
+                "status": 0,
                 "selected_model": model_name,
-                "api_key_used": f"...{api_key_to_use[-5:]}" if api_key_to_use else "N/A",
-                "requested_test_case_types": actual_test_case_types_to_generate,
-                "processing_start_time": datetime.now(IST)
+                "api_key_used": f"...{api_key_to_use[-5:]}",  # Mask key
             }
         },
     )
-
+ 
+    # ✅ Step 6: Trigger Celery task (passes either "all" or comma-separated string)
     task = process_and_generate_task.apply_async(args=[
-        str(file_path),
-        model_name,
-        chunk_size,
-        api_key_to_use,
-        actual_test_case_types_to_generate,
-        file_id, # document_id (which is file_id string)
+        str(file_path),             # file_path
+        model_name,                 # model_name
+        chunk_size,                 # chunk_size
+        api_key_to_use,             # api_key
+        test_case_types_to_send,    # "all" or "functional,security"
+        file_id,                    # document_id
     ])
-
+ 
+    # ✅ Save task ID to DB for tracking
     collection.update_one(
-        {"_id": doc_object_id}, {"$set": {"last_task_id": task.id}}
+        {"_id": ObjectId(file_id)}, {"$set": {"last_task_id": task.id}}
     )
-
+ 
+    # ✅ Step 7: Return response
     return {
         "message": "✅ Test case generation task started.",
         "task_id": task.id,
         "file_id": file_id,
-        "test_case_types_being_generated": actual_test_case_types_to_generate,
-        "api_key_being_used": f"...{api_key_to_use[-5:]}" if api_key_to_use else "N/A",
+        "test_case_types": test_case_types_list,  # Return list even if user passed 'all'
+        "api_key_being_used": f"...{api_key_to_use[-5:]}",
         "warning": warning,
     }
+ 
+ 
 
 
 @app.get("/documents/")
