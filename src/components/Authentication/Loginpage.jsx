@@ -37,11 +37,11 @@ const LoginPage = () => {
     });
 
     const { access_token } = response.data;
-    // const expiryTime = new Date().getTime() + 30 * 60 * 1000; // 30 mins
+    const expiryTime = new Date().getTime() + 30 * 60 * 1000; // 30 mins
 
     localStorage.setItem("token", access_token);
-    // localStorage.setItem("tokenExpiry", expiryTime);
-    // localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("tokenExpiry", expiryTime);
+    localStorage.setItem("isLoggedIn", "true");
 
     navigate("/dashboard");
   } catch (err) {

@@ -1,5 +1,5 @@
 // components/Configuration.jsx
-import React, { useState } from 'react';
+import React, { useState,useEffect,useRef } from 'react';
 import {
   Grid, Paper, Typography, IconButton, List, ListItem, ListItemIcon, Checkbox, ListItemText,
   Box, Button, Divider
@@ -32,6 +32,8 @@ const Configuration = () => {
     'Non-Functional',
     'Security',
     'Compliance',
+    'Boundary',
+    'Performance'
   ];
 
   // State inside the component
@@ -45,16 +47,35 @@ const Configuration = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [selectedUseCase, setSelectedUseCase] = useState('');
   const [selectedSubTypes, setSelectedSubTypes] = useState([]);
+const documentsRef = useRef(null); // For outside click
+
+
+// useEffect(() => {
+//   const handleClickOutside = (event) => {
+//     if (documentsRef.current && !documentsRef.current.contains(event.target)) {
+//       setCollapsed(true); // Collapse if clicking outside
+//     }
+//   };
+
+//   document.addEventListener('mousedown', handleClickOutside);
+//   return () => {
+//     document.removeEventListener('mousedown', handleClickOutside);
+//   };
+// }, []);
+
 
   const toggleDocument = (doc) => {
-    setSelectedDocs((prev) =>
-      prev.includes(doc) ? prev.filter((d) => d !== doc) : [...prev, doc]
-    );
-  };
+  setSelectedDocs((prevSelected) =>
+    prevSelected.includes(doc)
+      ? prevSelected.filter((d) => d !== doc)
+      : [...prevSelected, doc]
+  );
+};
 
   const handleUseCaseSelect = (useCase) => {
     setSelectedUseCase(useCase);
     setSelectedSubTypes([]); // reset subtypes on use case change
+      setCollapsed(true); // Close Documents accordion
   };
 
   const toggleSubType = (type) => {
@@ -64,19 +85,69 @@ const Configuration = () => {
   };
 
   return (
-    <Grid container spacing={12} sx={{ padding: "0px 50px" }}>
+    <Grid container spacing={12} mb={6} sx={{ padding: "0px 50px" }}>
       {/* Left Section */}
       <Grid item xs={12} md={8}>
         {/* Documents */}
-        <Paper sx={{ p: 2, borderRadius: 3, width: '720px', mb: 5 }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Typography fontWeight={600} fontSize={18}>Documents</Typography>
-            <IconButton onClick={() => setCollapsed(!collapsed)} size="small">
-              {collapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
-            </IconButton>
-          </Box>
+        <Box
+        ref={documentsRef} 
+        sx={{ padding:"8px 16px", borderRadius: 3, width: '670px', mb: 5, border: '1px solid #EBEBEB' }}>
+          <Box
+  display="flex"
+  justifyContent="space-between"
+  alignItems="center"
+  mb={0}
+  sx={{ cursor: 'pointer' }}
+  onClick={() => setCollapsed(!collapsed)}
+>
+  <Typography fontWeight={600} fontSize={18}>
+    Documents
+  </Typography>
+  <IconButton
+    size="small"
+    disableRipple
+    disableFocusRipple
+    sx={{ pointerEvents: 'none' }} // This makes the icon non-interactive so the parent Box handles the click
+  >
+    {collapsed ? <ExpandMoreIcon /> : <ExpandLessIcon />}
+  </IconButton>
+</Box>
           {!collapsed && (
-            <List sx={{ maxHeight: 220, overflow: 'auto', scrollbarWidth: "thin" }}>
+            <List sx={{ maxHeight: 300, overflow: 'auto', scrollbarWidth: "none",padding:'15px 25px' }}>
+              {/* Select All Checkbox */}
+      <ListItem disablePadding>
+        <ListItemIcon>
+          <Checkbox
+            edge="start"
+            indeterminate={
+              selectedDocs.length > 0 && selectedDocs.length < documentsData.length
+            }
+            checked={selectedDocs.length === documentsData.length}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedDocs(documentsData);
+              } else {
+                setSelectedDocs([]);
+              }
+            }}
+             sx={{
+    color: 'inherit', // neutral color before checked
+    '&.Mui-checked': {
+      color: '#000080', // your custom color for checked state
+    },
+    '&.MuiCheckbox-indeterminate': {
+      color: '#000080', // optional: style for indeterminate state
+    },
+    '& .MuiSvgIcon-root': {
+      borderRadius: '4px',
+    },
+  }}
+          />
+        </ListItemIcon>
+        <ListItemText primaryTypographyProps={{ fontSize: 14 }} primary="Select All" />
+      </ListItem>
+
+            {/* Individual Checkboxes */}
               {documentsData.map((doc, index) => (
                 <ListItem key={index} disablePadding>
                   <ListItemIcon>
@@ -101,47 +172,79 @@ const Configuration = () => {
               ))}
             </List>
           )}
-        </Paper>
+        </Box>
 
         {/* Use Cases */}
         <Typography fontWeight={600} fontSize={18} mb={1} textAlign="left" sx={{ color: '#333' }}>
           Use Cases
         </Typography>
-        <Paper elevation={0} sx={{ backgroundColor: '#F6F4FF', borderRadius: 3, p: 2, width: '669px' }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' }, gap: 1.5 }}>
-            {useCaseOptions.map((useCase) => (
-              <Button
-                key={useCase}
-                onClick={() => handleUseCaseSelect(useCase)}
+       <Paper elevation={0} sx={{ backgroundColor: '#F6F4FF', borderRadius: 3, p: 2, width: '669px' }}>
+  <Box
+    sx={{
+      display: 'grid',
+      gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(3, 1fr)' },
+      gap: 1.5,
+    }}
+  >
+    {useCaseOptions.map((useCase) => {
+      const isTestCases = useCase === 'Test Cases';
+      const isSelected = selectedUseCase === useCase;
+
+      return (
+        <Button
+          key={useCase}
+          disableRipple
+          onClick={() => handleUseCaseSelect(useCase)}
+          disabled={!isTestCases}
+          sx={{
+            justifyContent: 'flex-start',
+            // backgroundColor: isTestCases ? '#E8F0FE' : 'transparent', // ✅ light blue for emphasis
+            color: isSelected ? '#0A0080' : isTestCases ? '#000' : '#aaa',
+            fontSize: 14,
+            fontWeight: isSelected ? 600 : 400,
+            textTransform: 'none',
+            px: 1,
+            py: 1,
+            minWidth: 'unset',
+            boxShadow: 'none',
+            borderRadius: 2,
+            '&:hover': {
+              backgroundColor: isTestCases ? 'transparent' : 'transparent', // subtle hover only for enabled
+            },
+            cursor: isTestCases ? 'pointer' : 'default',
+          }}
+        >
+          <Box
+            sx={{
+              width: 16,
+              height: 16,
+              borderRadius: '50%',
+              border: '1.5px solid',
+              borderColor: isSelected ? '#0A0080' : isTestCases ? '#000' : '#aaa',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              mr: 1,
+            }}
+          >
+            {isSelected && (
+              <Box
                 sx={{
-                  justifyContent: 'flex-start',
-                  backgroundColor: 'transparent',
-                  color: selectedUseCase === useCase ? '#0A0080' : '#555',
-                  fontSize: 14,
-                  fontWeight: selectedUseCase === useCase ? 600 : 400,
-                  textTransform: 'none',
-                  px: 1,
-                  py: 1,
-                  minWidth: 'unset',
-                  boxShadow: 'none',
-                  '&:hover': { backgroundColor: 'transparent' },
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  backgroundColor: '#0A0080',
                 }}
-              >
-                <Box sx={{
-                  width: 16, height: 16, borderRadius: '50%',
-                  border: '1.5px solid',
-                  borderColor: selectedUseCase === useCase ? '#0A0080' : '#555',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1,
-                }}>
-                  {selectedUseCase === useCase && (
-                    <Box sx={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#0A0080' }} />
-                  )}
-                </Box>
-                {useCase}
-              </Button>
-            ))}
+              />
+            )}
           </Box>
-        </Paper>
+          {useCase}
+        </Button>
+      );
+    })}
+  </Box>
+</Paper>
+
 
         {/* Sub-types */}
         {selectedUseCase && (
@@ -149,7 +252,7 @@ const Configuration = () => {
             <Typography fontWeight={600} fontSize={18} mt={4} textAlign="left" sx={{ color: '#333' }}>
               Sub-types
             </Typography>
-            <Paper elevation={0} sx={{ borderRadius: 3, p: 2, width: '669px' }}>
+            <Paper elevation={0} sx={{ borderRadius: 3, p: 2, width: '650px' }}>
               <Grid container spacing={1}>
                 {subTypes.map((type) => (
                   <Grid item xs={6} sm={3} key={type}>
@@ -177,9 +280,9 @@ const Configuration = () => {
       </Grid>
 
       {/* Right Section */}
-      <Grid item xs={12} md={4}>
+      <Grid item xs={12} md={4} ml={8}>
         <Typography fontSize={18} fontWeight={700} mb={1.5}>Configure Summary</Typography>
-        <Paper sx={{ p: 2, borderRadius: 3, width: "450px" }}>
+        <Box sx={{ p: 2, borderRadius: 3, width: "450px",border: '1px solid #EBEBEB' }}>
           <Box mb={2}>
             <Typography fontSize={16} fontWeight={600} mb={2} sx={{ color: "#252525" }}>
               Documents
@@ -222,12 +325,13 @@ const Configuration = () => {
               </Box>
             </>
           )}
-        </Paper>
+        </Box>
 
         {/* Generate Button */}
         <Box display="flex" justifyContent="flex-end" mt={3}>
           <Button
             variant="contained"
+                disabled={selectedSubTypes.length === 0}
             sx={{
               backgroundColor: '#0A0080',
               borderRadius: '999px',

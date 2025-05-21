@@ -6,7 +6,7 @@
 }
 
 .history-section {
-  border-bottom: 1px solid #f0f0f0;
+  /* border-bottom: 1px solid #f0f0f0; */
   margin-bottom: 10px;
 }
 
@@ -17,7 +17,7 @@
   padding: 12px ;
   cursor: pointer;
     background-color: #FBFBFB;
-
+border-radius: 12px;
 }
 
 .section-title {
@@ -33,9 +33,10 @@
 }
 
 .history-docs {
+  margin: 3px 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   padding-bottom: 12px;
   padding: 10px 20px;
 }
