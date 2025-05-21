@@ -316,63 +316,133 @@ async def delete_documents(document_ids: List[str] = Query(...)): # Changed to Q
 router = APIRouter()
 
 
-@router.get("/get-test-cases/{document_id}")
-def get_test_cases_as_json(document_id: str):
+@router.get("/get-test-cases/{document_id}", tags=["Test Cases"])
+async def get_test_cases_as_json_filtered_and_counted( # Renamed for clarity
+    document_id: str,
+    types: Optional[str] = Query(None, description="Filter test cases by a comma-separated list of types (e.g., 'functional,security')."),
+    # 'collection' should ideally be injected using FastAPI's Depends
+):
+    """
+    Retrieves generated test cases for a document.
+    By default (no 'types' param), returns all available test cases.
+    Can be filtered by providing a 'types' query parameter.
+    The response includes counts for the returned (filtered) test cases.
+    e.g., /get-test-cases/some_id?types=functional,security
+    """
+    # Placeholder for DB collection access
+    from main3 import collection # Assuming collection is importable for this example
+
     try:
         doc_object_id = ObjectId(document_id)
     except InvalidId:
-        raise HTTPException(status_code=400, detail="Invalid document ID format")
-        
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid document ID format.")
+
     doc = collection.find_one({"_id": doc_object_id})
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found.")
 
     doc_status = doc.get("status")
-    if doc_status == 0: # Processing
-        progress = doc.get("progress", []) # Assuming 'progress' is updated by Celery task
+    requested_during_generation = doc.get("requested_test_case_types", [])
+    base_response = {
+        "document_id": document_id,
+        "requested_test_case_types_during_generation": requested_during_generation
+    }
+
+    # Handle non-completed statuses first
+    if doc_status == -1:
+        return {**base_response, "status_code": doc_status, "status_message": "pending_generation", "detail": "Test case generation has not been initiated."}
+    elif doc_status == 0:
+        progress = doc.get("progress", [])
         last_progress = progress[-1] if progress else "Processing test cases..."
-        return {
-            "status_code": doc_status,
-            "status_message": "processing",
-            "detail": last_progress,
-            "progress_log": progress,
-        }
-    elif doc_status == -1: # Not processed yet
-        return {
-            "status_code": doc_status,
-            "status_message": "pending_generation",
-            "detail": "Test case generation has not been initiated for this document."
-        }
-    elif doc_status == 1: # Completed
-        try:
-            # This will parse the test cases from the document's 'test_cases' field
-            _, rows = test_case_utils.parse_test_cases_to_csv(
-                document_id, collection
-            )
-            return {"status_code": doc_status, "status_message": "ready", "document_id": document_id, "test_cases": rows}
-        except HTTPException as e: # Catch specific HTTPExceptions from parse_test_cases_to_csv
-            raise e
-        except Exception as e:
-            print(f"Error parsing test cases in get_test_cases_as_json for doc {document_id}: {e}")
-            # Check if 'test_cases' field even exists or is empty
-            if not doc.get("test_cases"):
-                raise HTTPException(status_code=404, detail=f"No 'test_cases' data found in completed document {document_id}. Generation might have failed to save results.")
-            raise HTTPException(status_code=500, detail=f"Failed to parse test cases from document: {str(e)}")
+        return {**base_response, "status_code": doc_status, "status_message": "processing", "detail": last_progress, "progress_log": progress}
+    elif doc_status == 2:
+        error_info = doc.get("error_info", "An unspecified error occurred.")
+        return {**base_response, "status_code": doc_status, "status_message": "error", "detail": f"Test case generation failed: {error_info}"}
+    elif doc_status != 1: # Any other unknown status
+        return {**base_response, "status_code": doc_status if doc_status is not None else "unknown", "status_message": "unknown_status", "detail": f"Document is in an unknown state (status: {doc_status})."}
 
-    elif doc_status == 2: # Error state
-        error_info = doc.get("error_info", "An unspecified error occurred during processing.")
+    # Proceed if doc_status is 1 (Completed)
+    try:
+        _, all_parsed_rows = test_case_utils.parse_test_cases_to_csv(document_id, collection)
+
+        if not all_parsed_rows:
+            return {
+                **base_response,
+                "status_code": doc_status,
+                "status_message": "completed_no_data",
+                "detail": "Generation completed, but no test cases were found or parsed from the document.",
+                "test_cases": [],
+                "counts_by_type": {},
+                "total_test_cases": 0
+            }
+
+        # --- Filtering Logic for comma-separated 'types' string ---
+        final_rows_to_return = all_parsed_rows
+        applied_filter_types_list = []
+
+        if types:
+            filter_types_lower = [t.strip().lower() for t in types.split(',') if t.strip()]
+            applied_filter_types_list = [t.strip() for t in types.split(',') if t.strip()]
+
+            if filter_types_lower:
+                final_rows_to_return = [
+                    tc for tc in all_parsed_rows
+                    if tc.get("Test type", "").lower() in filter_types_lower
+                ]
+        
+        # --- Counting Logic for the final_rows_to_return ---
+        test_type_counts = Counter()
+        if final_rows_to_return: # Only count if there are rows to count
+            for tc in final_rows_to_return:
+                test_type_value = tc.get("Test type")
+                if test_type_value is None or not str(test_type_value).strip() or str(test_type_value).strip().upper() == "N/A":
+                    normalized_test_type = "Not Specified"
+                else:
+                    normalized_test_type = str(test_type_value).strip()
+                test_type_counts[normalized_test_type] += 1
+        
+        total_returned_test_cases = len(final_rows_to_return)
+        # --- End Counting Logic ---
+
+        status_message = "ready"
+        detail_message = "Test cases retrieved successfully."
+
+        if types and applied_filter_types_list and not final_rows_to_return:
+            status_message = "ready_no_match_for_filter"
+            detail_message = f"Generation completed. No test cases matched the filter types: {applied_filter_types_list}"
+        elif types and applied_filter_types_list:
+            detail_message = f"Test cases retrieved and filtered by: {applied_filter_types_list}"
+
+
         return {
+            **base_response,
             "status_code": doc_status,
-            "status_message": "error",
-            "detail": f"Test case generation failed for this document. Error: {error_info}"
-        }
-    else: # Unknown status
-        return {
-            "status_code": doc_status,
-            "status_message": "unknown",
-            "detail": f"Document is in an unknown state (status: {doc_status})."
+            "status_message": status_message,
+            "detail": detail_message,
+            "filter_applied_types": applied_filter_types_list if types else "None (all available shown)",
+            "test_cases": final_rows_to_return,
+            "counts_by_type": dict(test_type_counts), # Counts for the returned (filtered) TCs
+            "total_test_cases": total_returned_test_cases # Total for the returned (filtered) TCs
         }
 
+    except HTTPException as he: # Catch specific errors from parse_test_cases_to_csv
+        if he.status_code == 404 and "No test cases found" in he.detail:
+            return {
+                **base_response,
+                "status_code": doc_status,
+                "status_message": "completed_no_data", # Original error from parser
+                "detail": he.detail,
+                "test_cases": [],
+                "counts_by_type": {},
+                "total_test_cases": 0
+            }
+        raise he # Re-raise other HTTPExceptions
+    except Exception as e:
+        print(f"Error processing or counting test cases for doc {document_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process or count test cases: {str(e)}"
+        )
 
 # >>>>>>>>>>>>>>>>>>>>> NEW ENDPOINT START <<<<<<<<<<<<<<<<<<<<<<<
 @router.get("/test-case-summary/{document_id}")
