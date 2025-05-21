@@ -7,13 +7,14 @@ import {
   Button
 } from "@mui/material";
 import { motion } from "framer-motion";
-import logo from "../asessts/images/logo.png";
+import logo from "../../asessts/images/logo.png";
 // import sideImage from "../asessts/images/left1.png";
-import sideImage from "../asessts/images/left2.png";
+import sideImage from "../../asessts/images/left2.png";
 // import sideImage from "../asessts/images/left3.png";
 import { useNavigate } from "react-router-dom";
+import {adminAxios} from '../../asessts/axios/index';
 import { CircularProgress } from '@mui/material';
-import "./../asessts/css/login.css";
+import "./../../asessts/css/login.css";
 
 const LoginPage = () => {
   // const [togglePassword, setTogglePassword] = useState(false);
@@ -24,19 +25,32 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
-    e.preventDefault();
-    if (username === "Admin" && password === "Admin@123") {
-      const token = "dummyToken123";
-      const expiryTime = new Date().getTime() + 30 * 60 * 1000;
-      localStorage.setItem("token", token);
-      localStorage.setItem("tokenExpiry", expiryTime);
-      localStorage.setItem("isLoggedIn", "true");
-      navigate("/dashboard");
-    } else {
-      setError("Invalid username or password");
-    }
-  };
+ const handleLogin = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError("");
+
+  try {
+    const response = await adminAxios.post("/get_token", {
+      username,
+      password,
+    });
+
+    const { access_token } = response.data;
+    const expiryTime = new Date().getTime() + 30 * 60 * 1000; // 30 mins
+
+    localStorage.setItem("token", access_token);
+    localStorage.setItem("tokenExpiry", expiryTime);
+    localStorage.setItem("isLoggedIn", "true");
+
+    navigate("/dashboard");
+  } catch (err) {
+    setError("Invalid username or password");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Box sx={{ minHeight: "100vh", display: "flex",overflowY:"hidden",overflowX:"hidden",backgroundColor:"#f5f5f5" }}>

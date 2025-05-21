@@ -1,34 +1,10 @@
-
-
-// import React from "react";
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import LoginPage from "./components/Loginpage";
-// import Dashboard from "./components/./Documentlist";
-// // ... import other components
-// import TokenChecker from "./components/./TokenChecker"; // Make sure the path is correct
-
-// function App() {
-//   return (
-//     <BrowserRouter>
-//       <TokenChecker>
-//         <Routes>
-//           <Route path="/" element={<LoginPage />} />
-//           <Route path="/dashboard" element={<Dashboard />} />
-//         </Routes>
-//       </TokenChecker>
-//     </BrowserRouter>
-//   );
-// }
-
-// export default App;
-
-
 import React from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import LoginPage from "./components/Loginpage";
-import Dashboard from "./components/Documentlist";
-import TokenChecker from "./components/TokenChecker";
-import Header from "./components/Header"; // ✅ Make sure this path is correct
+import LoginPage from "./components/Authentication/Loginpage";
+import Dashboard from "./components/DocumentList/Documentlist";
+import TokenChecker from "./components/Authentication/TokenChecker";
+import Header from "./Layout/Header"; // ✅ Make sure this path is correct
+import UIUXConfigurator from './components/Generate/UIUXConfigurator';
 
 // This wrapper lets us access hooks like useNavigate inside Header placement logic
 const AppWrapper = () => {
@@ -41,7 +17,7 @@ const AppWrapper = () => {
   };
 
   // Optional: Only show header if not on login page
-  const showHeader = location.pathname !== "/";
+const showHeader = !["/", "/uiux-configurator"].includes(location.pathname);
 
   return (
     <>
@@ -50,6 +26,7 @@ const AppWrapper = () => {
         <Routes>
           <Route path="/" element={<LoginPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/uiux-configurator" element={<UIUXConfigurator />} />
         </Routes>
       </TokenChecker>
     </>
@@ -63,3 +40,25 @@ const App = () => (
 );
 
 export default App;
+
+
+
+// import React from 'react';
+// import GenAIUploader from './components/Upload/GenAi_Overview';
+// import UIUXConfigurator from './components/Generate/UIUXConfigurator';
+// import TestCaseTable from "./components/Generate/Result";
+// import Configuration from './components/Generate/Configuration';
+// import History from './components/Generate/History';
+// function App() {
+//   return (
+//     <div className="App">
+//      <GenAIUploader />
+//      {/* <UIUXConfigurator /> */}
+//      {/* <Configuration /> */}
+//      {/* <History /> */}
+//     {/* <TestCaseTable /> */}
+//     </div>
+//   );
+// }
+ 
+// export default App;
