@@ -931,22 +931,8 @@ const triggerSimulatedProgress = (selectedFile) => {
     );
   }, 500);
 
-  setTimeout(() => clearInterval(interval), 3000);
+  setTimeout(() => clearInterval(interval), 5000);
 };
-  const inputStyle = {
-     '& .MuiOutlinedInput-root': {
-      borderRadius: '12px',
-      minHeight: '36px',
-      fontSize: '13px', // input text size
-    },
-    '& .MuiInputBase-input': {
-      padding: '12px 12px',
-      fontSize: '13px', // input text size
-    },
-    '& .MuiInputLabel-root': {
-      fontSize: '14px', // label size
-    },
-  };
 
   return (
      <Drawer
@@ -961,14 +947,14 @@ const triggerSimulatedProgress = (selectedFile) => {
           borderRadius: '20px 0px 0px 20px',
                     transition: "transform 2s ease-in-out",
                               transform: "translate(50%, 0%)",
-          padding: "24px 32px 0px 32px",
+          padding: "0px 32px",
           mt: '64px',
 overflow: "auto",
           scrollbarWidth:"thin",
         overflowX:"hidden"        },
       }}
     >
-    <Box sx={{  fontFamily: 'sans-serif',width:'100%',maxWidth:'900px',padding:"0px 32px" }}>
+    <Box sx={{  fontFamily: 'sans-serif',width:'100%',maxWidth:'900px',p:4 }}>
      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
   <Typography variant="h5" fontWeight={700}>
     GenAI_Documentation_Overview
@@ -978,63 +964,9 @@ overflow: "auto",
   </IconButton>
 </Box>
 
-<Box display="flex" gap={3} mb={3} width={"96.5%"}>
-        {/* Left side - 3 fields */}
-       <Box flex={1} display="flex" flexDirection="column" gap={2}>
-          <TextField
-            label="Dataspace Name"
-            variant="outlined"
-            fullWidth
-            size="small"
-            sx={inputStyle}
-          />
-          <TextField
-            label="Category"
-            variant="outlined"
-            fullWidth
-            size="small"
-            sx={inputStyle}
-          />
-          <TextField
-            label="Subcategory"
-            variant="outlined"
-            fullWidth
-            size="small"
-            sx={inputStyle}
-          />
-        </Box>
-
-        {/* Right side - Description input field */}
-       <Box flex={1}>
-  <TextField
-    label="Description"
-    variant="outlined"
-    fullWidth
-    multiline
-    minRows={7}
-    sx={{
-      '& .MuiOutlinedInput-root': {
-        borderRadius: '12px',
-        fontSize: '13px',
-      },
-      '& .MuiInputBase-input': {
-        // padding: '12px',
-        fontSize: '13px',
-        maxHeight: '125px',
-overflow:"auto",
-overflowY:"auto"
-      },
-      '& .MuiInputLabel-root': {
-        fontSize: '14px',
-      },
-    }}
-  />
-</Box>
-
-
-      </Box>
       {/* Form with Starting Icon */}
-  {/* <Box display="flex" alignItems="flex-start" gap={4} mb={4} >
+  <Box display="flex" alignItems="flex-start" gap={4} mb={4} >
+  {/* Avatar on the left */}
   <Avatar
   variant="rounded"
   src={DocumentIcon}
@@ -1052,6 +984,7 @@ overflowY:"auto"
 
   <Box flex={1}>
   <Grid container spacing={2}>
+    {/* Row 1: full-width Data Space */}
   <Grid item xs={12}>
   <TextField
   value={dataSpace}
@@ -1077,6 +1010,7 @@ overflowY:"auto"
 
 
 
+    {/* Row 2: three fields side-by-side */}
    <Grid container spacing={2}>
   <Grid item xs={12} md={3}>
   <TextField
@@ -1132,7 +1066,7 @@ overflowY:"auto"
 
 
 
-</Box> */}
+</Box>
 
 
 
@@ -1334,9 +1268,8 @@ overflowY:"auto"
 
       </Grid>
        {/* Buttons directly under upload list */}
-            <Box display="flex" justifyContent="flex-end" gap={2}  mr={3}>
+            <Box display="flex" justifyContent="flex-end" gap={2} mt={5} mr={3}>
               <Button disableRipple
-              onClick={onClose}
                 sx={{ borderRadius: '20px', textTransform: 'none',padding:'6px 16px',color:"grey" }}
               >
                 Cancel
@@ -1375,7 +1308,7 @@ disabled={
               >
  Create
   {loading && (
-    <CircularProgress size={16} sx={{ color: "#000080"  }} />
+    <CircularProgress size={16} sx={{ color: "#000080" }} />
   )}              </Button>
             </Box>
     </Box>

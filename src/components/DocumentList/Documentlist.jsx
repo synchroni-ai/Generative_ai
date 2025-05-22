@@ -212,31 +212,6 @@ const handleGenerateClick = async (doc) => {
     <Box sx={{ minHeight: "100vh", display: "flex", flexDirection: "column", overflowY: "hidden" }}>
       {/* <Header onLogout={handleLogout} /> */}
       <Box sx={{ mt: 8, px: 5, overflowY: "auto", height: "89vh", scrollbarWidth: 'thin' }}>
-        {/* <Box sx={{ display: "flex", alignItems: "center", justifyContent: 'end', marginRight: "20px" }}>
-          <Box className="search-container" sx={{ position: "relative", mr: 2, width: "250px" }}>
-            <input
-              type="text"
-              placeholder="Search topics..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search className="basic-header-search-icon" />
-          </Box>
-
-          <Button
-            onClick={handleUploadClick}
-            sx={{
-              textTransform: "none",
-              fontWeight: "bold",
-              color: "white",
-              backgroundColor: "#000080",
-              borderRadius: "10px",
-              padding: "6px 16px",
-            }}
-          >
-            New Document
-          </Button>
-        </Box> */}
         <Box
       display="flex"
       justifyContent="space-between"
@@ -301,32 +276,6 @@ const handleGenerateClick = async (doc) => {
             <Search className="basic-header-search-icon" />
           </Box>
     </Box>
-        {/* <div className="Course-create-search-frame-parent">
-        <div className="Course-create-search-courses-parent">
-        <b className="Course-create-search-heading">Document Space</b>
-        <div
-          className="Course-create-search-vuesaxlinearadd-circle-parent"
-            onClick={handleUploadClick}
-          style={{ cursor: "pointer" }}
-        >
-          <img
-            className="Course-create-search-vuesaxlinearadd-circle-icon"
-            alt=""
-            src={Coursecreatesearchcourselistplus}
-          />
-          <div className="Course-create-search-courses">Create</div>
-        </div>
-      </div>
-      <Box className="search-container" sx={{ position: "relative", mr: 2, width: "250px" }}>
-            <input
-              type="text"
-              placeholder="Search topics..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <Search className="basic-header-search-icon" />
-          </Box>
-      </div> */}
         <Container maxWidth="xl" sx={{ mt: 4 }}>
           {loading ? (
             <TableContainer sx={{ width: "100%", border: "1px solid #e6e6e6", borderRadius: "10px", borderBottom: "none" }}>
@@ -469,22 +418,7 @@ const handleGenerateClick = async (doc) => {
               </Table>
             </TableContainer>
           )}
-          {/* <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-count={
-  documents.filter((doc) =>
-    doc.file_name?.toLowerCase().includes(searchTerm?.toLowerCase())
-  ).length
-}
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={(event, newPage) => setPage(newPage)}
-            onRowsPerPageChange={(event) => {
-              setRowsPerPage(parseInt(event.target.value, 10));
-              setPage(0);
-            }}
-          /> */}
+
            <Box mt={3}>
       <Box
         display="flex"
