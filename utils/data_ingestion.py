@@ -85,3 +85,37 @@ def store_processed_text(cleaned_text, num_tokens, processing_time, metadata=Non
         "metadata": metadata or {},  # Ensure metadata is a dictionary
     }
     return stored_data
+
+from pathlib import Path
+ 
+def extract_text_from_file(file_path: str) -> str:
+
+    ext = Path(file_path).suffix.lower()
+
+    if ext == ".pdf":
+
+        from PyPDF2 import PdfReader
+
+        with open(file_path, "rb") as f:
+
+            reader = PdfReader(f)
+
+            return "\n".join(page.extract_text() or "" for page in reader.pages)
+
+    elif ext in [".docx"]:
+
+        from docx import Document
+
+        doc = Document(file_path)
+
+        return "\n".join(para.text for para in doc.paragraphs)
+
+    else:
+
+        # Try reading as text
+
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+
+            return f.read()
+
+ 
