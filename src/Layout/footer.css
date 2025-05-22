@@ -1,0 +1,27 @@
+.Footer_paragraph {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  height: 9vh;
+  color: #666666;
+  padding: 10px 20px;
+  background-color: #f9f9f9;
+  width: 100%;
+  box-sizing: border-box;
+}
+ 
+.footer-logo {
+  width: 97px;
+  height: auto;
+  margin-right: 10px;
+  margin-left: 20px;
+}
+ 
+.footer-text {
+  margin: 0;
+  margin-right: 50px;
+  color: black;
+}
+ 
+ 

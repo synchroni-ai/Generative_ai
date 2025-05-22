@@ -7,9 +7,11 @@ import {
   Button
 } from "@mui/material";
 import { motion } from "framer-motion";
-import logo from "../../asessts/images/logo.png";
-// import sideImage from "../asessts/images/left1.png";
-import sideImage from "../../asessts/images/left2.png";
+import logo from "../../asessts/images/logo1.png";
+import sideImage from "../../asessts/images/Left.png";
+import Logo from "../../asessts/images/logo1.png";
+import topRightImage from "../../asessts/images/toprightcorner.png";
+// import sideImage from "../../asessts/images/left2.png";
 // import sideImage from "../asessts/images/left3.png";
 import { useNavigate } from "react-router-dom";
 import {adminAxios} from '../../asessts/axios/index';
@@ -31,7 +33,7 @@ const LoginPage = () => {
   setError("");
 
   try {
-    const response = await adminAxios.post("/get_token", {
+    const response = await adminAxios.post("/api/v1/auth/token", {
       username,
       password,
     });
@@ -53,59 +55,110 @@ const LoginPage = () => {
 
 
   return (
-    <Box sx={{ minHeight: "100vh", display: "flex",overflowY:"hidden",overflowX:"hidden",backgroundColor:"#f5f5f5" }}>
-      {/* Left Side Image with Animation */}
-      <Box
-  sx={{
-    flex: 1,
-    display: "flex",
-    alignItems: "center", // vertically centers the child
-    justifyContent: "center", // optional: horizontally center it too
-  }}
->
-<Box
-  sx={{
-    flex: 1,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    position: "relative", // important!
-  }}
->
-  {/* Image as background */}
-  <div
-    style={{
-      backgroundImage: `url(${sideImage})`,
-      backgroundRepeat: "no-repeat",
-      backgroundSize: "contain",
-      backgroundPosition: "center",
-      height: "98vh",
-      width: "100%",
-      maxWidth: 500,
-      border:"1px solid #f5f5f5"
-      // borderColor:"#f5f5f5"
+   <Box sx={{ minHeight: "100vh", display: "flex", overflowY: "hidden", overflowX: "hidden" }}>
+     {/* Top-left logo */}
+  <Box
+    component="img"
+    src={Logo}
+    alt="AI Logo"
+    sx={{
+      position: "absolute",
+      top: 16,
+      left: 16,
+      height: 40,
+      width: "auto",
+      zIndex: 1000,
     }}
   />
-</Box>
-</Box>
-      {/* Right Form with Animation */}
+    {/* ✅ Left side with background color */}
+  <Box
+    sx={{
+      flex: 1,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: "#FFFDF8", // ← Add your desired background color
+    }}
+  >
+    <Box
+      sx={{
+        flex: 1,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        position: "relative",
+      }}
+    >
+      {/* Image as background */}
       <div
+        style={{
+          backgroundImage: `url(${sideImage})`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: "contain",
+          backgroundPosition: "center",
+          height: "98vh",   // ✅ Set exact height
+          width: "350px",    // ✅ Set exact width
+          // border: "1px solid #f5f5f5",
+        }}
+      />
+    </Box>
+  </Box>
+      {/* Right Form with Animation */}
+   <div
   style={{
     flex: 1,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: "48px 32px",
+    position: "relative", // 🔑 Needed for positioning the top-right image
   }}
 >
+  <img
+  src={topRightImage} // replace with your image variable or path
+  alt="Top Right Decoration"
+  style={{
+    position: "absolute",
+    top: 0,
+    right: 0,
+    width: 100,     // Adjust size as needed
+    height: "auto",
+    zIndex: 1,
+  }}
+/>
         <div className="login-box">
           {/* <Box display="flex" justifyContent="center" mb={3}>
             <img src={logo} alt="Logo" style={{ height: 40 }} />
           </Box> */}
-          <Typography  fontWeight="bold" mb={4} textAlign="center" sx={{fontSize:"22px"}}>
-            Unlock the Possibilities <br/> of Generative AI
-          </Typography>
+           <Box textAlign="left" mb={4}>
+      {/* Heading */}
+      <Typography variant="h6" sx={{ fontWeight: 400 }}>
+        Welcome to
+      </Typography>
 
+      {/* Gradient Text */}
+      <Typography
+        variant="h5"
+        sx={{
+          fontWeight: "bold",
+          background: "linear-gradient(90deg, #8e2de2, #4a00e0)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          display: "inline-block",
+        }}
+      >
+        Generative AI
+      </Typography>
+
+      {/* Subtext */}
+      <Typography
+        variant="body2"
+        mt={1}
+        sx={{ color: "#888888", maxWidth: 320, margin: "0 auto" }}
+      >
+        "A smart assistant to help you experiment, validate, and perfect your work using the latest in generative AI."
+      </Typography>
+    </Box>
           <form onSubmit={handleLogin}>
           {/* <Box sx={{ maxWidth: 300, mx: "auto" }}> */}
           <div className="login-form-group">
@@ -166,12 +219,12 @@ const LoginPage = () => {
                 Sign Up
               </Link>
             </Typography>
-            <Box className="power" display="flex" justifyContent="center" alignItems="center" mb={3} mt={5}>
+            {/* <Box className="power" display="flex" justifyContent="center" alignItems="center" mb={3} mt={5}>
   <Typography sx={{ fontSize: "12px", mr: 1 }}>
     Powered by
   </Typography>
-  <img src={logo} alt="Logo" style={{ height: 20 }} />
-</Box>
+  <img src={logo} alt="logo" style={{ height: 20 }} />
+</Box> */}
 
           </form>
           </div>

@@ -265,7 +265,7 @@ const selectedHistoryDocData = [
   },
 ];
 
-const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token,fileId   }) => {
+const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token,fileId, selectedSubTypes   }) => {
 const [activeTab, setActiveTab] = useState('All'); // not index 0
 const [parsedData, setParsedData] = useState([]);
 const [headers, setHeaders] = useState([]);
@@ -276,16 +276,14 @@ const socketRef = useRef(null);
 const [allTestCases, setAllTestCases] = useState([]);
 const [testCaseCounts, setTestCaseCounts] = useState({});
 
-const tabLabels = useMemo(() => [
-  'All',
-  'Functional',
-  'Non-Functional',
-  'Security',
-  'Performance',
-  'Boundary',
-  'Compliance',
-], []);
+const tabLabels = useMemo(() => {
+  const defaultTabs = selectedSubTypes || [];
+  return ['All', ...defaultTabs];
+}, [selectedSubTypes]);
 
+ useEffect(() => {
+    console.log("Selected SubTypes:", selectedSubTypes);
+  }, [selectedSubTypes]);
 
 useEffect(() => {
   let pollingTimeout = null;

@@ -164,7 +164,7 @@ import setting from '../asessts/images/settings.png';
 import support from '../asessts/images/support.png';
 import LogoutIcon from '../asessts/images/Logout.png';
 import {  useLocation,useNavigate } from "react-router-dom";
-import logo from "../asessts/images/logo.png";
+import logo from "../asessts/images/logo1.png";
 import profilePic from "../asessts/images/profilelogo.png";
 
 const Header = ({ onLogout }) => {
@@ -201,20 +201,44 @@ const Header = ({ onLogout }) => {
         
 
         {/* Center: Navigation Links */}
-        <Box display="flex" alignItems="center" gap={6} >
-          <Typography 
-                        onClick={() => navigate("/dashboard")}
-            sx={{
-                color: isActive("/dashboard") ? "#000080" : "#494949",
-                fontWeight: isActive("/dashboard") ? 600 : 500,
-                fontSize: "14px",
-                cursor: "pointer",
-                // borderBottom: isActive("/dashboard") ? "2px solid #000080" : "none",
-                // pb: "2px"
-              }}>Home</Typography>
-          <Typography  sx={{ color: "#494949", fontWeight: 500, cursor: "pointer",fontSize:"14px" }}>Tools</Typography>
-          <Typography  sx={{ color: "#494949", fontWeight: 500, cursor: "pointer",fontSize:"14px" }}>Service</Typography>
-        </Box>
+        <Box display="flex" alignItems="center" gap={6}>
+  <Typography 
+    onClick={() => navigate("/dashboard")}
+    sx={{
+      color: isActive("/dashboard") ? "#000080" : "#494949",
+      fontWeight: isActive("/dashboard") ? 600 : 500,
+      fontSize: "14px",
+      cursor: "pointer",
+    }}
+  >
+    Home
+  </Typography>
+
+  <Typography
+    sx={{
+      color: "#bdbdbd",          // lighter text to show it's disabled
+      fontWeight: 500,
+      fontSize: "14px",
+      cursor: "not-allowed",     // indicates disabled behavior
+      pointerEvents: "none",     // disables clicks
+    }}
+  >
+    Tools
+  </Typography>
+
+  <Typography
+    sx={{
+      color: "#bdbdbd",
+      fontWeight: 500,
+      fontSize: "14px",
+      cursor: "not-allowed",
+      pointerEvents: "none",
+    }}
+  >
+    Service
+  </Typography>
+</Box>
+
         </Box>
 
         {/* Right: Icons + Avatar */}

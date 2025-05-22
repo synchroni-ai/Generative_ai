@@ -3,9 +3,9 @@
   }
   
   .login-form-group input {
-    width: 90%;
+    width: 100%;
     padding: 3%;
-    border-radius: 5px;
+    border-radius: 12px;
     box-sizing: border-box;
     background-color: #F6F6F6;
     border: none;
@@ -22,11 +22,11 @@
     position: relative;
     z-index: 2;
     width: 43%;
-    padding: 50px 30px 0px 30px;
+    padding: 30px;
     border-radius: 15px;
     text-align: center;
     background-color: white;
-    border: 1px solid #8E8E8E;
+    border: 1px solid #EBEBEB;
     height:auto
   }
 
