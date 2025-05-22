@@ -2689,6 +2689,7 @@ from collections import Counter
 # Import your custom modules
 from utils import data_ingestion, test_case_utils, user_story_utils 
 from utils.llms import Mistral, openai, llama 
+from utils.data_ingestion import extract_text_from_file
 
 from datetime import datetime, timezone as dt_timezone 
 from zoneinfo import ZoneInfo
@@ -2758,6 +2759,7 @@ class TokenRequest(BaseModel):
 
 class GenerateTaskResponseItem(BaseModel):
     file_id: str
+    document_id:Optional[str] = None
     task_id: str
     message: str
     error: Optional[str] = None
@@ -2930,39 +2932,493 @@ async def delete_data_space(data_space_id: str, delete_contained_documents: bool
 
 # --- Document Test Case Operations ---
 @api_v1_router.post("/documents/batch-generate-test-cases/", response_model=BatchGenerateTestCasesResponse, tags=["Document Test Cases"])
-async def batch_generate_test_cases_for_documents(
-    file_ids_str: str = Form(..., alias="file_ids", description="Comma-separated file_ids."),
-    model_name: Optional[str] = Form("Mistral"), chunk_size: Optional[int] = Query(None),
-    api_key: Optional[str] = Form(None), test_case_types: Optional[str] = Form("all"),
-):
-    actual_file_ids = [fid.strip() for fid in file_ids_str.split(',') if fid.strip()]
-    if not actual_file_ids: raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file_ids provided.")
-    initiated_tasks_info: List[GenerateTaskResponseItem] = []
-    api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
-    if not api_key_to_use: raise HTTPException(status_code=400, detail="API key required.")
-    warning_msg = "Using default API key." if not api_key and os.getenv("TOGETHER_API_KEY") else None
-    types_to_send, types_for_resp = "all", INDIVIDUAL_VALID_TEST_CASE_TYPES[:]
-    if test_case_types.strip().lower() != "all":
-        parsed = [t.strip().lower() for t in test_case_types.split(',') if t.strip()]
-        validated = list(dict.fromkeys(t for t in parsed if t in INDIVIDUAL_VALID_TEST_CASE_TYPES))
-        if not validated: raise HTTPException(status_code=400, detail="No valid types.")
-        types_to_send, types_for_resp = ",".join(validated), validated
-    for current_file_id in actual_file_ids:
-        try:
-            doc_obj_id = ObjectId(current_file_id)
-            document = documents_collection.find_one({"_id": doc_obj_id})
-            if not document: initiated_tasks_info.append(GenerateTaskResponseItem(file_id=current_file_id, task_id="N/A", message="Failed: Doc not found.", error="Doc not found")); continue
-            f_path_str = document.get("file_path")
-            if not f_path_str or not Path(f_path_str).exists(): initiated_tasks_info.append(GenerateTaskResponseItem(file_id=current_file_id, task_id="N/A", message="Failed: Doc file missing.", error="File missing")); continue
-            documents_collection.update_one({"_id": doc_obj_id}, {"$set": {"status":0, "selected_model":model_name, "api_key_used":f"...{api_key_to_use[-5:]}" if api_key_to_use else "N/A", "requested_test_case_types":types_for_resp, "processing_start_time":datetime.now(IST), "progress":["Batch gen task init."], "error_info":None, "last_task_id":None}})
-            task = process_and_generate_task.apply_async(args=[str(Path(f_path_str)), model_name, chunk_size, api_key_to_use, types_to_send, current_file_id])
-            documents_collection.update_one({"_id": doc_obj_id}, {"$set": {"last_task_id": task.id}})
-            initiated_tasks_info.append(GenerateTaskResponseItem(file_id=current_file_id, task_id=task.id, message="✅ TC gen task started."))
-        except InvalidId: initiated_tasks_info.append(GenerateTaskResponseItem(file_id=current_file_id, task_id="N/A", message="Failed: Invalid file_id.", error="Invalid file_id"))
-        except Exception as e: initiated_tasks_info.append(GenerateTaskResponseItem(file_id=current_file_id, task_id="N/A", message=f"Failed: {type(e).__name__}.", error=str(e)))
-    success_count = sum(1 for item in initiated_tasks_info if item.task_id != "N/A")
-    return BatchGenerateTestCasesResponse(overall_message=f"Batch process done. {success_count}/{len(actual_file_ids)} tasks started.", tasks_initiated=initiated_tasks_info, warning=warning_msg)
 
+# async def batch_generate_test_cases_for_documents(
+#     file_ids_str: str = Form(..., alias="file_ids", description="Comma-separated file_ids."),
+#     model_name: Optional[str] = Form("Mistral"),
+#     chunk_size: Optional[int] = Query(None),
+#     api_key: Optional[str] = Form(None),
+#     test_case_types: Optional[str] = Form("all"),
+# ):
+#     actual_file_ids = [fid.strip() for fid in file_ids_str.split(',') if fid.strip()]
+#     if not actual_file_ids:
+#         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file_ids provided.")
+#     initiated_tasks_info: List[GenerateTaskResponseItem] = []
+#     api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
+#     if not api_key_to_use:
+#         raise HTTPException(status_code=400, detail="API key required.")
+#     warning_msg = "Using default API key." if not api_key and os.getenv("TOGETHER_API_KEY") else None
+#     types_to_send, types_for_resp = "all", INDIVIDUAL_VALID_TEST_CASE_TYPES[:]
+#     if test_case_types.strip().lower() != "all":
+#         parsed = [t.strip().lower() for t in test_case_types.split(',') if t.strip()]
+#         validated = list(dict.fromkeys(t for t in parsed if t in INDIVIDUAL_VALID_TEST_CASE_TYPES))
+#         if not validated:
+#             raise HTTPException(status_code=400, detail="No valid types.")
+#         types_to_send, types_for_resp = ",".join(validated), validated
+#     for current_file_id in actual_file_ids:
+#         try:
+#             doc_obj_id = ObjectId(current_file_id)
+#             document = documents_collection.find_one({"_id": doc_obj_id})
+#             doc_id_str = str(document["_id"]) if document else None
+#             if not document:
+#                 initiated_tasks_info.append(GenerateTaskResponseItem(
+#                     file_id=current_file_id,
+#                     document_id=None,
+#                     task_id="N/A",
+#                     message="Failed: Doc not found.",
+#                     error="Doc not found"
+#                 ))
+#                 continue
+#             f_path_str = document.get("file_path")
+#             if not f_path_str or not Path(f_path_str).exists():
+#                 initiated_tasks_info.append(GenerateTaskResponseItem(
+#                     file_id=current_file_id,
+#                     document_id=doc_id_str,
+#                     task_id="N/A",
+#                     message="Failed: Doc file missing.",
+#                     error="File missing"
+#                 ))
+#                 continue
+#             documents_collection.update_one(
+#                 {"_id": doc_obj_id},
+#                 {"$set": {
+#                     "status": 0,
+#                     "selected_model": model_name,
+#                     "api_key_used": f"...{api_key_to_use[-5:]}" if api_key_to_use else "N/A",
+#                     "requested_test_case_types": types_for_resp,
+#                     "processing_start_time": datetime.now(IST),
+#                     "progress": ["Batch gen task init."],
+#                     "error_info": None,
+#                     "last_task_id": None
+#                 }}
+#             )
+#             task = process_and_generate_task.apply_async(
+#                 args=[str(Path(f_path_str)), model_name, chunk_size, api_key_to_use, types_to_send, current_file_id]
+#             )
+#             documents_collection.update_one(
+#                 {"_id": doc_obj_id},
+#                 {"$set": {"last_task_id": task.id}}
+#             )
+#             initiated_tasks_info.append(GenerateTaskResponseItem(
+#                 file_id=current_file_id,
+#                 document_id=doc_id_str,
+#                 task_id=task.id,
+#                 message="✅ TC gen task started."
+#             ))
+#         except InvalidId:
+#             initiated_tasks_info.append(GenerateTaskResponseItem(
+#                 file_id=current_file_id,
+#                 document_id=None,
+#                 task_id="N/A",
+#                 message="Failed: Invalid file_id.",
+#                 error="Invalid file_id"
+#             ))
+#         except Exception as e:
+#             initiated_tasks_info.append(GenerateTaskResponseItem(
+#                 file_id=current_file_id,
+#                 document_id=None,
+#                 task_id="N/A",
+#                 message=f"Failed: {type(e).__name__}.",
+#                 error=str(e)
+#             ))
+#     success_count = sum(1 for item in initiated_tasks_info if item.task_id != "N/A")
+#     return BatchGenerateTestCasesResponse(
+#         overall_message=f"Batch process done. {success_count}/{len(actual_file_ids)} tasks started.",
+#         tasks_initiated=initiated_tasks_info,
+#         warning=warning_msg
+#     )
+
+async def batch_generate_test_cases_for_documents(
+
+    file_ids_str: str = Form(..., alias="file_ids", description="Comma-separated file_ids."),
+
+    model_name: Optional[str] = Form("Mistral"),
+
+    chunk_size: Optional[int] = Query(None),
+
+    api_key: Optional[str] = Form(None),
+
+    test_case_types: Optional[str] = Form("all"),
+
+    combine_files: bool = Form(False)   # <-- NEW: Whether to aggregate files or not
+
+):
+
+    actual_file_ids = [fid.strip() for fid in file_ids_str.split(',') if fid.strip()]
+
+    if not actual_file_ids:
+
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file_ids provided.")
+ 
+    initiated_tasks_info: List[GenerateTaskResponseItem] = []
+
+    api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
+
+    if not api_key_to_use:
+
+        raise HTTPException(status_code=400, detail="API key required.")
+ 
+    warning_msg = "Using default API key." if not api_key and os.getenv("TOGETHER_API_KEY") else None
+
+    types_to_send, types_for_resp = "all", INDIVIDUAL_VALID_TEST_CASE_TYPES[:]
+
+    if test_case_types.strip().lower() != "all":
+
+        parsed = [t.strip().lower() for t in test_case_types.split(',') if t.strip()]
+
+        validated = list(dict.fromkeys(t for t in parsed if t in INDIVIDUAL_VALID_TEST_CASE_TYPES))
+
+        if not validated:
+
+            raise HTTPException(status_code=400, detail="No valid types.")
+
+        types_to_send, types_for_resp = ",".join(validated), validated
+ 
+    # --- AGGREGATE MODE ---
+
+    if combine_files and len(actual_file_ids) > 1:
+
+        from datetime import datetime
+
+        from zoneinfo import ZoneInfo
+
+        IST = ZoneInfo("Asia/Kolkata")
+
+        now = datetime.now(IST)
+ 
+        all_texts = []
+
+        source_doc_ids = []
+
+        all_file_names = []
+ 
+        for current_file_id in actual_file_ids:
+
+            try:
+
+                doc_obj_id = ObjectId(current_file_id)
+
+                document = documents_collection.find_one({"_id": doc_obj_id})
+
+                if not document:
+
+                    initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                        file_id=current_file_id,
+
+                        document_id=None,
+
+                        task_id="N/A",
+
+                        message="Failed: Doc not found.",
+
+                        error="Doc not found"
+
+                    ))
+
+                    continue
+
+                f_path_str = document.get("file_path")
+
+                if not f_path_str or not Path(f_path_str).exists():
+
+                    initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                        file_id=current_file_id,
+
+                        document_id=None,
+
+                        task_id="N/A",
+
+                        message="Failed: Doc file missing.",
+
+                        error="File missing"
+
+                    ))
+
+                    continue
+
+                all_texts.append(extract_text_from_file(f_path_str))
+
+                source_doc_ids.append(current_file_id)
+
+                all_file_names.append(document.get("file_name", ""))
+
+            except Exception as e:
+
+                initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                    file_id=current_file_id,
+
+                    document_id=None,
+
+                    task_id="N/A",
+
+                    message=f"Failed to extract: {e}",
+
+                    error=str(e)
+
+                ))
+ 
+        if not all_texts:
+
+            return BatchGenerateTestCasesResponse(
+
+                overall_message="No documents could be combined for test case generation.",
+
+                tasks_initiated=initiated_tasks_info,
+
+                warning=warning_msg
+
+            )
+ 
+        # Save combined text to a temp file (or you could keep as string)
+
+        aggregate_file_name = "Aggregate_" + now.strftime("%Y%m%d%H%M%S") + ".txt"
+
+        aggregate_file_path = str(Path(INPUT_DIR) / aggregate_file_name)
+
+        with open(aggregate_file_path, "w", encoding="utf-8") as agg_f:
+
+            agg_f.write("\n\n".join(all_texts))
+ 
+        aggregate_doc = {
+
+            "is_aggregate": True,
+
+            "source_documents": source_doc_ids,
+
+            "file_name": aggregate_file_name,
+
+            "file_path": aggregate_file_path,
+
+            "status": -1,
+
+            "timestamp": now,
+
+            "test_cases": None,
+
+            "progress": [],
+
+            "error_info": None,
+
+            "selected_model": model_name,
+
+            "last_task_id": None,
+
+            "requested_test_case_types": types_for_resp,
+
+            "description": f"Aggregate of: {', '.join(all_file_names)}"
+
+        }
+
+        insert_res = documents_collection.insert_one(aggregate_doc)
+
+        new_aggregate_id = str(insert_res.inserted_id)
+ 
+        documents_collection.update_one(
+
+            {"_id": insert_res.inserted_id},
+
+            {"$set": {
+
+                "status": 0,
+
+                "processing_start_time": now,
+
+                "progress": ["Batch aggregate gen task init."],
+
+            }}
+
+        )
+ 
+        # Start task on combined file (could pass file_path or string content as needed by your task)
+
+        task = process_and_generate_task.apply_async(
+
+            args=[aggregate_file_path, model_name, chunk_size, api_key_to_use, types_to_send, new_aggregate_id]
+
+        )
+
+        documents_collection.update_one(
+
+            {"_id": insert_res.inserted_id},
+
+            {"$set": {"last_task_id": task.id}}
+
+        )
+
+        initiated_tasks_info.append(GenerateTaskResponseItem(
+
+            file_id=new_aggregate_id,
+
+            document_id=new_aggregate_id,
+
+            task_id=task.id,
+
+            message="✅ Aggregate TC gen task started.",
+
+            error=None
+
+        ))
+
+        return BatchGenerateTestCasesResponse(
+
+            overall_message=f"Aggregate process started for {len(source_doc_ids)} documents.",
+
+            tasks_initiated=initiated_tasks_info,
+
+            warning=warning_msg
+
+        )
+ 
+    # --- DEFAULT MODE (ONE PER DOC) ---
+
+    for current_file_id in actual_file_ids:
+
+        try:
+
+            doc_obj_id = ObjectId(current_file_id)
+
+            document = documents_collection.find_one({"_id": doc_obj_id})
+
+            doc_id_str = str(document["_id"]) if document else None
+
+            if not document:
+
+                initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                    file_id=current_file_id,
+
+                    document_id=None,
+
+                    task_id="N/A",
+
+                    message="Failed: Doc not found.",
+
+                    error="Doc not found"
+
+                ))
+
+                continue
+
+            f_path_str = document.get("file_path")
+
+            if not f_path_str or not Path(f_path_str).exists():
+
+                initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                    file_id=current_file_id,
+
+                    document_id=doc_id_str,
+
+                    task_id="N/A",
+
+                    message="Failed: Doc file missing.",
+
+                    error="File missing"
+
+                ))
+
+                continue
+
+            documents_collection.update_one(
+
+                {"_id": doc_obj_id},
+
+                {"$set": {
+
+                    "status": 0,
+
+                    "selected_model": model_name,
+
+                    "api_key_used": f"...{api_key_to_use[-5:]}" if api_key_to_use else "N/A",
+
+                    "requested_test_case_types": types_for_resp,
+
+                    "processing_start_time": datetime.now(IST),
+
+                    "progress": ["Batch gen task init."],
+
+                    "error_info": None,
+
+                    "last_task_id": None
+
+                }}
+
+            )
+
+            task = process_and_generate_task.apply_async(
+
+                args=[str(Path(f_path_str)), model_name, chunk_size, api_key_to_use, types_to_send, current_file_id]
+
+            )
+
+            documents_collection.update_one(
+
+                {"_id": doc_obj_id},
+
+                {"$set": {"last_task_id": task.id}}
+
+            )
+
+            initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                file_id=current_file_id,
+
+                document_id=doc_id_str,
+
+                task_id=task.id,
+
+                message="✅ TC gen task started."
+
+            ))
+
+        except InvalidId:
+
+            initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                file_id=current_file_id,
+
+                document_id=None,
+
+                task_id="N/A",
+
+                message="Failed: Invalid file_id.",
+
+                error="Invalid file_id"
+
+            ))
+
+        except Exception as e:
+
+            initiated_tasks_info.append(GenerateTaskResponseItem(
+
+                file_id=current_file_id,
+
+                document_id=None,
+
+                task_id="N/A",
+
+                message=f"Failed: {type(e).__name__}.",
+
+                error=str(e)
+
+            ))
+
+    success_count = sum(1 for item in initiated_tasks_info if item.task_id != "N/A")
+
+    return BatchGenerateTestCasesResponse(
+
+        overall_message=f"Batch process done. {success_count}/{len(actual_file_ids)} tasks started.",
+
+        tasks_initiated=initiated_tasks_info,
+
+        warning=warning_msg
+
+    )
+
+ 
 @api_v1_router.get("/documents/{file_id}/get-test-cases/", tags=["Document Test Cases"])
 async def get_test_cases_as_json_filtered_and_counted(
     file_id: str, types: Optional[str] = Query(None, description="Filter by comma-separated types"),):
@@ -3068,62 +3524,292 @@ async def get_api_key_usage_stats(api_key_suffix: str):
 app.include_router(api_v1_router)
 
 # --- WebSocket Endpoint ---
-@app.websocket("/ws/v1/task_status/{task_id}")
-async def websocket_task_status_endpoint(websocket: WebSocket, task_id: str):
-    token = websocket.query_params.get("token")
-    if not SECRET_KEY_ENV: await websocket.accept(); await websocket.send_json({"s":"err","m":"JWT secret missing."}); await websocket.close(1011); return
-    if not token: await websocket.accept(); await websocket.send_json({"s":"err","m":"Token missing."}); await websocket.close(1008); return
-    username = "ws_user_anon"
-    try:
-        from jose import jwt, JWTError
-        payload = jwt.decode(token, SECRET_KEY_ENV, algorithms=[ALGORITHM_ENV])
-        username = payload.get("sub", "ws_user_no_sub")
-    except Exception as e_auth_ws: await websocket.accept(); await websocket.send_json({"s":"err","m":f"Auth fail WS: {e_auth_ws}"}); await websocket.close(1008); return
-    await websocket.accept(); print(f"WS Conn: task {task_id}, user {username}")
-    await websocket.send_json({"s":"connected", "m":f"Monitoring {task_id}"})
-    task_mon = AsyncResult(task_id)
-    try:
-        while True:
-            if websocket.client_state != WebSocketState.CONNECTED: break
-            cel_stat = task_mon.state
-            doc_info_ws = documents_collection.find_one({"last_task_id":task_id}, {"status":1, "progress":1, "error_info":1, "_id":1})
-            db_stat_ws = doc_info_ws.get("status") if doc_info_ws else None
-            doc_id_ws = str(doc_info_ws["_id"]) if doc_info_ws else None
-            resp_ws = {"tid":task_id, "cs":cel_stat, "dbs":db_stat_ws, "did":doc_id_ws}
-            if cel_stat == "PENDING": resp_ws["i"] = "Pending"
-            elif cel_stat == "STARTED": resp_ws["i"] = "Started"
-            elif cel_stat == "PROGRESS": resp_ws["i"] = "Progress"; resp_ws["pd"] = task_mon.info;
-            elif cel_stat == "SUCCESS":
-                resp_ws["i"] = "SUCCESS (Celery)"; resp_ws["r"] = task_mon.result
-                if doc_id_ws and db_stat_ws != 1: documents_collection.update_one({"_id":doc_info_ws["_id"]}, {"$set":{"status":1, "error_info":None}, "$push":{"progress":"Celery SUCCESS via WS"}})
-                await websocket.send_json(resp_ws); break
-            elif cel_stat == "FAILURE":
-                resp_ws["i"] = "FAILURE (Celery)"; resp_ws["ed"] = str(task_mon.info)
-                if doc_id_ws and db_stat_ws != 2: documents_collection.update_one({"_id":doc_info_ws["_id"]}, {"$set":{"status":2, "error_info":str(task_mon.info)}, "$push":{"progress":"Celery FAILURE via WS"}})
-                await websocket.send_json(resp_ws); break
-            elif cel_stat == "RETRY": resp_ws["i"] = "RETRY"; resp_ws["rr"] = str(task_mon.info)
-            else: resp_ws["i"] = f"State: {cel_stat}"
-            await websocket.send_json(resp_ws)
-            if task_mon.ready():
-                if cel_stat not in ["SUCCESS", "FAILURE"]:
-                    final_resp_ws = {"tid":task_id, "cs":task_mon.state, "i":"Final state."}
-                    if task_mon.state == "SUCCESS": final_resp_ws["r"] = task_mon.result
-                    elif task_mon.state == "FAILURE": final_resp_ws["ed"] = str(task_mon.info)
-                    await websocket.send_json(final_resp_ws)
-                break
-            await asyncio.sleep(2)
-    except WebSocketDisconnect: print(f"WS Client {username} (task {task_id}) disconnected.")
-    except Exception as e_ws_main:
-        print(f"WS Unhandled Error {task_id} ({username}): {type(e_ws_main).__name__} - {e_ws_main}")
-        if websocket.client_state == WebSocketState.CONNECTED:
-            try: await websocket.send_json({"s":"error","m":"Server WS error."})
-            except: pass
-    finally:
-        if websocket.client_state == WebSocketState.CONNECTED:
-            try: await websocket.close(code=status.WS_1001_GOING_AWAY)
-            except RuntimeError: pass
-        print(f"WS for task {task_id} ({username}) closed.")
 
+# @app.websocket("/ws/v1/task_status/{task_id}")
+# async def websocket_task_status_endpoint(websocket: WebSocket, task_id: str):
+#     token = websocket.query_params.get("token")
+#     if not SECRET_KEY_ENV: await websocket.accept(); await websocket.send_json({"s":"err","m":"JWT secret missing."}); await websocket.close(1011); return
+#     if not token: await websocket.accept(); await websocket.send_json({"s":"err","m":"Token missing."}); await websocket.close(1008); return
+#     username = "ws_user_anon"
+#     try:
+#         from jose import jwt, JWTError
+#         payload = jwt.decode(token, SECRET_KEY_ENV, algorithms=[ALGORITHM_ENV])
+#         username = payload.get("sub", "ws_user_no_sub")
+#     except Exception as e_auth_ws: await websocket.accept(); await websocket.send_json({"s":"err","m":f"Auth fail WS: {e_auth_ws}"}); await websocket.close(1008); return
+#     await websocket.accept(); print(f"WS Conn: task {task_id}, user {username}")
+#     await websocket.send_json({"s":"connected", "m":f"Monitoring {task_id}"})
+#     task_mon = AsyncResult(task_id)
+#     try:
+#         while True:
+#             if websocket.client_state != WebSocketState.CONNECTED: break
+#             cel_stat = task_mon.state
+#             doc_info_ws = documents_collection.find_one({"last_task_id":task_id}, {"status":1, "progress":1, "error_info":1, "_id":1})
+#             db_stat_ws = doc_info_ws.get("status") if doc_info_ws else None
+#             doc_id_ws = str(doc_info_ws["_id"]) if doc_info_ws else None
+#             resp_ws = {"tid":task_id, "cs":cel_stat, "dbs":db_stat_ws, "did":doc_id_ws}
+#             if cel_stat == "PENDING": resp_ws["i"] = "Pending"
+#             elif cel_stat == "STARTED": resp_ws["i"] = "Started"
+#             elif cel_stat == "PROGRESS": resp_ws["i"] = "Progress"; resp_ws["pd"] = task_mon.info;
+#             elif cel_stat == "SUCCESS":
+#                 resp_ws["i"] = "SUCCESS (Celery)"; resp_ws["r"] = task_mon.result
+#                 if doc_id_ws and db_stat_ws != 1: documents_collection.update_one({"_id":doc_info_ws["_id"]}, {"$set":{"status":1, "error_info":None}, "$push":{"progress":"Celery SUCCESS via WS"}})
+#                 await websocket.send_json(resp_ws); break
+#             elif cel_stat == "FAILURE":
+#                 resp_ws["i"] = "FAILURE (Celery)"; resp_ws["ed"] = str(task_mon.info)
+#                 if doc_id_ws and db_stat_ws != 2: documents_collection.update_one({"_id":doc_info_ws["_id"]}, {"$set":{"status":2, "error_info":str(task_mon.info)}, "$push":{"progress":"Celery FAILURE via WS"}})
+#                 await websocket.send_json(resp_ws); break
+#             elif cel_stat == "RETRY": resp_ws["i"] = "RETRY"; resp_ws["rr"] = str(task_mon.info)
+#             else: resp_ws["i"] = f"State: {cel_stat}"
+#             await websocket.send_json(resp_ws)
+#             if task_mon.ready():
+#                 if cel_stat not in ["SUCCESS", "FAILURE"]:
+#                     final_resp_ws = {"tid":task_id, "cs":task_mon.state, "i":"Final state."}
+#                     if task_mon.state == "SUCCESS": final_resp_ws["r"] = task_mon.result
+#                     elif task_mon.state == "FAILURE": final_resp_ws["ed"] = str(task_mon.info)
+#                     await websocket.send_json(final_resp_ws)
+#                 break
+#             await asyncio.sleep(2)
+#     except WebSocketDisconnect: print(f"WS Client {username} (task {task_id}) disconnected.")
+#     except Exception as e_ws_main:
+#         print(f"WS Unhandled Error {task_id} ({username}): {type(e_ws_main).__name__} - {e_ws_main}")
+#         if websocket.client_state == WebSocketState.CONNECTED:
+#             try: await websocket.send_json({"s":"error","m":"Server WS error."})
+#             except: pass
+#     finally:
+#         if websocket.client_state == WebSocketState.CONNECTED:
+#             try: await websocket.close(code=status.WS_1001_GOING_AWAY)
+#             except RuntimeError: pass
+#         print(f"WS for task {task_id} ({username}) closed.")
+
+@app.websocket("/ws/v1/task_status_by_doc/{doc_id}")
+
+async def websocket_task_status_by_doc(websocket: WebSocket, doc_id: str):
+
+    token = websocket.query_params.get("token")
+
+    if not SECRET_KEY_ENV:
+
+        await websocket.accept()
+
+        await websocket.send_json({"s": "err", "m": "JWT secret missing."})
+
+        await websocket.close(1011)
+
+        return
+
+    if not token:
+
+        await websocket.accept()
+
+        await websocket.send_json({"s": "err", "m": "Token missing."})
+
+        await websocket.close(1008)
+
+        return
+
+    username = "ws_user_anon"
+
+    try:
+
+        from jose import jwt, JWTError
+
+        payload = jwt.decode(token, SECRET_KEY_ENV, algorithms=[ALGORITHM_ENV])
+
+        username = payload.get("sub", "ws_user_no_sub")
+
+    except Exception as e_auth_ws:
+
+        await websocket.accept()
+
+        await websocket.send_json({"s": "err", "m": f"Auth fail WS: {e_auth_ws}"})
+
+        await websocket.close(1008)
+
+        return
+
+    await websocket.accept()
+
+    print(f"WS Conn: doc_id {doc_id}, user {username}")
+
+    await websocket.send_json({"s": "connected", "m": f"Monitoring document {doc_id}"})
+
+    try:
+
+        from bson import ObjectId
+
+        doc_obj_id = ObjectId(doc_id)
+
+    except Exception as e_invalid:
+
+        await websocket.send_json({"s": "err", "m": f"Invalid document ID: {e_invalid}"})
+
+        await websocket.close(1008)
+
+        return
+ 
+    try:
+
+        doc_info_ws = documents_collection.find_one({"_id": doc_obj_id})
+
+        if not doc_info_ws:
+
+            await websocket.send_json({"s": "err", "m": "Document not found."})
+
+            await websocket.close(1008)
+
+            return
+
+        task_id = doc_info_ws.get("last_task_id")
+
+        if not task_id:
+
+            await websocket.send_json({"s": "err", "m": "No Celery task_id associated with this document yet."})
+
+            await websocket.close(1008)
+
+            return
+
+        from celery.result import AsyncResult
+
+        from starlette.websockets import WebSocketState
+
+        import asyncio
+ 
+        task_mon = AsyncResult(task_id)
+
+        while True:
+
+            if websocket.client_state != WebSocketState.CONNECTED:
+
+                break
+
+            # Always fetch fresh doc status
+
+            doc_info_ws = documents_collection.find_one({"_id": doc_obj_id})
+
+            db_stat_ws = doc_info_ws.get("status") if doc_info_ws else None
+
+            progress = doc_info_ws.get("progress", []) if doc_info_ws else []
+
+            error_info = doc_info_ws.get("error_info") if doc_info_ws else None
+ 
+            cel_stat = task_mon.state
+
+            resp_ws = {
+
+                "task_id": task_id,
+
+                "celery_state": cel_stat,
+
+                "db_status": db_stat_ws,
+
+                "document_id": doc_id,
+
+                "progress": progress,
+
+                "error_info": error_info,
+
+            }
+
+            # Optional: Add user-friendly info
+
+            if cel_stat == "PENDING":
+
+                resp_ws["info"] = "Pending"
+
+            elif cel_stat == "STARTED":
+
+                resp_ws["info"] = "Started"
+
+            elif cel_stat == "PROGRESS":
+
+                resp_ws["info"] = "Progress"
+
+                resp_ws["task_info"] = task_mon.info
+
+            elif cel_stat == "SUCCESS":
+
+                resp_ws["info"] = "SUCCESS (Celery)"
+
+                resp_ws["result"] = task_mon.result
+
+                await websocket.send_json(resp_ws)
+
+                break
+
+            elif cel_stat == "FAILURE":
+
+                resp_ws["info"] = "FAILURE (Celery)"
+
+                resp_ws["error_detail"] = str(task_mon.info)
+
+                await websocket.send_json(resp_ws)
+
+                break
+
+            elif cel_stat == "RETRY":
+
+                resp_ws["info"] = "RETRY"
+
+                resp_ws["retry_info"] = str(task_mon.info)
+
+            else:
+
+                resp_ws["info"] = f"State: {cel_stat}"
+ 
+            await websocket.send_json(resp_ws)
+ 
+            if task_mon.ready():
+
+                if cel_stat not in ["SUCCESS", "FAILURE"]:
+
+                    final_resp_ws = {"task_id": task_id, "celery_state": task_mon.state, "info": "Final state."}
+
+                    if task_mon.state == "SUCCESS":
+
+                        final_resp_ws["result"] = task_mon.result
+
+                    elif task_mon.state == "FAILURE":
+
+                        final_resp_ws["error_detail"] = str(task_mon.info)
+
+                    await websocket.send_json(final_resp_ws)
+
+                break
+ 
+            await asyncio.sleep(2)
+ 
+    except WebSocketDisconnect:
+
+        print(f"WS Client {username} (doc {doc_id}) disconnected.")
+
+    except Exception as e_ws_main:
+
+        print(f"WS Unhandled Error {doc_id} ({username}): {type(e_ws_main).__name__} - {e_ws_main}")
+
+        if websocket.client_state == WebSocketState.CONNECTED:
+
+            try:
+
+                await websocket.send_json({"s": "error", "m": "Server WS error."})
+
+            except:
+
+                pass
+
+    finally:
+
+        if websocket.client_state == WebSocketState.CONNECTED:
+
+            try:
+
+                await websocket.close(code=status.WS_1001_GOING_AWAY)
+
+            except RuntimeError:
+                pass
+        print(f"WS for doc {doc_id} ({username}) closed.")
+
+ 
 # --- Main Execution ---
 if __name__ == "__main__":
     import uvicorn
