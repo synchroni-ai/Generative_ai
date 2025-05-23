@@ -194,7 +194,7 @@ const Header = ({ onLogout }) => {
         overflowY: "hidden"
       }}
     >
-      <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between", minHeight: 'auto', }}>
         {/* Left: Logo */}
         <Box display="flex" alignItems="center" gap={30}>
           <img src={logo} alt="Logo" style={{ height: "33px", marginLeft: "10px" }} />
