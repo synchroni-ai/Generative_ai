@@ -397,7 +397,7 @@ const Configuration = ({selectedDocs, setSelectedDocs,  selectedUseCase, setSele
         <Box display="flex" justifyContent="flex-end" mt={3}>
           <Button
             variant="contained"
-            disabled={selectedSubTypes.length === 0 || isGenerating}
+disabled={selectedSubTypes.length === 0 || selectedDocs.length === 0 || isGenerating}
             onClick={handleGenerate}
             sx={{
               backgroundColor: '#0A0080',

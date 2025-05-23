@@ -1532,7 +1532,7 @@ const triggerSimulatedProgress = (selectedFile) => {
     );
   }, 500);
 
-  setTimeout(() => clearInterval(interval), 3000);
+  setTimeout(() => clearInterval(interval), 5000);
 };
 
   const inputStyle = {
@@ -1606,7 +1606,7 @@ overflow: "auto",
   <Typography variant="h5" fontWeight={700}>
     New Dataspace 
   </Typography>
-  <IconButton onClick={onClose} >
+  <IconButton onClick={handleCancel} >
     <CloseIcon />
   </IconButton>
 </Box>
@@ -1683,7 +1683,7 @@ overflow: "auto",
   <Paper
     sx={{
       border: '2px dashed #D9D9D9',
-      p: 2,
+    
       textAlign: 'center',
       borderRadius: '16px',
       minHeight: 280,
@@ -1775,7 +1775,7 @@ if (selectedFilesArray.length) {
   {/* Upload Progress Section */}
    <Box
     sx={{
-      padding: '10px 15px',
+      padding: '10px 0px 10px 10px',
       borderRadius: 3,
     maxHeight: collapsed ? 40 : 'auto', // Collapsed = small height
       minWidth: 220,  // match upload box
@@ -1810,9 +1810,10 @@ disabled={selectedFiles.length === 0}
               {getFileIcon(file.type)}
               <Box flexGrow={1}>
                 <Typography
-                  variant="body2"
-                  fontWeight={600}
+                  // variant="body2"
+                  fontWeight={500}
                   sx={{
+                    fontSize:"12px",
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis'
@@ -1916,10 +1917,13 @@ disabled={
     },
   }}
               >
- Create
-  {loading && (
-    <CircularProgress size={16} sx={{ color: "#000080" }} />
-  )}              </Button>
+ 
+  {loading ? (
+<Box display="flex" alignItems="center" gap={1}>
+                <span>Create</span>
+                <CircularProgress size={18} sx={{ color: '#fff' }} />
+              </Box>) : (
+              'Create'  )}              </Button>
             </Box>
     </Box>
     <Dialog
