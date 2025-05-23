@@ -3791,14 +3791,14 @@ class DataSpaceResponse(BaseModel):
 
 class DocumentMetadataResponse(BaseModel):
     file_id: str
-    file_name: str
+    file_name: str  # This field is required
     status: Optional[int]
     timestamp: datetime
     content_type: Optional[str] = None
     size: Optional[int] = None
     class Config:
         json_encoders = {ObjectId: str}
-        from_attributes = True
+        from_attributes = True # Changed from orm_mode = True for Pydantic v2
 
 class UploadedFileDetail(BaseModel):
     file_id: Optional[str] = None
@@ -4024,12 +4024,61 @@ async def list_data_spaces(skip: int = 0, limit: int = 20):
 
 @api_v1_router.get("/data-spaces/{data_space_id}/documents/", response_model=List[DocumentMetadataResponse], tags=["Data Spaces"])
 async def list_documents_in_data_space(data_space_id: str, skip: int = 0, limit: int = 20):
-    try: ds_obj_id = ObjectId(data_space_id)
-    except InvalidId: raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Data Space ID.")
+    try:
+        ds_obj_id = ObjectId(data_space_id)
+    except InvalidId:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Data Space ID.")
+
     if not data_spaces_collection.count_documents({"_id": ds_obj_id}, limit=1):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data Space not found.")
-    docs_cursor = documents_collection.find({"data_space_id": ds_obj_id}).sort("timestamp", -1).skip(skip).limit(limit)
-    return [DocumentMetadataResponse(file_id=str(doc["_id"]), **doc) for doc in docs_cursor] # **doc assumes fields match
+
+    # Modify the query to exclude batch generation documents
+    # We assume actual documents do NOT have 'is_test_case_generation_batch: True'
+    # or that they have a 'file_name' field.
+    # A more robust way is to ensure batch documents are distinguished.
+    # Option 1: Filter out documents that are marked as batch generations
+    query_filter = {
+        "data_space_id": ds_obj_id,
+        "is_test_case_generation_batch": {"$ne": True} # Exclude if this field is True
+        # Alternatively, or in addition, ensure 'file_name' exists for actual documents:
+        # "file_name": {"$exists": True}
+    }
+
+    docs_cursor = documents_collection.find(query_filter).sort("timestamp", -1).skip(skip).limit(limit)
+
+    response_list = []
+    for doc in docs_cursor:
+        # Double-check if file_name is present, just in case, though the query should handle it.
+        if "file_name" in doc:
+            try:
+                # Construct the Pydantic model.
+                # If you use `from_attributes = True` (Pydantic v2) or `orm_mode = True` (Pydantic v1)
+                # and your Pydantic model fields match the DB fields, you can often do:
+                # response_list.append(DocumentMetadataResponse.model_validate(doc)) # For Pydantic v2
+                # response_list.append(DocumentMetadataResponse.from_orm(doc)) # For Pydantic v1
+                # However, your current explicit construction is fine too if file_id needs casting.
+
+                # Your current way:
+                response_list.append(DocumentMetadataResponse(
+                    file_id=str(doc["_id"]),
+                    file_name=doc["file_name"], # Explicitly pass required fields
+                    status=doc.get("status"),
+                    timestamp=doc["timestamp"], # Ensure timestamp is always present or handle None
+                    content_type=doc.get("content_type"),
+                    size=doc.get("size")
+                ))
+            except KeyError as e:
+                print(f"Warning: Document {doc['_id']} is missing a required field for DocumentMetadataResponse: {e}")
+                # Optionally skip this document or handle the error
+            except Exception as e_pydantic:
+                print(f"Pydantic validation error for document {doc['_id']}: {e_pydantic}")
+                # Optionally skip or handle
+        else:
+            # This case should ideally be caught by the query filter
+            print(f"Warning: Document {doc['_id']} was fetched but is missing 'file_name'. Skipping.")
+
+    return response_list
+
 
 @api_v1_router.delete("/data-spaces/{data_space_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Data Spaces"])
 async def delete_data_space(data_space_id: str, delete_contained_documents: bool = Query(False)):
@@ -4335,31 +4384,31 @@ async def download_test_cases_csv_for_document(file_id: str):
     if not os.path.exists(csv_p): raise HTTPException(status_code=404, detail="CSV file missing post-parse attempt. Generation might have failed.")
     return FileResponse(csv_p, media_type="text/csv", filename=f"{Path(fname).stem}_test_cases.csv")
 
-@api_v1_router.delete("/documents/", tags=["Document Test Cases"]) # Note: Query param for list of IDs
-async def delete_multiple_documents(document_ids: List[str] = Query(...)):
-    del_c, errs = 0, []
-    if not document_ids:
-        raise HTTPException(status_code=400, detail="No document_ids provided for deletion.")
-    for id_str in document_ids:
-        try:
-            obj_id = ObjectId(id_str)
-            doc = documents_collection.find_one_and_delete({"_id":obj_id})
-            if doc:
-                del_c+=1
-                if doc.get("file_path") and os.path.exists(doc["file_path"]):
-                    try: os.remove(doc["file_path"])
-                    except Exception as e_fdel: print(f"Error deleting file {doc['file_path']}: {e_fdel}")
-                if hasattr(test_case_utils, 'CSV_OUTPUT_DIR'):
-                    csv_p = os.path.join(test_case_utils.CSV_OUTPUT_DIR, f"{id_str}_test_cases.csv")
-                    if os.path.exists(csv_p):
-                        try: os.remove(csv_p)
-                        except Exception as e_csvdel: print(f"Error deleting CSV {csv_p}: {e_csvdel}")
-            else: errs.append({"id":id_str, "error":"Not found"})
-        except InvalidId: errs.append({"id":id_str, "error":"Invalid ID format"})
-        except Exception as e_del: errs.append({"id":id_str, "error":str(e_del)})
-    if del_c == 0 and not errs and document_ids: # If IDs were provided but none were found and no other errors
-        return {"deleted_count": 0, "errors": [{"id": "all_provided", "error": "None of the provided document IDs were found."}]}
-    return {"deleted_count":del_c, "errors":errs if errs else None}
+# @api_v1_router.delete("/documents/", tags=["Document Test Cases"]) # Note: Query param for list of IDs
+# async def delete_multiple_documents(document_ids: List[str] = Query(...)):
+#     del_c, errs = 0, []
+#     if not document_ids:
+#         raise HTTPException(status_code=400, detail="No document_ids provided for deletion.")
+#     for id_str in document_ids:
+#         try:
+#             obj_id = ObjectId(id_str)
+#             doc = documents_collection.find_one_and_delete({"_id":obj_id})
+#             if doc:
+#                 del_c+=1
+#                 if doc.get("file_path") and os.path.exists(doc["file_path"]):
+#                     try: os.remove(doc["file_path"])
+#                     except Exception as e_fdel: print(f"Error deleting file {doc['file_path']}: {e_fdel}")
+#                 if hasattr(test_case_utils, 'CSV_OUTPUT_DIR'):
+#                     csv_p = os.path.join(test_case_utils.CSV_OUTPUT_DIR, f"{id_str}_test_cases.csv")
+#                     if os.path.exists(csv_p):
+#                         try: os.remove(csv_p)
+#                         except Exception as e_csvdel: print(f"Error deleting CSV {csv_p}: {e_csvdel}")
+#             else: errs.append({"id":id_str, "error":"Not found"})
+#         except InvalidId: errs.append({"id":id_str, "error":"Invalid ID format"})
+#         except Exception as e_del: errs.append({"id":id_str, "error":str(e_del)})
+#     if del_c == 0 and not errs and document_ids: # If IDs were provided but none were found and no other errors
+#         return {"deleted_count": 0, "errors": [{"id": "all_provided", "error": "None of the provided document IDs were found."}]}
+#     return {"deleted_count":del_c, "errors":errs if errs else None}
 
 
 # MOVED ENDPOINT DEFINITION for /test-case-batch/results
