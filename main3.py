@@ -3766,8 +3766,8 @@ from zoneinfo import ZoneInfo
 load_dotenv()
 
 # --- Environment Variables ---
-ADMIN_USERNAME_ENV = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD_ENV = os.getenv("ADMIN_PASSWORD", "admin123")
+ADMIN_USERNAME_ENV = os.getenv("ADMIN_USERNAME", "guest_user")
+ADMIN_PASSWORD_ENV = os.getenv("ADMIN_PASSWORD", "Welcome@123")
 SECRET_KEY_ENV = os.getenv("SECRET_KEY")
 ALGORITHM_ENV = "HS256"
 INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
