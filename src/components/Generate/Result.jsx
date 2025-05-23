@@ -242,12 +242,12 @@ import ExportIcon from "./../../asessts/images/exporticon.png";
 import { Skeleton } from '@mui/material';
 import "./Tabs.css";
 const parseTestCasesFromContent = (content, testType, fileName) => {
-  const testCases = content.split('---').map(tc => tc.trim()).filter(Boolean);
   const parsed = [];
+  const entries = content.split(/\n(?=TCID:)/g); // Split at each TCID
 
-  testCases.forEach(raw => {
+  entries.forEach(raw => {
     const fields = {
-      file_name: fileName, // ✅ add document name
+      file_name: fileName,
       "TCID": "",
       "Test type": testType,
       "Title": "",
@@ -263,12 +263,15 @@ const parseTestCasesFromContent = (content, testType, fileName) => {
 
     Object.keys(fields).forEach(key => {
       if (key === "file_name") return;
-      const regex = new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z][^:]+:|\\n*$)`, 'i');
+      const regex = new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z][^:]*?:|\\n*$)`, 'i');
       const match = raw.match(regex);
       if (match) {
         fields[key] = match[1].trim();
       }
     });
+
+    // Skip if it's just a heading or doesn't have a valid TCID
+    if (!fields["TCID"]) return;
 
     fields["Type (P / N / in)"] = fields["Test Nature"];
     delete fields["Test Nature"];
@@ -278,6 +281,8 @@ const parseTestCasesFromContent = (content, testType, fileName) => {
 
   return parsed;
 };
+
+
 
 
 
@@ -302,7 +307,7 @@ const selectedHistoryDocData = [
   },
 ];
 
-const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = [], }) => {
+const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = [],selectedDocs }) => {
   const [activeTab, setActiveTab] = useState('All'); // not index 0
   const [parsedData, setParsedData] = useState([]);
   const [headers, setHeaders] = useState([]);
@@ -511,31 +516,38 @@ const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId,
   }, [fileId]);
 
 
+const exportCSV = async () => {
+  try {
+    // Join selectedDocs for file_ids
+    const fileIdsParam = selectedDocs.join(',');
+    // Join selectedSubTypes for types (make sure to lowercase them)
+    const typesParam = selectedSubTypes.map(type => type.toLowerCase()).join(',');
 
-  const exportCSV = async () => {
-    try {
-      const response = await adminAxios.get(`/download-csv/${fileId}`, {
-        responseType: 'blob', // Important: tells Axios to expect binary data
-        headers: {
-          Authorization: `Bearer ${token}`, // if your API requires authentication
-        },
-      });
+    const url = `/api/v1/documents/download-testcases?file_ids=${fileIdsParam}&types=${typesParam}&mode=zip`;
 
-      // Create a download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
+    const response = await adminAxios.get(url, {
+      responseType: 'blob',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      // Optional: Set the filename
-      link.setAttribute('download', `report_${fileId}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (error) {
-      console.error("Error downloading CSV:", error);
-      // Optional: Show error message to user
-    }
-  };
+    const blob = new Blob([response.data], { type: 'application/zip' });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.setAttribute('download', 'test_cases_bundle.zip');
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("❌ Error downloading test cases ZIP:", error);
+  }
+};
+
+
+
+
 useEffect(() => {
   const counts = {};
   let total = 0;

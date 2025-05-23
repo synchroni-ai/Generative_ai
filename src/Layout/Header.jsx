@@ -309,7 +309,7 @@ const Header = ({ onLogout }) => {
               },
             }}
           >
-            <MenuItem onClick={handleMenuClose} sx={{ color: "#8e8e8e" }}>
+            {/* <MenuItem onClick={handleMenuClose} sx={{ color: "#8e8e8e" }}>
               <ListItemIcon>
                 <img src={setting} alt="Settings" style={{ width: 20, height: 20 }} />
               </ListItemIcon>
@@ -321,7 +321,7 @@ const Header = ({ onLogout }) => {
                 <img src={support} alt="Support" style={{ width: 20, height: 20 }} />
               </ListItemIcon>
               Support
-            </MenuItem>
+            </MenuItem> */}
 
             <MenuItem onClick={handleLogout} sx={{ color: "#8e8e8e" }}>
               <ListItemIcon>

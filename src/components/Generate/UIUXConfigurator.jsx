@@ -226,6 +226,7 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
   generationId={generationId}
 />
           : <TestCaseTable
+            selectedDocs={selectedDocs}
             selectedHistoryDoc={selectedHistoryDoc}
             fromHistory={fromHistory}
             taskId={taskId}
