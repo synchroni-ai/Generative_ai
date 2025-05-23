@@ -4573,153 +4573,394 @@ async def download_test_cases_csv_for_document(file_id: str):
     return FileResponse(tmp_csv_path, media_type="text/csv", filename=f"{fname.rsplit('.', 1)[0]}_test_cases.csv")
 
 
-from fastapi import APIRouter, Query, HTTPException
-from fastapi.responses import StreamingResponse, FileResponse
-from typing import List, Optional
+# from fastapi import APIRouter, Query, HTTPException
+# from fastapi.responses import StreamingResponse, FileResponse
+# from typing import List, Optional
+# from io import StringIO, BytesIO
+# import csv
+# import tempfile
+# import zipfile
+# from bson import ObjectId
+# import io
+
+
+# def get_file_entry(documents_collection, file_id):
+#     """Find a file entry in a test case generation batch document."""
+#     batch = documents_collection.find_one({
+#         "is_test_case_generation_batch": True,
+#         "files.file_id": ObjectId(file_id)
+#     })
+#     if not batch:
+#         return None, None
+#     for f in batch["files"]:
+#         if str(f["file_id"]) == str(file_id):
+#             return batch, f
+#     return None, None
+
+# def parse_test_cases(content: str):
+#     # Split by --- or double newline
+#     blocks = re.split(r'---+|\n\s*\n(?=TCID:)', content)
+#     cases = []
+#     for block in blocks:
+#         data = {
+#             "Test type": "",
+#             "TCID": "",
+#             "Title": "",
+#             "Description": "",
+#             "Precondition": "",
+#             "Steps": "",
+#             "Action": "",
+#             "Data": "",
+#             "Result": "",
+#             "Test Nature": "",
+#             "Test priority": ""
+#         }
+#         lines = block.strip().split('\n')
+#         for line in lines:
+#             line = line.strip()
+#             # Try all keys
+#             for key in data.keys():
+#                 pat = f"{key}:"
+#                 if line.lower().startswith(pat.lower()):
+#                     data[key] = line[len(pat):].strip()
+#         # Only include if there is a TCID or Title
+#         if data["TCID"] or data["Title"]:
+#             cases.append(data)
+#     return cases
+
+
+# @api_v1_router.get("/documents/download-testcases", tags=["Document Test Cases"])
+# async def download_testcases(
+#     file_ids: str = Query(..., description="Comma-separated file_ids"),
+#     types: str = Query(..., description="Comma-separated test case types"),
+#     mode: str = Query("zip", description="'zip' for ZIP with CSVs, 'csv' for single CSV if one file")
+# ):
+#     file_id_list = [f.strip() for f in file_ids.split(",") if f.strip()]
+#     type_list = [t.strip().lower() for t in types.split(",") if t.strip()]
+#     if not file_id_list:
+#         raise HTTPException(400, detail="No file_ids provided")
+#     if not type_list:
+#         raise HTTPException(400, detail="No test case types provided")
+    
+#     # Find the batch document containing any of these files
+#     batch = documents_collection.find_one({
+#         "is_test_case_generation_batch": True,
+#         "files.file_id": {"$in": [ObjectId(fid) for fid in file_id_list]}
+#     })
+#     if not batch:
+#         raise HTTPException(404, detail="Batch document not found for given file(s)")
+
+#     file_entries = []
+#     for f in batch["files"]:
+#         fid = str(f["file_id"])
+#         if fid in file_id_list:
+#             file_entries.append(f)
+
+#     if not file_entries:
+#         raise HTTPException(404, detail="No files found with provided file_ids")
+
+#     # Fieldnames for CSV
+#     csv_fields = [
+#         "Test type", "TCID", "Title", "Description", "Precondition",
+#         "Steps", "Action", "Data", "Result", "Test Nature", "Test priority"
+#     ]
+
+#     # Helper to extract test cases case-insensitively
+#     def get_case_insensitive(tc_dict, key):
+#         """Returns the value in tc_dict matching key, ignoring case, or None."""
+#         key = key.lower()
+#         for k, v in tc_dict.items():
+#             if k.lower() == key:
+#                 return k, v
+#         return None, None
+
+#     # Single CSV for one file, else ZIP
+#     if mode == "csv" and len(file_entries) == 1:
+#         file_entry = file_entries[0]
+#         output = io.StringIO()
+#         writer = csv.DictWriter(output, fieldnames=csv_fields)
+#         writer.writeheader()
+#         for t in type_list:
+#             tc_dict = file_entry.get("test_cases", {})
+#             found_key, tc_obj = get_case_insensitive(tc_dict, t)
+#             if tc_obj and tc_obj.get("content"):
+#                 for row in parse_test_cases(tc_obj["content"]):
+#                     row["Test type"] = found_key or t
+#                     writer.writerow(row)
+#         output.seek(0)
+#         filename = f"{file_entry.get('file_name', 'testcases')}_test_cases.csv"
+#         return StreamingResponse(io.BytesIO(output.getvalue().encode()), media_type="text/csv", headers={
+#             "Content-Disposition": f"attachment; filename={filename}"
+#         })
+
+#     # --- Multiple files: ZIP with CSVs ---
+#     zip_buffer = io.BytesIO()
+#     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
+#         for file_entry in file_entries:
+#             rows = []
+#             for t in type_list:
+#                 tc_dict = file_entry.get("test_cases", {})
+#                 found_key, tc_obj = get_case_insensitive(tc_dict, t)
+#                 if tc_obj and tc_obj.get("content"):
+#                     for row in parse_test_cases(tc_obj["content"]):
+#                         row["Test type"] = found_key or t
+#                         rows.append(row)
+#             if not rows:
+#                 continue
+#             # Write this file's CSV into the zip
+#             csv_stream = io.StringIO()
+#             writer = csv.DictWriter(csv_stream, fieldnames=csv_fields)
+#             writer.writeheader()
+#             for row in rows:
+#                 writer.writerow(row)
+#             csv_bytes = csv_stream.getvalue().encode()
+#             filename = f"{file_entry.get('file_name', 'testcases')}_test_cases.csv"
+#             zipf.writestr(filename, csv_bytes)
+#     zip_buffer.seek(0)
+#     return StreamingResponse(zip_buffer, media_type="application/x-zip-compressed", headers={
+#         "Content-Disposition": "attachment; filename=testcases.zip"
+#     })
+
+from fastapi import APIRouter, Query, HTTPException, status # Added status
+from fastapi.responses import StreamingResponse # FileResponse might not be needed if always streaming
+from typing import List, Optional # Already in your main file likely
 from io import StringIO, BytesIO
 import csv
-import tempfile
+# import tempfile # Not strictly needed if using BytesIO for zip
 import zipfile
-from bson import ObjectId
-import io
+from bson import ObjectId # Already in your main file likely
+import io # Already imported, but good to note
+import re
 
+def parse_test_cases_from_content_string(content: str):
+    if not content or not content.strip():
+        return []
 
-def get_file_entry(documents_collection, file_id):
-    """Find a file entry in a test case generation batch document."""
-    batch = documents_collection.find_one({
-        "is_test_case_generation_batch": True,
-        "files.file_id": ObjectId(file_id)
-    })
-    if not batch:
-        return None, None
-    for f in batch["files"]:
-        if str(f["file_id"]) == str(file_id):
-            return batch, f
+    content = content.replace('\r\n', '\n').strip()
+    individual_case_blocks = re.split(r'\n\s*-{3,}\s*\n|(?=\n(?:[\n\s]*)(?:\*\*)?TCID\s*[:：])', content)
+
+    parsed_cases = []
+    expected_fields = [
+        'TCID', 'Test type', 'Title', 'Description', 'Precondition', 'Steps',
+        'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
+    ]
+    next_field_lookahead_pattern = r"|".join([rf"(?:\*\*)?{re.escape(f)}(?:\*\*)?\s*[:：]" for f in expected_fields])
+
+    for block_idx, block in enumerate(individual_case_blocks):
+        block = block.strip()
+        if not block:
+            continue
+
+        case_data = {field: '' for field in expected_fields}
+        current_text_to_parse = block 
+
+        for field_name in expected_fields:
+            pattern = rf'(?:\*\*)?{re.escape(field_name)}(?:\*\*)?\s*[:：]\s*(.*?)(?=(?:\n\s*(?:{next_field_lookahead_pattern}))|\Z)'
+            match = re.search(pattern, current_text_to_parse, re.DOTALL | re.IGNORECASE)
+            
+            if match:
+                value = match.group(1).strip()
+                cleaned_value = value
+
+                # General stripping (from previous attempt)
+                while True:
+                    original_len = len(cleaned_value)
+                    if cleaned_value.startswith("**") and cleaned_value.endswith("**") and len(cleaned_value) >= 4:
+                        cleaned_value = cleaned_value[2:-2].strip()
+                    elif cleaned_value.startswith("*") and cleaned_value.endswith("*") and len(cleaned_value) >= 2:
+                        cleaned_value = cleaned_value[1:-1].strip()
+                    if len(cleaned_value) == original_len:
+                        break
+                
+                cleaned_value = re.sub(r"^\s*(\*\*|\*)\s+", "", cleaned_value).strip()
+                cleaned_value = re.sub(r"\s+(\*\*|\*)\s*$", "", cleaned_value).strip()
+
+                # ---- NEW SPECIFIC FIX for "CODE** TEXT" pattern ----
+                if field_name in ['TCID', 'Title', 'Description']: # Apply to relevant fields
+                    # Look for pattern like "ANYTHING_WITHOUT_SPACE_OR_ASTERISK" followed by "**" and then text
+                    # This is very specific to the FTC_001** User Registration pattern
+                    specific_pattern_match = re.match(r'^([A-Za-z0-9_/-]+)\s*\*\*(.*)$', cleaned_value)
+                    if specific_pattern_match:
+                        # If it matches, take the first group (code) and the second group (text after **)
+                        # and join them with a space, effectively removing the "** "
+                        cleaned_value = f"{specific_pattern_match.group(1)} {specific_pattern_match.group(2).strip()}"
+                    
+                    # Additional check if the value *itself* still starts with **, remove it from the beginning of the text part
+                    # (e.g. if the original was FTC_001**** Text -> FTC_001 ** Text -> FTC_001 Text)
+                    if cleaned_value.startswith("**"): # If after the above, it *still* starts with **
+                        cleaned_value = cleaned_value[2:].strip()
+
+                # ---- END NEW SPECIFIC FIX ----
+
+                case_data[field_name] = cleaned_value.replace('\n', ' ')
+            
+        if case_data['TCID'] or case_data['Title']:
+            parsed_cases.append(case_data)
+            
+    return parsed_cases
+
+def get_case_insensitive_from_dict(data_dict: Dict, target_key: str):
+    """
+    Searches a dictionary for a key case-insensitively.
+    Returns the original key (with its casing) and its value if found, else (None, None).
+    """
+    target_key_lower = target_key.lower()
+    for original_key, value in data_dict.items():
+        if original_key.lower() == target_key_lower:
+            return original_key, value
     return None, None
 
-def parse_test_cases(content: str):
-    # Split by --- or double newline
-    blocks = re.split(r'---+|\n\s*\n(?=TCID:)', content)
-    cases = []
-    for block in blocks:
-        data = {
-            "Test type": "",
-            "TCID": "",
-            "Title": "",
-            "Description": "",
-            "Precondition": "",
-            "Steps": "",
-            "Action": "",
-            "Data": "",
-            "Result": "",
-            "Test Nature": "",
-            "Test priority": ""
-        }
-        lines = block.strip().split('\n')
-        for line in lines:
-            line = line.strip()
-            # Try all keys
-            for key in data.keys():
-                pat = f"{key}:"
-                if line.lower().startswith(pat.lower()):
-                    data[key] = line[len(pat):].strip()
-        # Only include if there is a TCID or Title
-        if data["TCID"] or data["Title"]:
-            cases.append(data)
-    return cases
 
-
-@api_v1_router.get("/documents/download-testcases", tags=["Document Test Cases"])
+@api_v1_router.get("/documents/download-testcases", tags=["Document Test Cases"], summary="Download test cases for multiple files and types as CSV or ZIP")
 async def download_testcases(
-    file_ids: str = Query(..., description="Comma-separated file_ids"),
-    types: str = Query(..., description="Comma-separated test case types"),
-    mode: str = Query("zip", description="'zip' for ZIP with CSVs, 'csv' for single CSV if one file")
+    file_ids: str = Query(..., description="Comma-separated string of original document file_ids."),
+    types: str = Query(..., description="Comma-separated test case types (e.g., functional,security). Case-insensitive."),
+    mode: str = Query("zip", enum=["zip", "csv"], description="'zip' for multiple files/types, 'csv' for single file output (if only one file_id requested).")
 ):
-    file_id_list = [f.strip() for f in file_ids.split(",") if f.strip()]
-    type_list = [t.strip().lower() for t in types.split(",") if t.strip()]
-    if not file_id_list:
-        raise HTTPException(400, detail="No file_ids provided")
-    if not type_list:
-        raise HTTPException(400, detail="No test case types provided")
-    
-    # Find the batch document containing any of these files
-    batch = documents_collection.find_one({
+    # --- Input Validation and Preparation ---
+    file_id_str_list = [f_id.strip() for f_id in file_ids.split(',') if f_id.strip()]
+    if not file_id_str_list:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file_ids provided.")
+
+    requested_types_lower = [t.strip().lower() for t in types.split(',') if t.strip()]
+    if not requested_types_lower:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No test case types provided.")
+
+    try:
+        object_id_list = [ObjectId(f_id) for f_id in file_id_str_list]
+    except Exception: # InvalidId can also be raised here
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="One or more file_ids are invalid.")
+
+    # --- Data Fetching ---
+    # Find the batch document(s) that contain these files.
+    # A single file_id might exist in multiple batch runs, but usually, we'd target a specific batch.
+    # For simplicity, let's assume we find the latest batch or any batch containing these.
+    # This query finds any batch doc that has at least one of the requested file_ids in its 'files' array.
+    # It might be better to require a generation_id if files can be in multiple batches.
+    batch_cursor = documents_collection.find({
         "is_test_case_generation_batch": True,
-        "files.file_id": {"$in": [ObjectId(fid) for fid in file_id_list]}
-    })
-    if not batch:
-        raise HTTPException(404, detail="Batch document not found for given file(s)")
+        "files.file_id": {"$in": object_id_list}
+    }).sort("timestamp", -1) # Get the most recent batch first if multiple exist
 
-    file_entries = []
-    for f in batch["files"]:
-        fid = str(f["file_id"])
-        if fid in file_id_list:
-            file_entries.append(f)
+    # We need to aggregate data from potentially multiple batch documents if files are spread out,
+    # or assume all requested files are in ONE batch document.
+    # For now, let's process the first batch found that contains relevant files.
+    
+    processed_file_entries = {} # Store as {file_id_str: file_entry_from_batch} to avoid duplicates
 
-    if not file_entries:
-        raise HTTPException(404, detail="No files found with provided file_ids")
+    for batch_doc in batch_cursor:
+        batch_files_array = batch_doc.get("files", [])
+        for file_entry_in_batch in batch_files_array:
+            file_id_in_entry_obj = file_entry_in_batch.get("file_id")
+            if not file_id_in_entry_obj: continue # Malformed entry
 
-    # Fieldnames for CSV
-    csv_fields = [
+            file_id_in_entry_str = str(file_id_in_entry_obj)
+
+            # If this file is one we requested and we haven't processed it yet from another (older) batch
+            if file_id_in_entry_str in file_id_str_list and file_id_in_entry_str not in processed_file_entries:
+                 if file_entry_in_batch.get("status") == 1: # Only consider successfully processed files
+                    processed_file_entries[file_id_in_entry_str] = file_entry_in_batch
+                 else:
+                    print(f"File {file_id_in_entry_str} found in batch {batch_doc['_id']} but its status is not 1 (completed). Status: {file_entry_in_batch.get('status')}")
+
+
+    if not processed_file_entries:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="No successfully processed test case data found for the provided file_ids in any batch.")
+
+    # --- CSV Header ---
+    csv_header_fields = [
         "Test type", "TCID", "Title", "Description", "Precondition",
         "Steps", "Action", "Data", "Result", "Test Nature", "Test priority"
-    ]
+    ] # Ensure your parse_test_cases_from_content_string returns dicts with these keys
 
-    # Helper to extract test cases case-insensitively
-    def get_case_insensitive(tc_dict, key):
-        """Returns the value in tc_dict matching key, ignoring case, or None."""
-        key = key.lower()
-        for k, v in tc_dict.items():
-            if k.lower() == key:
-                return k, v
-        return None, None
+    # --- Mode Handling ---
+    if mode == "csv":
+        if len(processed_file_entries) > 1:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                detail="CSV mode is only supported for a single file_id. Multiple file_ids were found processed. Use mode='zip'.")
+        if not processed_file_entries: # Should be caught above, but defensive
+             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No processed file found for CSV mode.")
 
-    # Single CSV for one file, else ZIP
-    if mode == "csv" and len(file_entries) == 1:
-        file_entry = file_entries[0]
-        output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=csv_fields)
-        writer.writeheader()
-        for t in type_list:
-            tc_dict = file_entry.get("test_cases", {})
-            found_key, tc_obj = get_case_insensitive(tc_dict, t)
-            if tc_obj and tc_obj.get("content"):
-                for row in parse_test_cases(tc_obj["content"]):
-                    row["Test type"] = found_key or t
-                    writer.writerow(row)
-        output.seek(0)
-        filename = f"{file_entry.get('file_name', 'testcases')}_test_cases.csv"
-        return StreamingResponse(io.BytesIO(output.getvalue().encode()), media_type="text/csv", headers={
-            "Content-Disposition": f"attachment; filename={filename}"
-        })
+        # Get the single file entry
+        # Since processed_file_entries is a dict, get its first (and only) value
+        single_file_id_str = list(processed_file_entries.keys())[0]
+        file_entry_data = processed_file_entries[single_file_id_str]
 
-    # --- Multiple files: ZIP with CSVs ---
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zipf:
-        for file_entry in file_entries:
-            rows = []
-            for t in type_list:
-                tc_dict = file_entry.get("test_cases", {})
-                found_key, tc_obj = get_case_insensitive(tc_dict, t)
-                if tc_obj and tc_obj.get("content"):
-                    for row in parse_test_cases(tc_obj["content"]):
-                        row["Test type"] = found_key or t
-                        rows.append(row)
-            if not rows:
-                continue
-            # Write this file's CSV into the zip
-            csv_stream = io.StringIO()
-            writer = csv.DictWriter(csv_stream, fieldnames=csv_fields)
-            writer.writeheader()
-            for row in rows:
-                writer.writerow(row)
-            csv_bytes = csv_stream.getvalue().encode()
-            filename = f"{file_entry.get('file_name', 'testcases')}_test_cases.csv"
-            zipf.writestr(filename, csv_bytes)
-    zip_buffer.seek(0)
-    return StreamingResponse(zip_buffer, media_type="application/x-zip-compressed", headers={
-        "Content-Disposition": "attachment; filename=testcases.zip"
-    })
+        csv_output_stream = io.StringIO()
+        csv_writer = csv.DictWriter(csv_output_stream, fieldnames=csv_header_fields, extrasaction='ignore')
+        csv_writer.writeheader()
+
+        file_had_matching_types = False
+        test_cases_dict_in_file_entry = file_entry_data.get("test_cases", {})
+        for requested_type_lower in requested_types_lower:
+            # Find the test case content for the current requested_type_lower
+            original_tc_type_key, tc_type_data_obj = get_case_insensitive_from_dict(test_cases_dict_in_file_entry, requested_type_lower)
+
+            if tc_type_data_obj and isinstance(tc_type_data_obj, dict) and tc_type_data_obj.get("content"):
+                content_string = tc_type_data_obj["content"]
+                parsed_tc_rows = parse_test_cases_from_content_string(content_string)
+                for row_dict in parsed_tc_rows:
+                    row_dict["Test type"] = original_tc_type_key or requested_type_lower # Set the actual type found or requested
+                    csv_writer.writerow(row_dict)
+                if parsed_tc_rows:
+                    file_had_matching_types = True
+        
+        if not file_had_matching_types:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"No test cases found for the file '{file_entry_data.get('file_name', single_file_id_str)}' matching the requested types: {', '.join(requested_types_lower)}.")
+
+        csv_output_stream.seek(0)
+        csv_filename = f"{file_entry_data.get('file_name', 'testcases').rsplit('.',1)[0]}_test_cases.csv"
+        return StreamingResponse(
+            io.BytesIO(csv_output_stream.getvalue().encode('utf-8')),
+            media_type="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=\"{csv_filename}\""}
+        )
+
+    elif mode == "zip":
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_archive_file:
+            any_file_had_data = False
+            for file_id_str, file_entry_data in processed_file_entries.items():
+                csv_output_stream_for_zip = io.StringIO()
+                csv_writer_for_zip = csv.DictWriter(csv_output_stream_for_zip, fieldnames=csv_header_fields, extrasaction='ignore')
+                csv_writer_for_zip.writeheader()
+
+                file_in_zip_had_matching_types = False
+                test_cases_dict_in_file_entry = file_entry_data.get("test_cases", {})
+                for requested_type_lower in requested_types_lower:
+                    original_tc_type_key, tc_type_data_obj = get_case_insensitive_from_dict(test_cases_dict_in_file_entry, requested_type_lower)
+
+                    if tc_type_data_obj and isinstance(tc_type_data_obj, dict) and tc_type_data_obj.get("content"):
+                        content_string = tc_type_data_obj["content"]
+                        parsed_tc_rows = parse_test_cases_from_content_string(content_string)
+                        for row_dict in parsed_tc_rows:
+                            row_dict["Test type"] = original_tc_type_key or requested_type_lower
+                            csv_writer_for_zip.writerow(row_dict)
+                        if parsed_tc_rows:
+                            file_in_zip_had_matching_types = True
+                            any_file_had_data = True
+                
+                if file_in_zip_had_matching_types:
+                    csv_output_stream_for_zip.seek(0)
+                    csv_bytes_for_zip = csv_output_stream_for_zip.getvalue().encode('utf-8')
+                    csv_filename_in_zip = f"{file_entry_data.get('file_name', file_id_str).rsplit('.',1)[0]}_test_cases.csv"
+                    zip_archive_file.writestr(csv_filename_in_zip, csv_bytes_for_zip)
+            
+            if not any_file_had_data:
+                 raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail=f"No test cases found for any of the files matching the requested types: {', '.join(requested_types_lower)}.")
+
+        zip_buffer.seek(0)
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/x-zip-compressed",
+            headers={"Content-Disposition": "attachment; filename=\"test_cases_batch.zip\""}
+        )
+    else:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid mode specified. Choose 'zip' or 'csv'.")
+
 
 # @api_v1_router.delete("/documents/", tags=["Document Test Cases"]) # Note: Query param for list of IDs
 # async def delete_multiple_documents(document_ids: List[str] = Query(...)):
