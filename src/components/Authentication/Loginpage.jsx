@@ -4,7 +4,8 @@ import {
   Typography,
   Alert,
   Link,
-  Button
+  Button,
+  IconButton
 } from "@mui/material";
 import { motion } from "framer-motion";
 import logo from "../../asessts/images/logo1.png";
@@ -13,6 +14,8 @@ import Logo from "../../asessts/images/logo1.png";
 import topRightImage from "../../asessts/images/toprightcorner.png";
 // import sideImage from "../../asessts/images/left2.png";
 // import sideImage from "../asessts/images/left3.png";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
 import { adminAxios } from '../../asessts/axios/index';
 import { CircularProgress } from '@mui/material';
@@ -165,7 +168,7 @@ const LoginPage = () => {
             variant="subtitle1"
 
             fontWeight={700}
-            sx={{ color: "#333", textAlign: "left", marginBottom: "10px" }}
+            sx={{ color: "#333", textAlign: "left", marginBottom: "10px",fontSize:"18px" }}
           >
             Login
           </Typography>
@@ -191,7 +194,22 @@ const LoginPage = () => {
                 required
                 onChange={(e) => setPassword(e.target.value)}
                 value={password}
+                    style={{ paddingRight: "36px" }} // space for icon
               />
+              <IconButton
+              disableRipple
+    onClick={() => setShowPassword((prev) => !prev)}
+    sx={{
+      position: "absolute",
+      right: 8,
+      top: "50%",
+      transform: "translateY(-50%)",
+      color: "#aaa",
+      padding: "4px",
+    }}
+  >
+    {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
+  </IconButton>
             </div>
             {error && (
               <Alert severity="error" sx={{ mt: 2 }}>

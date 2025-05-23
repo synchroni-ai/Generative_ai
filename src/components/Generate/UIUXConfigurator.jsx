@@ -157,30 +157,44 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
         {/* Tabs */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} sx={{ backgroundColor: "#f5f5f5", padding: "5px 50px" }}>
           <Box display="flex">
-            {['Configuration', 'Results'].map((tab) => (
-              <Box
-                key={tab}
-                px={2}
-                py={1}
-                onClick={() => {
-                  setActiveTab(tab);
-                  if (tab === 'Results') {
-                    setSelectedHistoryDoc(null);  // reset history doc
-                    setFromHistory(false);        // indicates manual selection
-                  }
-                }}
-                sx={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                  color: activeTab === tab ? '#000080' : 'gray',
-                  borderBottom: activeTab === tab ? '2px solid #000080' : 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                {tab}
-              </Box>
-            ))}
-          </Box>
+  {['Configuration', 'Results'].map((tab) => {
+    const isResultsTab = tab === 'Results';
+    const isDisabled = isResultsTab && generatedResults.length === 0;
+
+    return (
+      <Box
+        key={tab}
+        px={2}
+        py={1}
+        onClick={() => {
+          if (isDisabled) return; // ⛔ Prevent Results tab click
+          setActiveTab(tab);
+          if (tab === 'Results') {
+            setSelectedHistoryDoc(null);
+            setFromHistory(false);
+          }
+        }}
+        sx={{
+          fontSize: 14,
+          fontWeight: 500,
+          color: isDisabled
+            ? '#bdbdbd'
+            : activeTab === tab
+            ? '#000080'
+            : 'gray',
+          borderBottom: activeTab === tab
+            ? '2px solid #000080'
+            : 'none',
+          cursor: isDisabled ? 'not-allowed' : 'pointer',
+          pointerEvents: isDisabled ? 'none' : 'auto',
+        }}
+      >
+        {tab}
+      </Box>
+    );
+  })}
+</Box>
+
 
           {/* History Section */}
           {/* <Box

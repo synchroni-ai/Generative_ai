@@ -241,9 +241,60 @@ import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined
 import ExportIcon from "./../../asessts/images/exporticon.png";
 import { Skeleton } from '@mui/material';
 import "./Tabs.css";
+// const parseTestCasesFromContent = (content, testType, fileName) => {
+//   const parsed = [];
+//   const entries = content.split(/\n(?=TCID:)/g); // Split at each TCID
+
+//   entries.forEach(raw => {
+//     const fields = {
+//       file_name: fileName,
+//       "TCID": "",
+//       "Test type": testType,
+//       "Title": "",
+//       "Description": "",
+//       "Precondition": "",
+//       "Steps": "",
+//       "Action": "",
+//       "Data": "",
+//       "Result": "",
+//       "Test Nature": "",
+//       "Test priority": ""
+//     };
+
+//     Object.keys(fields).forEach(key => {
+//       if (key === "file_name") return;
+//       const regex = new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z][^:]*?:|\\n*$)`, 'i');
+//       const match = raw.match(regex);
+//       if (match) {
+//         fields[key] = match[1].trim();
+//       }
+//     });
+
+//     // Skip if it's just a heading or doesn't have a valid TCID
+//     if (!fields["TCID"]) return;
+
+//     fields["Type (P / N / in)"] = fields["Test Nature"];
+//     delete fields["Test Nature"];
+
+//     parsed.push(fields);
+//   });
+
+//   return parsed;
+// };
+
+
 const parseTestCasesFromContent = (content, testType, fileName) => {
   const parsed = [];
-  const entries = content.split(/\n(?=TCID:)/g); // Split at each TCID
+
+  // Normalize **label:** to label: (strip Markdown bolds)
+  const cleanedContent = content.replace(/\*\*(.*?)\*\*/g, '$1');
+
+  // Split entries based on TCID start
+  const entries = cleanedContent
+    .split(/\n\s*TCID:/g)
+    .filter(Boolean)
+    .map((e) => `TCID:${e.trim()}`)  // Reattach "TCID:" label
+    .filter(e => e.toLowerCase().includes('title:'));  // ✅ Ensure it's an actual test case
 
   entries.forEach(raw => {
     const fields = {
@@ -270,8 +321,8 @@ const parseTestCasesFromContent = (content, testType, fileName) => {
       }
     });
 
-    // Skip if it's just a heading or doesn't have a valid TCID
-    if (!fields["TCID"]) return;
+    // Skip if no TCID or improperly formatted block
+    if (!fields["TCID"] || fields["TCID"].toLowerCase().includes("test cases")) return;
 
     fields["Type (P / N / in)"] = fields["Test Nature"];
     delete fields["Test Nature"];
@@ -281,8 +332,6 @@ const parseTestCasesFromContent = (content, testType, fileName) => {
 
   return parsed;
 };
-
-
 
 
 
