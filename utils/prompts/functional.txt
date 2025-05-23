@@ -46,3 +46,4 @@ Test Nature: [P for Positive, N for Negative, in for input validation]
 Test priority: [High, Medium, or Low]
 
 Generate 5 test cases. Only return the test cases in output and not any other text.
+Do not include any * marks in output
