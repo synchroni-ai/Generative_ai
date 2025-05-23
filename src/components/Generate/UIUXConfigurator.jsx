@@ -82,6 +82,7 @@ const UIUXConfigurator = () => {
   const taskId = location.state?.task_id; // ✅ extract task_id
   const fileId = location.state?.file_id;
   const dataSpaceId = location.state?.data_space_id;
+  const generationId = location.state?.generation_id; // ✅ Add this
   const token = localStorage.getItem("token");
   const [activeTab, setActiveTab] = useState('Configuration');
   const [drawerOpen, setDrawerOpen] = useState(false);  // State for drawer open
@@ -89,6 +90,10 @@ const UIUXConfigurator = () => {
   const [fromHistory, setFromHistory] = useState(false); // NEW: track if Results tab is from History
   const navigate = useNavigate(); // Inside your component
   const [selectedSubTypes, setSelectedSubTypes] = useState([]);
+  const [generatedResults, setGeneratedResults] = useState([]);
+const [selectedDocs, setSelectedDocs] = useState([]);
+const [selectedUseCase, setSelectedUseCase] = useState('');
+
 
 
   const toggleDrawer = (open) => () => {
@@ -205,12 +210,21 @@ const UIUXConfigurator = () => {
         </Box>
 
         {/* Body: Conditional Rendering */}
-        {activeTab === 'Configuration' ? <Configuration
-          selectedSubTypes={selectedSubTypes}
-          setSelectedSubTypes={setSelectedSubTypes}
-          onGenerate={() => setActiveTab('Results')}
-          dataSpaceId={dataSpaceId} // 👈 Pass it here
-        />
+        {activeTab === 'Configuration' ? 
+       <Configuration
+  selectedDocs={selectedDocs}
+  setSelectedDocs={setSelectedDocs}
+  selectedUseCase={selectedUseCase}
+  setSelectedUseCase={setSelectedUseCase}
+  selectedSubTypes={selectedSubTypes}
+  setSelectedSubTypes={setSelectedSubTypes}
+  onGenerate={(results) => {
+    setGeneratedResults(results);
+    setActiveTab('Results');
+  }}
+  dataSpaceId={dataSpaceId}
+  generationId={generationId}
+/>
           : <TestCaseTable
             selectedHistoryDoc={selectedHistoryDoc}
             fromHistory={fromHistory}
@@ -218,6 +232,7 @@ const UIUXConfigurator = () => {
             token={token}
             fileId={fileId}
             selectedSubTypes={selectedSubTypes}
+              results={generatedResults} // ✅ pass it here
           />
         }</Box>
       {/* Drawer for History */}
