@@ -4015,17 +4015,26 @@ async def create_dataspace_and_upload_documents(
 @api_v1_router.get("/data-spaces/", response_model=List[DataSpaceResponse], tags=["Data Spaces"])
 async def list_data_spaces(skip: int = 0, limit: int = 20):
     spaces_cursor = data_spaces_collection.find().sort("created_at", -1).skip(skip).limit(limit)
-    return [
-        DataSpaceResponse(
-            data_space_id=str(ds_doc["_id"]),
-            name=ds_doc.get("name"),
-            description=ds_doc.get("description"),
-            category=ds_doc.get("category"), # Include category in response
-            sub_category=ds_doc.get("sub_category"), # Include sub_category
-            created_at=ds_doc.get("created_at"),
-            document_count=documents_collection.count_documents({"data_space_id": ds_doc["_id"]})
-        ) for ds_doc in spaces_cursor
-    ]
+    data_spaces = []
+    for ds_doc in spaces_cursor:
+        ds_id = ds_doc["_id"]
+        # Count documents with either ObjectId or string representation
+        doc_count = documents_collection.count_documents({
+            "data_space_id": {"$in": [ds_id, str(ds_id)]}
+        })
+        data_spaces.append(
+            DataSpaceResponse(
+                data_space_id=str(ds_id),
+                name=ds_doc.get("name"),
+                description=ds_doc.get("description"),
+                category=ds_doc.get("category"),
+                sub_category=ds_doc.get("sub_category"),
+                created_at=ds_doc.get("created_at"),
+                document_count=doc_count
+            )
+        )
+    return data_spaces
+
 
 @api_v1_router.get("/data-spaces/{data_space_id}/documents/", response_model=List[DocumentMetadataResponse], tags=["Data Spaces"])
 async def list_documents_in_data_space(data_space_id: str, skip: int = 0, limit: int = 20):
