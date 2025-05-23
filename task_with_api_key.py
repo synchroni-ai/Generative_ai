@@ -73,150 +73,251 @@ def process_document(file_path, model_name, chunk_size):
  
  
 @celery_app.task(bind=True, name="task_with_api_key.process_and_generate_task")
+
 def process_and_generate_task(
-    self, file_path, model_name, chunk_size, api_key, test_case_types, document_id
+
+    self, file_path, model_name, chunk_size, api_key, test_case_types, generation_id, file_id, batch_id
+
 ):
+
     print(f"🎯 Celery task started: {file_path} ({test_case_types})")
+
     task_id = self.request.id
  
     try:
+
         if model_name not in MODEL_DISPATCHER:
-            raise HTTPException(
-                status_code=400, detail=f"Unsupported model: {model_name}"
-            )
+
+            raise Exception(f"Unsupported model: {model_name}")
  
         # Normalize test_case_types
+
         if isinstance(test_case_types, str):
+
             if test_case_types.lower() == "all":
+
                 test_case_types = VALID_TEST_CASE_TYPES
+
             else:
+
                 test_case_types = [
-                    t.strip().lower()
-                    for t in test_case_types.split(",")
+
+                    t.strip().lower() for t in test_case_types.split(",")
+
                     if t.strip().lower() in VALID_TEST_CASE_TYPES
+
                 ]
+
         elif isinstance(test_case_types, list):
+
             test_case_types = [
-                t.strip().lower()
-                for t in test_case_types
+
+                t.strip().lower() for t in test_case_types
+
                 if t.strip().lower() in VALID_TEST_CASE_TYPES
+
             ]
+
         else:
-            raise HTTPException(
-                status_code=400,
-                detail="test_case_types must be a list, comma-separated string, or the string 'all'",
-            )
+
+            raise Exception("test_case_types must be a list, comma-separated string, or the string 'all'")
  
         if not test_case_types:
-            raise HTTPException(
-                status_code=400,
-                detail=f"No valid test case types provided. Valid types are: {VALID_TEST_CASE_TYPES}",
-            )
+
+            raise Exception(f"No valid test case types provided. Valid types are: {VALID_TEST_CASE_TYPES}")
  
         generation_function = MODEL_DISPATCHER[model_name]
+
         chunks, cleaned_text = process_document(file_path, model_name, chunk_size)
  
         all_results = []
+
         all_combined_test_cases = ""
+
         test_cases_by_type = {}
  
-        try:
-            collection.update_one(
-                {"_id": ObjectId(document_id)},
-                {"$set": {"status": 0, "progress": []}},
-            )
-        except Exception as e:
-            print("MongoDB update error (init):", str(e))
- 
         for test_case_type in test_case_types:
+
             prompt_path = Path("utils/prompts") / f"{test_case_type}.txt"
- 
+
             if not prompt_path.exists():
-                raise HTTPException(
-                    status_code=500,
-                    detail=f"Prompt file not found: {prompt_path}",
-                )
+
+                raise Exception(f"Prompt file not found: {prompt_path}")
  
             with open(prompt_path, "r") as f:
+
                 test_case_prompt = f.read()
  
             all_test_cases = []
+
             test_case_tokens = 0
  
             for idx, chunk_text in enumerate(chunks, start=1):
+
                 try:
+
                     test_case_text, tokens = test_case_utils.generate_test_cases(
+
                         chunk_text,
+
                         generation_function,
+
                         test_case_prompt=test_case_prompt,
+
                     )
+
                     if test_case_text:
+
                         all_test_cases.append(test_case_text)
+
                         test_case_tokens += tokens
+
                 except Exception as e:
-                    print(
-                        f"Error generating test cases for chunk {idx} ({test_case_type}): {e}"
-                    )
+
+                    print(f"Error generating test cases for chunk {idx} ({test_case_type}): {e}")
+
                     continue
  
             combined_test_cases = "\n".join(all_test_cases)
+
             all_combined_test_cases += f"\n\n### {test_case_type.upper()} TEST CASES ###\n\n{combined_test_cases}"
- 
+
             embedded_id = str(uuid.uuid4())
+
             test_cases_by_type[test_case_type] = {
+
                 "_id": embedded_id,
+
                 "content": combined_test_cases,
+
             }
- 
-            all_results.append(
-                {
-                    "test_case_type": test_case_type,
-                    "test_cases": combined_test_cases,
-                }
-            )
+
+            all_results.append({
+
+                "test_case_type": test_case_type,
+
+                "test_cases": combined_test_cases
+
+            })
  
             progress_message = f"{test_case_type} test cases generated"
+
             try:
+
+                # ⬇️ Update the correct embedded file doc in 'files' array!
+
                 collection.update_one(
-                    {"_id": ObjectId(document_id)},
+
+                    {"_id": ObjectId(generation_id), "files.batch_id": ObjectId(batch_id)},
+
                     {
+
                         "$set": {
-                            "test_cases": test_cases_by_type,
-                            "status": 0,
+
+                            "files.$.test_cases": test_cases_by_type,
+
+                            "files.$.status": 0
+
                         },
-                        "$push": {"progress": progress_message},
-                    },
+
+                        "$push": {
+
+                            "files.$.progress": progress_message
+
+                        }
+
+                    }
+
                 )
+
             except Exception as e:
-                print(
-                    f"MongoDB update error (progress after {test_case_type}): {str(e)}"
-                )
+
+                print(f"MongoDB update error (progress after {test_case_type}): {str(e)}")
  
             self.update_state(
+
                 state="PROGRESS",
-                meta={"status": "processing", "progress": progress_message},
+
+                meta={"status": "processing", "progress": progress_message}
+
             )
  
-        try:
+        # Final success update for file
+
+        collection.update_one(
+
+            {"_id": ObjectId(generation_id), "files.batch_id": ObjectId(batch_id)},
+
+            {"$set": {
+
+                "files.$.status": 1,
+
+                "files.$.progress": ["All test cases generated"]
+
+            }}
+
+        )
+
+        # 👇 PATCH: After setting file status, check if all are done
+
+        parent_doc = collection.find_one({"_id": ObjectId(generation_id)})
+
+        if parent_doc and all(f.get("status") == 1 for f in parent_doc.get("files", [])):
+
             collection.update_one(
-                {"_id": ObjectId(document_id)},
-                {"$set": {"status": 1, "progress": ["All test cases generated"]}},
+
+                {"_id": ObjectId(generation_id)},
+
+                {
+
+                    "$set": {"status": 1},
+
+                    "$push": {"progress": "All test case batches complete."}
+
+                }
+
             )
-        except Exception as e:
-            print("MongoDB update error (final):", str(e))
  
         final_result = {
+
             "message": "All test cases generated and stored successfully.",
+
             "model_used": model_name,
+
             "results": all_results,
-            "document_id": document_id,
+
+            "document_id": generation_id,
+
+            "batch_id": batch_id
+
         }
  
         self.update_state(state="SUCCESS", meta=final_result)
+
         return final_result
  
     except Exception as e:
+
+        # Error handling inside the batch
+
+        collection.update_one(
+
+            {"_id": ObjectId(generation_id), "files.batch_id": ObjectId(batch_id)},
+
+            {"$set": {
+
+                "files.$.status": 2,
+
+                "files.$.error_info": str(e),
+
+                "files.$.progress": ["Error: " + str(e)]
+
+            }}
+
+        )
+
         self.update_state(state="FAILURE", meta={"error": str(e)})
+
         raise self.retry(exc=e)
- 
+
  
