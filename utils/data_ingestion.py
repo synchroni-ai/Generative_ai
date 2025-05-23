@@ -118,4 +118,24 @@ def extract_text_from_file(file_path: str) -> str:
 
             return f.read()
 
- 
+import re
+def parse_test_case_block(case_str):
+    """
+    Parse a single test case string into a dictionary of fields.
+    Supports both "**Field:**" and "Field:" style.
+    """
+    # Fields to extract
+    fields = [
+        'TCID', 'Test type', 'Title', 'Description', 'Precondition', 'Steps',
+        'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
+    ]
+    result = {f: '' for f in fields}
+    
+    # Normalize formatting (handle both **Field:** and Field:)
+    for f in fields:
+        # Regex matches e.g. "**Title:** ..." or "Title: ..."
+        match = re.search(rf"(\*\*)?{re.escape(f)}(\*\*)?:\s*(.*?)(?=\n[A-Z][^:\n]*:|\n\*\*[A-Z][^:]*\*\*:|\Z)", case_str, re.DOTALL)
+        if match:
+            value = match.group(3).strip()
+            result[f] = value
+    return result
