@@ -51,6 +51,7 @@ const [taskId, setTaskId] = useState('');
 const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [selectedRows, setSelectedRows] = useState([]);
+const [generateLoading, setGenerateLoading] = useState(false); // <-- ✅ Add this line
 
 
 const FilteredDocs = documents.filter((doc) =>
@@ -156,45 +157,47 @@ const fetchDocuments = async () => {
 };
 
 
-
-
-
 const handleGenerateClick = async (doc) => {
+  console.log("Hiiii")
+  if (generateLoading) return;
+
   try {
-    setSelectedDocumentName(doc.file_name); 
+    setGenerateLoading(true);
+    setSelectedDocumentName(doc.file_name);
 
-    if (doc.status === -1) {
-      // 🔁 Generate test cases first
-      const formData = new FormData();
-      formData.append("file_id", doc.file_id);
+    const formData = new FormData();
+    formData.append("api_key", "mistral");
+    formData.append("combine_files", "false");
+    formData.append("data_space_id", doc._id);
 
-      const response = await adminAxios.post("/generate_test_cases/", formData);
-      console.log("Generated Test Cases:", response.data);
+    const response = await adminAxios.post(
+      "/api/v1/documents/batch-generate-test-cases/",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } }
+    );
 
-      setGenerateData(response.data);
-      setTaskId(response.data.task_id);
+    console.log("✅ Batch generation response:", response.data);
+    setGenerateData(response.data);
+    setTaskId(response.data.task_id);
 
-      navigate('/uiux-configurator', {
-        state: {
-          doc,
-          task_id: response.data.task_id,  
-            data_space_id: doc._id, // 👈 Add this line to pass the data_space_id
-        },
-      });
-    } else {
-      // ✅ Already processed, skip generation
-      navigate('/uiux-configurator', {
-        state: {
-          doc,
-          file_id: doc.file_id,
-              data_space_id: doc._id, // 👈 Add this line to pass the data_space_id
-        },
-      });
-    }
+    navigate("/uiux-configurator", {
+      state: {
+        doc,
+        task_id: response.data.task_id,
+        data_space_id: doc._id,
+        generation_id: response.data.generation_id,
+      },
+    });
+
   } catch (error) {
-    console.error("Error generating test cases:", error);
+    console.error("❌ Error:", error);
+  } finally {
+    setGenerateLoading(false);
   }
 };
+
+
+
 
 
   useEffect(() => {
@@ -385,12 +388,13 @@ const handleGenerateClick = async (doc) => {
   }}
           />
         </TableCell>
-        <TableCell 
-          onClick={async () => await handleGenerateClick(doc)}
-          sx={{ cursor: "pointer", color: "navy" }}
-        >
-          {doc.name}
-        </TableCell>
+       <TableCell 
+  onClick={() => handleGenerateClick(doc)}
+  sx={{ cursor: "pointer", color: "navy" }}
+>
+  {doc.name}
+</TableCell>
+
         <TableCell sx={{ color: "#8e8e8e" }}>{doc.category}</TableCell>
         <TableCell sx={{ color: "#8e8e8e" }}>{doc.sub_category}</TableCell>
         <TableCell sx={{ color: "#8e8e8e" }}>{doc.document_count}</TableCell>

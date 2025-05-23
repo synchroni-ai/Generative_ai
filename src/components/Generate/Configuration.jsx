@@ -7,21 +7,23 @@ import {
 import { adminAxios } from '../../asessts/axios/index';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import CircularProgress from '@mui/material/CircularProgress';
 
-const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, dataSpaceId }) => {
+const Configuration = ({selectedDocs, setSelectedDocs,  selectedUseCase, setSelectedUseCase, selectedSubTypes, setSelectedSubTypes, onGenerate, dataSpaceId, generationId }) => {
   console.log("Received dataSpaceId:", dataSpaceId);
+  console.log("Received generationId:", generationId);
   const [documentsData, setDocumentsData] = useState([]);
-  const [selectedDocs, setSelectedDocs] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
 
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
         const response = await adminAxios.get(`/api/v1/data-spaces/${dataSpaceId}/documents/`);
-        const fetchedDocs = response.data.map(doc => doc.file_name);
+        const fetchedDocs = response.data;
         setDocumentsData(fetchedDocs);
-        setSelectedDocs([]);// Optional: preselect all on load
+        // setSelectedDocs([]);// Optional: preselect all on load
       } catch (error) {
         console.error("Error fetching documents for data space:", error);
       }
@@ -68,7 +70,7 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
   // ]);
 
   // const [collapsed, setCollapsed] = useState(false);
-  const [selectedUseCase, setSelectedUseCase] = useState('');
+
   // const [selectedSubTypes, setSelectedSubTypes] = useState([]);
   const documentsRef = useRef(null); // For outside click
 
@@ -87,13 +89,14 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
   // }, []);
 
 
-  const toggleDocument = (doc) => {
+  const toggleDocument = (docId) => {
     setSelectedDocs((prevSelected) =>
-      prevSelected.includes(doc)
-        ? prevSelected.filter((d) => d !== doc)
-        : [...prevSelected, doc]
+      prevSelected.includes(docId)
+        ? prevSelected.filter((id) => id !== docId)
+        : [...prevSelected, docId]
     );
   };
+
 
   const handleUseCaseSelect = (useCase) => {
     setSelectedUseCase(useCase);
@@ -106,6 +109,55 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
       prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
     );
   };
+
+
+  const pollingIdRef = useRef(null);
+
+  const handleGenerate = async () => {
+    try {
+      setIsGenerating(true); // ✅ Start loading
+
+      const payload = {
+        generation_id: generationId,
+        file_ids: selectedDocs,
+        types: selectedSubTypes.map(type => type.toLowerCase()),
+      };
+
+      const response = await adminAxios.post("/api/v1/test-case-batch/results", payload);
+      const results = response.data.results || [];
+
+      const poll = async () => {
+        const res = await adminAxios.post("/api/v1/test-case-batch/results", payload);
+        const latestResults = res.data.results || [];
+        const allDone = latestResults.every(r => r.status === 1);
+
+        if (allDone) {
+          clearInterval(pollingIdRef.current);
+          pollingIdRef.current = null;
+
+          setIsGenerating(false); // ✅ Stop loading
+          onGenerate(latestResults); // ✅ Navigate or update parent
+        }
+      };
+
+      pollingIdRef.current = setInterval(poll, 5000);
+    } catch (error) {
+      console.error("❌ Error generating test cases:", error);
+      setIsGenerating(false); // ✅ Ensure loading stops on error
+    }
+  };
+
+
+
+  // ⛔ Stop polling on unmount (e.g., reload or navigation away)
+  useEffect(() => {
+    return () => {
+      if (pollingIdRef.current) {
+        clearInterval(pollingIdRef.current);
+        console.log("⛔ Polling stopped on unmount");
+      }
+    };
+  }, []);
 
   return (
     <Box display="flex" flexDirection={{ xs: 'column', md: 'row' }} gap={6} mb={6} sx={{ padding: "0px 50px" }}>
@@ -152,7 +204,8 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
                       selectedDocs.length === documentsData.length
                     }
                     onChange={(e) => {
-                      setSelectedDocs(e.target.checked ? documentsData : []);
+                      setSelectedDocs(e.target.checked ? documentsData.map(doc => doc.file_id) : []);
+
                     }}
                     sx={{
                       color: 'inherit',
@@ -167,25 +220,24 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
               </ListItem>
 
               {/* Individual Checkboxes */}
-              {documentsData.map((doc, index) => (
-                <ListItem key={index} disablePadding>
+              {documentsData.map((doc) => (
+                <ListItem key={doc.file_id} disablePadding>
                   <ListItemIcon>
                     <Checkbox
                       edge="start"
-                      checked={selectedDocs.includes(doc)}
-                      tabIndex={-1}
-                      disableRipple
-                      onChange={() => toggleDocument(doc)}
+                      checked={selectedDocs.includes(doc.file_id)}
+                      onChange={() => toggleDocument(doc.file_id)}
                       sx={{
-                        color: selectedDocs.includes(doc) ? '#000080' : '#c4c4c4',
+                        color: selectedDocs.includes(doc.file_id) ? '#000080' : '#c4c4c4',
                         '&.Mui-checked': { color: '#000080' },
                         '& .MuiSvgIcon-root': { borderRadius: '4px' },
                       }}
                     />
                   </ListItemIcon>
-                  <ListItemText primaryTypographyProps={{ fontSize: 14 }} primary={doc} />
+                  <ListItemText primaryTypographyProps={{ fontSize: 14 }} primary={doc.file_name} />
                 </ListItem>
               ))}
+
             </List>
           )}
         </Box>
@@ -296,11 +348,15 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
             <Typography fontSize={16} fontWeight={600} mb={2} sx={{ color: "#252525" }}>
               Documents
             </Typography>
-            {selectedDocs.map((doc, idx) => (
-              <Typography key={idx} fontSize={14} sx={{ color: '#000080', fontWeight: 400, mb: "3px", ml: "15px" }}>
-                {doc}
-              </Typography>
-            ))}
+            {selectedDocs.map((id, idx) => {
+              const doc = documentsData.find(doc => doc.file_id === id);
+              return (
+                <Typography key={idx} fontSize={14} sx={{ color: '#000080', fontWeight: 400, mb: "3px", ml: "15px" }}>
+                  {doc?.file_name || 'Unknown Document'}
+                </Typography>
+              );
+            })}
+
           </Box>
           <Divider sx={{ my: 2 }} />
           <Box>
@@ -341,8 +397,8 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
         <Box display="flex" justifyContent="flex-end" mt={3}>
           <Button
             variant="contained"
-            disabled={selectedSubTypes.length === 0}
-            onClick={onGenerate}
+            disabled={selectedSubTypes.length === 0 || isGenerating}
+            onClick={handleGenerate}
             sx={{
               backgroundColor: '#0A0080',
               borderRadius: '999px',
@@ -355,8 +411,14 @@ const Configuration = ({ selectedSubTypes, setSelectedSubTypes, onGenerate, data
               '&:hover': { backgroundColor: '#07006B' },
             }}
           >
-            Generate
-          </Button>
+            {isGenerating ? (
+              <Box display="flex" alignItems="center" gap={1}>
+                <span>Generate</span>
+                <CircularProgress size={18} sx={{ color: '#fff' }} />
+              </Box>
+            ) : (
+              'Generate'
+            )}         </Button>
         </Box>
       </Box>
     </Box>

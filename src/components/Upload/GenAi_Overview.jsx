@@ -1470,10 +1470,10 @@ const handleUpload = async () => {
   formData.append("data_space_description", dataSpaceDescription);
   formData.append("category", category);
   formData.append("sub_category", subCategory);
+selectedFiles.forEach(file => {
+  formData.append("files", file);  // use same key for each file
+});
 
-  selectedFiles.forEach(file => {
-    formData.append("files", file);
-  });
 
   try {
     const response = await adminAxios.post("/api/v1/data-spaces/create-and-upload/", formData, {
@@ -1532,7 +1532,7 @@ const triggerSimulatedProgress = (selectedFile) => {
     );
   }, 500);
 
-  setTimeout(() => clearInterval(interval), 5000);
+  setTimeout(() => clearInterval(interval), 3000);
 };
 
   const inputStyle = {
@@ -1549,6 +1549,37 @@ const triggerSimulatedProgress = (selectedFile) => {
       fontSize: '14px', // label size
     },
   };
+const handleCancel = () => {
+
+  // Reset all state variables
+
+  setDataSpaceName('');
+
+  setDataSpaceDescription('');
+
+  setCategory('');
+
+  setSubCategory('');
+
+  setSelectedFiles([]);
+
+  setFile(null);
+
+  setUploadProgress([]);
+
+  setProgress(0);
+
+  setUploadCompleted(false);
+
+  setCollapsed(true);
+ 
+  // Close the drawer
+
+  onClose();
+
+};
+
+ 
 
   return (
      <Drawer
@@ -1846,12 +1877,13 @@ disabled={selectedFiles.length === 0}
 
        {/* Buttons directly under upload list */}
             <Box display="flex" justifyContent="flex-end" gap={2} mt={5} mr={3}>
-              <Button disableRipple
-                            onClick={onClose}
-                sx={{ borderRadius: '20px', textTransform: 'none',padding:'6px 16px',color:"grey" }}
-              >
-                Cancel
-              </Button>
+              <Button
+  disableRipple
+  onClick={handleCancel}
+  sx={{ borderRadius: '20px', textTransform: 'none', padding: '6px 16px', color: "grey" }}
+>
+  Cancel
+</Button>
               <Button
 onClick={handleUpload}
 disabled={

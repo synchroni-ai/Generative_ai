@@ -63,8 +63,8 @@ const LoginPage = () => {
     alt="AI Logo"
     sx={{
       position: "absolute",
-      top: 16,
-      left: 16,
+      top: 50,
+      left: 25,
       height: 40,
       width: "auto",
       zIndex: 1000,
