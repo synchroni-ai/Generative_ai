@@ -65,7 +65,7 @@
 // export default UIUXConfigurator;
 
 
-import React, { useState } from 'react';
+import React, { useState,useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom'; // Make sure this is imported at the top
 import { useLocation } from "react-router-dom";
 import { Box, Typography, IconButton, Drawer } from '@mui/material';  // Import Drawer
@@ -75,6 +75,7 @@ import backarrowicon from "./../../asessts/images/backarrowicon.png";
 import Configuration from './Configuration';
 import TestCaseTable from './Result';
 import History from './History';  // Import History component
+import { adminAxios } from '../../asessts/axios';
 
 const UIUXConfigurator = () => {
   const location = useLocation();
@@ -84,15 +85,97 @@ const UIUXConfigurator = () => {
   const dataSpaceId = location.state?.data_space_id;
   const generationId = location.state?.generation_id; // ✅ Add this
   const token = localStorage.getItem("token");
+    const navigate = useNavigate();
+const [progress, setProgress] = useState(0);  // progress from 0 to 100
+
   const [activeTab, setActiveTab] = useState('Configuration');
   const [drawerOpen, setDrawerOpen] = useState(false);  // State for drawer open
   const [selectedHistoryDoc, setSelectedHistoryDoc] = useState(null);
   const [fromHistory, setFromHistory] = useState(false); // NEW: track if Results tab is from History
-  const navigate = useNavigate(); // Inside your component
   const [selectedSubTypes, setSelectedSubTypes] = useState([]);
   const [generatedResults, setGeneratedResults] = useState([]);
 const [selectedDocs, setSelectedDocs] = useState([]);
 const [selectedUseCase, setSelectedUseCase] = useState('');
+  const pollingIdRef = useRef(null);
+const [generationLoading, setGenerationLoading] = useState(false);
+
+const triggerTestCaseGeneration = async () => {
+  try {
+    setGeneratedResults([]);
+    setActiveTab('Results');
+    setGenerationLoading(true);
+    setProgress(0);
+
+    const payload = {
+      generation_id: generationId,
+      file_ids: selectedDocs,
+      types: selectedSubTypes.map(t => t.toLowerCase()),
+    };
+
+    const startTime = Date.now(); // ⏱️ Start timer
+
+    await adminAxios.post("/api/v1/test-case-batch/results", payload);
+
+    let simulatedProgress = 0;
+
+    // Simulate gradual progress
+    const progressInterval = setInterval(() => {
+      simulatedProgress = Math.min(simulatedProgress + 1, 95);
+      setProgress(simulatedProgress);
+    }, 300);
+
+    // Poll every 2 seconds
+    pollingIdRef.current = setInterval(async () => {
+      try {
+        const res = await adminAxios.post("/api/v1/test-case-batch/results", payload);
+        const latestResults = res.data.results || [];
+        const allDone = latestResults.every(r => r.status === 1);
+
+        if (allDone) {
+          clearInterval(pollingIdRef.current);
+          clearInterval(progressInterval);
+
+          // Rapidly animate to 100%
+          let quickProgress = simulatedProgress;
+          const finishInterval = setInterval(() => {
+            quickProgress += 5;
+            setProgress(Math.min(quickProgress, 100));
+
+            if (quickProgress >= 100) {
+              clearInterval(finishInterval);
+              const endTime = Date.now(); // ⏱️ Stop timer
+              const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
+              console.log(`✅ Test case generation completed in ${elapsedSeconds} seconds`);
+              
+              setGeneratedResults(latestResults);
+              setGenerationLoading(false);
+            }
+          }, 50);
+        }
+      } catch (err) {
+        console.error("❌ Error while polling:", err);
+        clearInterval(pollingIdRef.current);
+        clearInterval(progressInterval);
+        setGenerationLoading(false);
+        setProgress(0);
+      }
+    }, 3000);
+  } catch (err) {
+    console.error("❌ Generation error:", err);
+    setGenerationLoading(false);
+    setProgress(0);
+  }
+};
+
+
+  useEffect(() => {
+    return () => {
+      if (pollingIdRef.current) {
+        clearInterval(pollingIdRef.current);
+        console.log("⛔ Polling stopped on unmount");
+      }
+    };
+  }, []);
 
 
 
@@ -197,7 +280,7 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
 
 
           {/* History Section */}
-          {/* <Box
+          <Box
             display="flex"
             alignItems="center"
             gap={1}
@@ -206,8 +289,8 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
           >
             <Typography fontSize={14} color="gray">History</Typography>
             <img src={historyIcon} alt="History Icon" width={20} height={20} />
-          </Box> */}
-<Box
+          </Box>
+{/* <Box
   display="flex"
   alignItems="center"
   gap={1}
@@ -219,7 +302,7 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
 >
   <Typography fontSize={14} color="gray">History</Typography>
   <img src={historyIcon} alt="History Icon" width={20} height={20} />
-</Box>
+</Box> */}
 
         </Box>
 
@@ -232,23 +315,23 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
   setSelectedUseCase={setSelectedUseCase}
   selectedSubTypes={selectedSubTypes}
   setSelectedSubTypes={setSelectedSubTypes}
-  onGenerate={(results) => {
-    setGeneratedResults(results);
-    setActiveTab('Results');
-  }}
+  onGenerate={triggerTestCaseGeneration} // pass the trigger function
   dataSpaceId={dataSpaceId}
   generationId={generationId}
 />
           : <TestCaseTable
-            selectedDocs={selectedDocs}
-            selectedHistoryDoc={selectedHistoryDoc}
-            fromHistory={fromHistory}
-            taskId={taskId}
-            token={token}
-            fileId={fileId}
-            selectedSubTypes={selectedSubTypes}
-              results={generatedResults} // ✅ pass it here
-          />
+  selectedDocs={selectedDocs}
+  selectedHistoryDoc={selectedHistoryDoc}
+  fromHistory={fromHistory}
+  taskId={taskId}
+  token={token}
+  fileId={fileId}
+  selectedSubTypes={selectedSubTypes}
+  results={generatedResults}
+  generationLoading={generationLoading}
+  progress={progress}
+/>
+
         }</Box>
       {/* Drawer for History */}
       <Drawer

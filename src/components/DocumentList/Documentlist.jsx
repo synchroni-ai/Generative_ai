@@ -166,9 +166,9 @@ const handleGenerateClick = async (doc) => {
     setSelectedDocumentName(doc.file_name);
 
     const formData = new FormData();
-    formData.append("api_key", "mistral");
-    formData.append("combine_files", "false");
     formData.append("data_space_id", doc._id);
+    formData.append("model_name", "Openai");
+    // formData.append("test_case_types", "all");
 
     const response = await adminAxios.post(
       "/api/v1/documents/batch-generate-test-cases/",

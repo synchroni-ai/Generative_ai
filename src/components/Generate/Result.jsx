@@ -240,6 +240,7 @@ import { adminAxios } from '../../asessts/axios/index';
 import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
 import ExportIcon from "./../../asessts/images/exporticon.png";
 import { Skeleton } from '@mui/material';
+import LinearProgress from '@mui/material/LinearProgress';
 import "./Tabs.css";
 // const parseTestCasesFromContent = (content, testType, fileName) => {
 //   const parsed = [];
@@ -356,7 +357,7 @@ const selectedHistoryDocData = [
   },
 ];
 
-const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = [],selectedDocs }) => {
+const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = [],selectedDocs, generationLoading = false, progress = 0 }) => {
   const [activeTab, setActiveTab] = useState('All'); // not index 0
   const [parsedData, setParsedData] = useState([]);
   const [headers, setHeaders] = useState([]);
@@ -618,6 +619,68 @@ useEffect(() => {
 
   return (
     <Box padding={'0px 32px'} mb={5}>
+{generationLoading ? (
+<Box
+    width="100%"
+    height="calc(100vh - 100px)" // Adjust based on your header height
+    display="flex"
+    justifyContent="center"
+    alignItems="center"
+  >
+    <Box
+      width="30%"
+      height="35%"
+      display="flex"
+      flexDirection="column"
+      justifyContent="center"
+      alignItems="center"
+      textAlign="center"
+      p={4}
+      sx={{
+        background: 'linear-gradient(to bottom right, #f3f6fd, #ffffff)',
+        borderRadius: 4,
+        // boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+      }}
+    >
+      <Typography variant="h5" fontWeight={700} color="#0A0080" mb={3}>
+        Test Case Generation in Progress...
+      </Typography>
+
+      <Box display="flex" alignItems="center" gap={2} width="100%" maxWidth={500}>
+        <Box flex={1}>
+          <LinearProgress
+            variant="determinate"
+            value={progress}
+            sx={{
+              height: 10,
+              borderRadius: 5,
+              backgroundColor: '#e0e0e0',
+              '& .MuiLinearProgress-bar': {
+                backgroundColor: progress >= 95 ? '#ffa726' : '#0A0080',
+              },
+            }}
+          />
+        </Box>
+        <Typography variant="body1" fontWeight={600} width={50}>
+          {progress}%
+        </Typography>
+      </Box>
+
+      {progress >= 95 && (
+        <Typography mt={3} fontSize={14} color="text.secondary">
+          We are Almost Reaching there...
+        </Typography>
+      )}
+
+      <Typography mt={2} fontSize={12} color="text.disabled">
+        You will see results once all test cases are ready.
+      </Typography>
+    </Box>
+  </Box>
+
+) : (
+  <>
+    {/* 👉 Everything below only renders when not generating */}
       {/* Export Button Row */}
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Button
@@ -801,7 +864,8 @@ useEffect(() => {
           </Paper>
         </Box>
       ))}
-
+</>
+)}
     </Box>
   );
 };
