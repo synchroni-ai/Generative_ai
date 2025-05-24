@@ -4,7 +4,7 @@ import os
 import openai
 from dotenv import load_dotenv
 from typing import Tuple, Optional
- 
+###########
 load_dotenv()
  
 DEFAULT_OPENAI_MODEL = "gpt-4o-mini"

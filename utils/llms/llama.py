@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
 
-
+########
 def generate_with_llama(prompt, temperature=0.3, max_tokens=2500, api_key=None):
     """
     Calls the Together AI API to generate text based on a prompt.

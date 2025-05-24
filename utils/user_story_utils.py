@@ -191,7 +191,7 @@ def format_acceptance_criteria_excel(
             criteria_list = [item.strip() for item in criteria_list if item.strip()]
             return criteria_list
         return []
-
+#######
     # Dynamic output file name based on mode
     mode_suffix = (
         "bullets_in_cell" if mode == "numbered_in_cell" else "criteria_per_row"

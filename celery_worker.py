@@ -8,7 +8,7 @@ celery_app = Celery(
     backend=os.getenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0"),
     include=["task_with_api_key"],
 )
-
+#########
 # No changes needed in celery_app.conf.update because we are calling tasks dynamically
 # celery_app.conf.update(
 #     task_routes={
