@@ -1580,6 +1580,24 @@ const GenAIUploader = ({ open, onClose, fetchDocuments }) => {
   };
 
 
+  const handleFileChange = (e) => {
+  const newFiles = Array.from(e.target.files);
+  if (newFiles.length) {
+    const updatedFiles = [...selectedFiles, ...newFiles];
+    const uniqueFiles = Array.from(new Map(updatedFiles.map(file => [file.name, file])).values());
+    setSelectedFiles(uniqueFiles);
+
+    newFiles.forEach(file => {
+      if (!selectedFiles.some(f => f.name === file.name)) {
+        triggerSimulatedProgress(file);
+      }
+    });
+  }
+   // ✅ Clear input so same file can be re-selected
+  e.target.value = '';
+};
+
+
 
   return (
     <Drawer
@@ -1644,31 +1662,43 @@ const GenAIUploader = ({ open, onClose, fetchDocuments }) => {
           </Box>
 
           {/* Right side - Description input field */}
-          <Box flex={1}>
-            <TextField
-              label="Description"
-              variant="outlined"
-              fullWidth
-              multiline
-              minRows={7}
-              value={dataSpaceDescription}
-              onChange={(e) => setDataSpaceDescription(e.target.value)}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: '12px',
-                  fontSize: '13px',
-                },
-                '& .MuiInputBase-input': {
-                  fontSize: '13px',
-                  maxHeight: '125px',
-                  overflowY: "auto",
-                },
-                '& .MuiInputLabel-root': {
-                  fontSize: '14px',
-                },
-              }}
-            />
-          </Box>
+     <Box flex={1}>
+  <TextField
+    label="Description"
+    variant="outlined"
+    fullWidth
+    multiline
+    minRows={8} // sets initial visible rows
+    maxRows={9} // optional: limits expansion
+    value={dataSpaceDescription}
+    onChange={(e) => setDataSpaceDescription(e.target.value)}
+    sx={{
+      '& .MuiOutlinedInput-root': {
+        borderRadius: '12px',
+        fontSize: '13px',
+        padding: '8px 12px',
+      },
+      '& textarea': {
+        fontSize: '13px',
+        maxHeight: '125px',
+        overflowY: 'auto',
+        scrollbarWidth: 'thin',
+      },
+      '& .MuiInputLabel-root': {
+        fontSize: '14px',
+      },
+      // Optional Webkit scrollbar styles for better appearance
+      '& textarea::-webkit-scrollbar': {
+        width: '6px',
+      },
+      '& textarea::-webkit-scrollbar-thumb': {
+        backgroundColor: '#ccc',
+        borderRadius: '4px',
+      },
+    }}
+  />
+</Box>
+
 
 
         </Box>
@@ -1684,7 +1714,7 @@ const GenAIUploader = ({ open, onClose, fetchDocuments }) => {
           <Paper
             sx={{
               border: '2px dashed #D9D9D9',
-              p:2,
+           
               textAlign: 'center',
               borderRadius: '16px',
               minHeight: 280,
@@ -1714,62 +1744,47 @@ const GenAIUploader = ({ open, onClose, fetchDocuments }) => {
             <Box display="flex" alignItems="center" gap={0.5} mb={2} mt={0}>
               <InfoOutlinedIcon fontSize="small" color="disabled" />
               <Typography variant="body2" color="#666">
-                Supported file types: JPG, PNG, PDF, Max size is 10 MB
+                Supported file type: PDF Max size is 10 MB
               </Typography>
             </Box>
 
             {/* Upload Button */}
             <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              {!uploading && selectedFiles.length === 0 && (
-                <>
-                  <Box onClick={() => document.getElementById('fileInput').click()}>
-                    <Button
-                      sx={{
-                        mt: 2,
-                        backgroundColor: '#000080',
-                        color: '#fff',
-                        padding: '6px 16px',
-                        fontSize: '14px',
-                        borderRadius: '30px',
-                        textTransform: 'none',
-                        boxShadow: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        '&:hover': {
-                          backgroundColor: '#000080'
-                        }
-                      }}
-                    >
-                      <img
-                        src={Choosefileicon}
-                        alt="icon"
-                        style={{ width: 20, height: 20 }}
-                      />
-                      Choose file
-                    </Button>
-                  </Box>
+             <Box onClick={() => !uploading && document.getElementById('fileInput').click()}>
+  <Button
+    disabled={uploading}
+    sx={{
+      mt: 2,
+      backgroundColor: uploading ? '#ccc' : '#000080',
+      color: '#fff',
+      padding: '6px 16px',
+      fontSize: '14px',
+      borderRadius: '30px',
+      textTransform: 'none',
+      boxShadow: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '8px',
+      '&:hover': {
+        backgroundColor: uploading ? '#ccc' : '#000080',
+      },
+    }}
+  >
+    <img src={Choosefileicon} alt="icon" style={{ width: 20, height: 20 }} />
+    Choose file
+  </Button>
+</Box>
 
-                  {/* Hidden File Input */}
-                  <input
-                    type="file"
-                    multiple
-                    id="fileInput"
-                    style={{ display: 'none' }}
-                    accept=".jpg,.jpeg,.png,.pdf"
-                    onChange={(e) => {
-                      const selectedFilesArray = Array.from(e.target.files);
-                      if (selectedFilesArray.length) {
-                        setUploadProgress([]); // Clear previous progress
-                        setSelectedFiles(selectedFilesArray); // Store all files
-                        selectedFilesArray.forEach(file => {
-                          triggerSimulatedProgress(file); // Simulate progress for each
-                        });
-                      }
-                    }}
-                  />
-                </>
-              )}
+{/* Hidden file input stays outside condition */}
+<input
+  type="file"
+  multiple
+  id="fileInput"
+  style={{ display: 'none' }}
+  accept=".jpg,.jpeg,.png,.pdf"
+  onChange={handleFileChange}
+/>
+
             </Box>
           </Paper>
 
@@ -1804,73 +1819,121 @@ const GenAIUploader = ({ open, onClose, fetchDocuments }) => {
             </Box>
 
             {!collapsed && (
-              <Box mt={2} flex={1} overflow="auto" sx={{ padding: '0 10px' }}>
+              <Box mt={2} flex={1} overflow="auto"  sx={{
+    padding: '0 10px',
+    maxHeight: '200px',              // ⬅️ Adjust based on how many items you want visible
+    overflowY: 'auto',               // ⬅️ Enables vertical scrolling
+    scrollbarWidth: 'thin',          // ⬅️ Firefox (native)
+    '&::-webkit-scrollbar': {
+      width: '6px',                  // ⬅️ Chrome/Edge styling
+    },
+    '&::-webkit-scrollbar-thumb': {
+      backgroundColor: '#c0c0c0',
+      borderRadius: '4px',
+    },
+    '&::-webkit-scrollbar-track': {
+      backgroundColor: '#f5f5f5',
+    }
+  }}>
                 {uploadProgress.map((file, index) => (
-                  <Box key={index} mb={1.5}>
-                    <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                      {getFileIcon(file.type)}
-                      <Box flexGrow={1}>
-                        <Typography
-                          // variant="body2"
-                          fontWeight={500}
-                          sx={{
-                            fontSize: "12px",
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis'
-                          }}
-                        >
-                          {file.name}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {file.uploaded} / {file.size}
-                        </Typography>
-                      </Box>
-                      {/* Circular Progress */}
-                      <Box position="relative" display="inline-flex">
-                        <CircularProgress
-                          variant="determinate"
-                          value={file.progress}
-                          size={30}
-                          thickness={3}
-                          sx={{ color: '#000080' }}
-                        />
-                        <Box
-                          top={0}
-                          left={0}
-                          bottom={0}
-                          right={0}
-                          position="absolute"
-                          display="flex"
-                          alignItems="center"
-                          justifyContent="center"
-                        >
-                          <Typography
-                            variant="caption"
-                            fontWeight={500}
-                            color="text.primary"
-                            sx={{ fontSize: '0.65rem' }} // or try '10px', '0.6rem', etc.
-                          >
-                            {file.progress}%
-                          </Typography>
+                  <Box
+  key={index}
+  mb={2}
+  sx={{
+    position: 'relative',
+    border: '1px solid #eee',
+    borderRadius: 2,
+    padding: '12px 12px 8px',
+    backgroundColor: '#fafafa'
+  }}
+>
+  {/* ❌ Top-right Remove Button */}
+  <IconButton
+    size="small"
+    onClick={() => {
+      setSelectedFiles(prev => prev.filter(f => f.name !== file.name));
+      setUploadProgress(prev => prev.filter(f => f.name !== file.name));
+    }}
+    sx={{
+      position: 'absolute',
+      top: 4,
+      right: 4,
+      padding: 0.5
+    }}
+  >
+    <CloseIcon fontSize="small" />
+  </IconButton>
 
-                        </Box>
-                      </Box>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={file.progress}
-                      sx={{
-                        height: 5,
-                        borderRadius: 5,
-                        backgroundColor: '#eee',
-                        '& .MuiLinearProgress-bar': {
-                          borderRadius: 5,
-                          backgroundColor: '#000080'
-                        }
-                      }}
-                    />
-                  </Box>
+  {/* Content Row */}
+  <Box display="flex" alignItems="center" gap={1}>
+    {getFileIcon(file.type)}
+    <Box flexGrow={1}>
+      <Typography
+        fontWeight={500}
+        sx={{
+          fontSize: "12px",
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis'
+        }}
+      >
+        {file.name}
+      </Typography>
+      <Typography variant="caption" color="text.secondary">
+        {file.uploaded} / {file.size}
+      </Typography>
+    </Box>
+
+     {/* Progress Circle */}
+  <Box position="relative" display="inline-flex" sx={{ mr: 4 }}>
+    <CircularProgress
+      variant="determinate"
+      value={file.progress}
+      size={30}
+      thickness={3}
+      sx={{ color: '#000080' }}
+    />
+    <Box
+      top={0}
+      left={0}
+      bottom={0}
+      right={0}
+      position="absolute"
+      display="flex"
+      alignItems="center"
+      justifyContent="center"
+    >
+      <Typography
+        variant="caption"
+        fontWeight={500}
+        color="text.primary"
+        sx={{ fontSize: '0.65rem' }}
+      >
+        {file.progress}%
+      </Typography>
+    </Box>
+  </Box>
+  </Box>
+
+  {/* Progress Bar below row, spans full width */}
+  <Box mt={1.5} width="90%"> {/* You can also use maxWidth="300px" instead */}
+  <LinearProgress
+    variant="determinate"
+    value={file.progress}
+    sx={{
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: '#e0e0e0',
+      '& .MuiLinearProgress-bar': {
+        borderRadius: 3,
+        backgroundColor: '#000080'
+      }
+    }}
+  />
+</Box>
+
+</Box>
+
                 ))}
               </Box>
             )}

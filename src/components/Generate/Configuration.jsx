@@ -33,15 +33,7 @@ const Configuration = ({selectedDocs, setSelectedDocs,  selectedUseCase, setSele
       fetchDocuments();
     }
   }, [dataSpaceId]);
-  // const documentsData = [
-  //   'LMSDashboardWireframes-StructureSheet.xlsx',
-  //   'designdocumentation.PDF',
-  //   'CompleteUIScreenDesigns-FigmaExport.pdf',
-  //   'UserJourneyFlows-LMSNavigationMap.pdf',
-  //   'CourseContentOutline-WeeklyModules.docx',
-  //   'AdminPanelUIDesign-VisualLayoutPreview.png',
-  //   'DesignReviewFeedback-Iteration1.xlsx',
-  // ];
+
 
   const useCaseOptions = [
     'Functional',
@@ -61,32 +53,8 @@ const Configuration = ({selectedDocs, setSelectedDocs,  selectedUseCase, setSele
     'Performance'
   ];
 
-  // State inside the component
-  // const [selectedDocs, setSelectedDocs] = useState([
-  //   'CompleteUIScreenDesigns-FigmaExport.pdf',
-  //   'AdminPanelUIDesign-VisualLayoutPreview.png',
-  //   'designdocumentation.PDF',
-  //   'LMSDashboardWireframes-StructureSheet.xlsx',
-  // ]);
 
-  // const [collapsed, setCollapsed] = useState(false);
-
-  // const [selectedSubTypes, setSelectedSubTypes] = useState([]);
   const documentsRef = useRef(null); // For outside click
-
-
-  // useEffect(() => {
-  //   const handleClickOutside = (event) => {
-  //     if (documentsRef.current && !documentsRef.current.contains(event.target)) {
-  //       setCollapsed(true); // Collapse if clicking outside
-  //     }
-  //   };
-
-  //   document.addEventListener('mousedown', handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener('mousedown', handleClickOutside);
-  //   };
-  // }, []);
 
 
   const toggleDocument = (docId) => {
@@ -110,43 +78,15 @@ const Configuration = ({selectedDocs, setSelectedDocs,  selectedUseCase, setSele
     );
   };
 
+const pollingIdRef = useRef(null);
 
-  const pollingIdRef = useRef(null);
 
-  const handleGenerate = async () => {
-    try {
-      setIsGenerating(true); // ✅ Start loading
 
-      const payload = {
-        generation_id: generationId,
-        file_ids: selectedDocs,
-        types: selectedSubTypes.map(type => type.toLowerCase()),
-      };
-
-      const response = await adminAxios.post("/api/v1/test-case-batch/results", payload);
-      const results = response.data.results || [];
-
-      const poll = async () => {
-        const res = await adminAxios.post("/api/v1/test-case-batch/results", payload);
-        const latestResults = res.data.results || [];
-        const allDone = latestResults.every(r => r.status === 1);
-
-        if (allDone) {
-          clearInterval(pollingIdRef.current);
-          pollingIdRef.current = null;
-
-          setIsGenerating(false); // ✅ Stop loading
-          onGenerate(latestResults); // ✅ Navigate or update parent
-        }
-      };
-
-      pollingIdRef.current = setInterval(poll, 5000);
-    } catch (error) {
-      console.error("❌ Error generating test cases:", error);
-      setIsGenerating(false); // ✅ Ensure loading stops on error
-    }
-  };
-
+const handleGenerate = () => {
+  if (onGenerate) {
+    onGenerate(); // Parent handles actual API + navigation
+  }
+};
 
 
   // ⛔ Stop polling on unmount (e.g., reload or navigation away)
@@ -397,7 +337,7 @@ const Configuration = ({selectedDocs, setSelectedDocs,  selectedUseCase, setSele
         <Box display="flex" justifyContent="flex-end" mt={3}>
           <Button
             variant="contained"
-disabled={selectedSubTypes.length === 0 || selectedDocs.length === 0 || isGenerating}
+disabled={selectedSubTypes.length === 0 || selectedDocs.length === 0}
             onClick={handleGenerate}
             sx={{
               backgroundColor: '#0A0080',
@@ -411,14 +351,8 @@ disabled={selectedSubTypes.length === 0 || selectedDocs.length === 0 || isGenera
               '&:hover': { backgroundColor: '#07006B' },
             }}
           >
-            {isGenerating ? (
-              <Box display="flex" alignItems="center" gap={1}>
-                <span>Generate</span>
-                <CircularProgress size={18} sx={{ color: '#fff' }} />
-              </Box>
-            ) : (
-              'Generate'
-            )}         </Button>
+            Generate
+               </Button>
         </Box>
       </Box>
     </Box>
