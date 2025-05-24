@@ -46,3 +46,6 @@ def generate_with_openai(
         return response.choices[0].message.content, total_tokens
     except Exception as e:
         return f"API Error: {str(e)}", 0
+
+
+#hdaedby

@@ -2,7 +2,7 @@ import fitz  # PyMuPDF
 import time
 import tiktoken
 
-
+#sdaegd
 def load_pdf_text(pdf_path):
     """
     Loads a PDF from the given path, extracts the text, and returns it.

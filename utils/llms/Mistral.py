@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Load environment variables from .env file
 
-
+#dwdqegdy
 def generate_with_mistral(prompt, temperature=0.3, max_tokens=2500, api_key=None):
     """
     Calls the Together AI API to generate text based on a prompt.

@@ -276,7 +276,7 @@ def process_and_generate_task(
 
                 }
 
-            )
+        
  
         final_result = {
 
