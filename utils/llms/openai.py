@@ -7,7 +7,7 @@ from typing import Tuple, Optional
 
 load_dotenv()
 
-DEFAULT_OPENAI_MODEL = "gpt-4-turbo"
+DEFAULT_OPENAI_MODEL = "gpt-3.5-turbo"
 
 def generate_with_openai(
     prompt: str,

@@ -435,7 +435,7 @@ async def batch_generate_test_cases_for_documents(
     model_name: Optional[str] = Form("Openai"),
     chunk_size: Optional[int] = Form(None),
     api_key: Optional[str] = Form(None),
-    test_case_types: Optional[str] = Form("all"),
+    test_case_types: Optional[str] = Form(None)
     # Assuming data_spaces_collection and documents_collection are accessible
     # (e.g., global or injected). For this snippet, let's make it explicit if needed,
     # or assume they are globally available as in your full main3.py.
