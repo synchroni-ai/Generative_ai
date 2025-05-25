@@ -729,22 +729,22 @@ async def get_batch_test_case_summary(file_id: str):
         "total_test_cases": total
     }
 
-# @api_v1_router.get("/documents/{file_id}/download-csv/", tags=["Document Test Cases"])
-# async def download_test_cases_csv_for_document(file_id: str):
-#     try: doc_obj_id = ObjectId(file_id)
-#     except InvalidId: raise HTTPException(status_code=400, detail="Invalid file_id.")
-#     doc = documents_collection.find_one({"_id": doc_obj_id})
-#     if not doc: raise HTTPException(status_code=404, detail="Doc not found.")
-#     if doc.get("status") != 1: raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed.")
-#     fname = doc.get("file_name", "doc.pdf")
-#     try:
-#         # This function should create the CSV if not exists or outdated, and return path
-#         csv_p, _ = test_case_utils.parse_test_cases_to_csv(file_id, documents_collection)
-#     except Exception as e_parse_csv:
-#         print(f"Error generating CSV for {file_id}: {e_parse_csv}")
-#         raise HTTPException(status_code=500, detail=f"Failed to generate CSV file: {str(e_parse_csv)}")
-#     if not os.path.exists(csv_p): raise HTTPException(status_code=404, detail="CSV file missing post-parse attempt. Generation might have failed.")
-#     return FileResponse(csv_p, media_type="text/csv", filename=f"{Path(fname).stem}_test_cases.csv")
+@api_v1_router.get("/documents/{file_id}/download-csv/", tags=["Document Test Cases"])
+async def download_test_cases_csv_for_document(file_id: str):
+    try: doc_obj_id = ObjectId(file_id)
+    except InvalidId: raise HTTPException(status_code=400, detail="Invalid file_id.")
+    doc = documents_collection.find_one({"_id": doc_obj_id})
+    if not doc: raise HTTPException(status_code=404, detail="Doc not found.")
+    if doc.get("status") != 1: raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed.")
+    fname = doc.get("file_name", "doc.pdf")
+    try:
+        # This function should create the CSV if not exists or outdated, and return path
+        csv_p, _ = test_case_utils.parse_test_cases_to_csv(file_id, documents_collection)
+    except Exception as e_parse_csv:
+        print(f"Error generating CSV for {file_id}: {e_parse_csv}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate CSV file: {str(e_parse_csv)}")
+    if not os.path.exists(csv_p): raise HTTPException(status_code=404, detail="CSV file missing post-parse attempt. Generation might have failed.")
+    return FileResponse(csv_p, media_type="text/csv", filename=f"{Path(fname).stem}_test_cases.csv")
 
 def split_test_cases(content):
     """
