@@ -573,7 +573,7 @@ const exportCSV = async () => {
     // Join selectedSubTypes for types (make sure to lowercase them)
     const typesParam = selectedSubTypes.map(type => type.toLowerCase()).join(',');
 
-    const url = `/api/v1/documents/download-testcases?file_ids=${fileIdsParam}&types=${typesParam}&mode=zip`;
+    const url = `/api/v1/documents/download-testcases?file_ids=${fileIdsParam}&types=${typesParam}&mode=csv`;
 
     const response = await adminAxios.get(url, {
       responseType: 'blob',
