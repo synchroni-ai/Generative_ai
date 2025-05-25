@@ -99,72 +99,134 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
   const pollingIdRef = useRef(null);
 const [generationLoading, setGenerationLoading] = useState(false);
 
-const triggerTestCaseGeneration = async () => {
-  try {
-    setGeneratedResults([]);
-    setActiveTab('Results');
-    setGenerationLoading(true);
-    setProgress(0);
+// const triggerTestCaseGeneration = async () => {
+//   try {
+//     setGeneratedResults([]);
+//     setActiveTab('Results');
+//     setGenerationLoading(true);
+//     setProgress(0);
 
-    const payload = {
-      generation_id: generationId,
-      file_ids: selectedDocs,
-      types: selectedSubTypes.map(t => t.toLowerCase()),
-    };
+//     const payload = {
+//       generation_id: generationId,
+//       file_ids: selectedDocs,
+//       types: selectedSubTypes.map(t => t.toLowerCase()),
+//     };
 
-    const startTime = Date.now(); // ⏱️ Start timer
+//     const startTime = Date.now(); // ⏱️ Start timer
 
-    await adminAxios.post("/api/v1/test-case-batch/results", payload);
+//     await adminAxios.post("/api/v1/test-case-batch/results/", payload);
 
-    let simulatedProgress = 0;
+//     let simulatedProgress = 0;
 
-    // Simulate gradual progress
-    const progressInterval = setInterval(() => {
-      simulatedProgress = Math.min(simulatedProgress + 1, 95);
-      setProgress(simulatedProgress);
-    }, 300);
+//     // Simulate gradual progress
+//     const progressInterval = setInterval(() => {
+//       simulatedProgress = Math.min(simulatedProgress + 1, 95);
+//       setProgress(simulatedProgress);
+//     }, 300);
 
-    // Poll every 2 seconds
-    pollingIdRef.current = setInterval(async () => {
-      try {
-        const res = await adminAxios.post("/api/v1/test-case-batch/results", payload);
-        const latestResults = res.data.results || [];
-        const allDone = latestResults.every(r => r.status === 1);
+//     // Poll every 2 seconds
+//     pollingIdRef.current = setInterval(async () => {
+//       try {
+//         const res = await adminAxios.post("/api/v1/test-case-batch/results/", payload);
+//         const latestResults = res.data.results || [];
+//         const allDone = latestResults.every(r => r.status === 1);
 
-        if (allDone) {
-          clearInterval(pollingIdRef.current);
-          clearInterval(progressInterval);
+//         if (allDone) {
+//           clearInterval(pollingIdRef.current);
+//           clearInterval(progressInterval);
 
-          // Rapidly animate to 100%
-          let quickProgress = simulatedProgress;
-          const finishInterval = setInterval(() => {
-            quickProgress += 5;
-            setProgress(Math.min(quickProgress, 100));
+//           // Rapidly animate to 100%
+//           let quickProgress = simulatedProgress;
+//           const finishInterval = setInterval(() => {
+//             quickProgress += 5;
+//             setProgress(Math.min(quickProgress, 100));
 
-            if (quickProgress >= 100) {
-              clearInterval(finishInterval);
-              const endTime = Date.now(); // ⏱️ Stop timer
-              const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
-              console.log(`✅ Test case generation completed in ${elapsedSeconds} seconds`);
+//             if (quickProgress >= 100) {
+//               clearInterval(finishInterval);
+//               const endTime = Date.now(); // ⏱️ Stop timer
+//               const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
+//               console.log(`✅ Test case generation completed in ${elapsedSeconds} seconds`);
               
-              setGeneratedResults(latestResults);
-              setGenerationLoading(false);
-            }
-          }, 50);
-        }
-      } catch (err) {
-        console.error("❌ Error while polling:", err);
+//               setGeneratedResults(latestResults);
+//               setGenerationLoading(false);
+//             }
+//           }, 50);
+//         }
+//       } catch (err) {
+//         console.error("❌ Error while polling:", err);
+//         clearInterval(pollingIdRef.current);
+//         clearInterval(progressInterval);
+//         setGenerationLoading(false);
+//         setProgress(0);
+//       }
+//     }, 3000);
+//   } catch (err) {
+//     console.error("❌ Generation error:", err);
+//     setGenerationLoading(false);
+//     setProgress(0);
+//   }
+// };
+const triggerTestCaseGeneration = async () => {
+  setGeneratedResults([]);
+  setActiveTab('Results');
+  setGenerationLoading(true);
+  setProgress(0);
+
+  const payload = {
+    generation_id: generationId,
+    file_ids: selectedDocs,
+    types: selectedSubTypes.map(t => t.toLowerCase()),
+  };
+
+  const startTime = Date.now();
+  let simulatedProgress = 0;
+
+  // Start progress bar simulation
+  const progressInterval = setInterval(() => {
+    simulatedProgress = Math.min(simulatedProgress + 1, 95);
+    setProgress(simulatedProgress);
+  }, 300);
+
+  // Try initial trigger, but do not block if it fails
+  try {
+    await adminAxios.post("/api/v1/test-case-batch/results", payload);
+    console.log("🚀 Initial test case generation triggered.");
+  } catch (err) {
+    console.warn("⚠️ Initial trigger failed, starting polling anyway:", err.response?.data || err.message);
+  }
+
+  // Poll every 2 seconds to check if generation is complete
+  pollingIdRef.current = setInterval(async () => {
+    try {
+      const res = await adminAxios.post("/api/v1/test-case-batch/results", payload);
+      const latestResults = res.data.results || [];
+      const allDone = latestResults.every(r => r.status === 1);
+
+      if (allDone) {
         clearInterval(pollingIdRef.current);
         clearInterval(progressInterval);
-        setGenerationLoading(false);
-        setProgress(0);
+
+        // Smoothly transition to 100%
+        let quickProgress = simulatedProgress;
+        const finishInterval = setInterval(() => {
+          quickProgress += 5;
+          setProgress(Math.min(quickProgress, 100));
+
+          if (quickProgress >= 100) {
+            clearInterval(finishInterval);
+            const endTime = Date.now();
+            const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
+            console.log(`✅ Test case generation completed in ${elapsedSeconds} seconds`);
+
+            setGeneratedResults(latestResults);
+            setGenerationLoading(false);
+          }
+        }, 50);
       }
-    }, 3000);
-  } catch (err) {
-    console.error("❌ Generation error:", err);
-    setGenerationLoading(false);
-    setProgress(0);
-  }
+    } catch (err) {
+      console.error("❌ Polling error:", err.response?.data || err.message);
+    }
+  }, 3000);
 };
 
 
@@ -242,8 +304,8 @@ const triggerTestCaseGeneration = async () => {
           <Box display="flex">
   {['Configuration', 'Results'].map((tab) => {
     const isResultsTab = tab === 'Results';
-    const isDisabled = isResultsTab && generatedResults.length === 0;
-
+    // const isDisabled = isResultsTab && generatedResults.length === 0;
+const isDisabled = false; // Always allow Results tab
     return (
       <Box
         key={tab}
@@ -341,7 +403,7 @@ const triggerTestCaseGeneration = async () => {
         transitionDuration={{ enter: 1000, exit: 1000 }}
         PaperProps={{
           sx: {
-            width: 420,
+            width: "45%",
             height: "88%",
             padding: "10px 0px",
             borderRadius: '10px 0 0 10px',
@@ -350,7 +412,7 @@ const triggerTestCaseGeneration = async () => {
           },
         }}
       >
-        <Box sx={{ width: 400, height: '100%', overflowY: 'auto', }}>
+        <Box sx={{ width: '100%', height: '100%', overflowY: 'auto', }}>
           <History onClose={toggleDrawer(false)} onSelectDoc={handleHistoryDocSelect} />
         </Box>
       </Drawer>
