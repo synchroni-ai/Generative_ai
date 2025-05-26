@@ -148,7 +148,7 @@ const fetchDocuments = async () => {
       document_count: space.document_count,
     }));
     setDocuments(mappedDocs);
-    console.log("Fetched data spaces:", mappedDocs);
+    // console.log("Fetched data spaces:", mappedDocs);
   } catch (error) {
     console.error("Error fetching data spaces:", error);
   } finally {
@@ -158,7 +158,6 @@ const fetchDocuments = async () => {
 
 
 const handleGenerateClick = async (doc) => {
-  console.log("Hiiii")
   if (generateLoading) return;
 
   try {
@@ -168,24 +167,32 @@ const handleGenerateClick = async (doc) => {
     const formData = new FormData();
     formData.append("data_space_id", doc._id);
     formData.append("model_name", "Openai");
-    // formData.append("test_case_types", "all");
 
+    // Step 1: POST to trigger test case generation
     const response = await adminAxios.post(
       "/api/v1/documents/batch-generate-test-cases/",
       formData,
       { headers: { "Content-Type": "multipart/form-data" } }
     );
 
-    console.log("✅ Batch generation response:", response.data);
-    setGenerateData(response.data);
-    setTaskId(response.data.task_id);
+    const generationId = response.data.generation_id;
+    const taskId = response.data.task_id;
 
+    // Step 2: GET generation status
+    const statusRes = await adminAxios.get(
+      `/api/v1/documents/generation-status/?data_space_id=${doc._id}`
+    );
+
+    console.log("✅ Generation status:", statusRes.data);
+
+    // Step 3: Navigate to configurator
     navigate("/uiux-configurator", {
       state: {
         doc,
-        task_id: response.data.task_id,
+        task_id: taskId,
         data_space_id: doc._id,
-        generation_id: response.data.generation_id,
+        generation_id: generationId,
+        status: statusRes.data, // optional: pass the generation status
       },
     });
 
@@ -195,6 +202,7 @@ const handleGenerateClick = async (doc) => {
     setGenerateLoading(false);
   }
 };
+
 
 
 

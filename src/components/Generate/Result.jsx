@@ -241,6 +241,7 @@ import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined
 import ExportIcon from "./../../asessts/images/exporticon.png";
 import { Skeleton } from '@mui/material';
 import LinearProgress from '@mui/material/LinearProgress';
+import { saveAs } from 'file-saver';
 import "./Tabs.css";
 // const parseTestCasesFromContent = (content, testType, fileName) => {
 //   const parsed = [];
@@ -377,143 +378,154 @@ const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId,
     console.log("Selected SubTypes:", selectedSubTypes);
   }, [selectedSubTypes]);
 
-  useEffect(() => {
-    const groupedByFile = {}; // { file_name: [testcases] }
+ useEffect(() => {
+  const groupedByFile = {}; // { file_name: [testcases] }
 
-    results.forEach(fileResult => {
-      const fileName = fileResult.file_name;
-      const testCaseTypes = fileResult.test_cases || {};
+  results.forEach(fileResult => {
+    const fileName = fileResult.file_name;
+    const testCaseTypes = fileResult.test_cases || {};
 
-      Object.entries(testCaseTypes).forEach(([type, tc]) => {
-        if (tc.content) {
-          const parsedRows = parseTestCasesFromContent(tc.content, type, fileName);
-          if (!groupedByFile[fileName]) groupedByFile[fileName] = [];
-          groupedByFile[fileName].push(...parsedRows);
-        }
-      });
+    const seenTCIDs = new Set(); // 🧠 Track seen TCIDs per file
+
+    Object.entries(testCaseTypes).forEach(([type, tc]) => {
+      if (tc.content) {
+        const parsedRows = parseTestCasesFromContent(tc.content, type, fileName);
+
+        const uniqueRows = parsedRows.filter(row => {
+          const tcid = row.TCID?.trim();
+          if (!tcid || seenTCIDs.has(tcid)) return false;
+          seenTCIDs.add(tcid);
+          return true;
+        });
+
+        if (!groupedByFile[fileName]) groupedByFile[fileName] = [];
+        groupedByFile[fileName].push(...uniqueRows);
+      }
     });
+  });
 
-    setAllTestCases(groupedByFile); // store grouped format
-    setParsedData(groupedByFile); // same as above if no additional filtering needed
+  setAllTestCases(groupedByFile);
+  setParsedData(groupedByFile);
 
-    const firstGroup = Object.values(groupedByFile)[0] || [];
-    const headers = firstGroup.length ? Object.keys(firstGroup[0]) : [];
+  const firstGroup = Object.values(groupedByFile)[0] || [];
+  const headers = firstGroup.length ? Object.keys(firstGroup[0]) : [];
 
-    setHeaders(headers);
-    setLoading(false);
-  }, [results]);
+  setHeaders(headers);
+  setLoading(false);
+}, [results]);
 
 
 
-  useEffect(() => {
-    let pollingTimeout = null;
 
-    const fetchTestCasesFromAPI = async () => {
-      try {
-        const response = await adminAxios.get(`/get-test-cases/${fileId}`);
-        const resultData = response.data;
+  // useEffect(() => {
+  //   let pollingTimeout = null;
 
-        // ⏳ Keep polling until status_code is 1
-        if (resultData.status_code === 0) {
-          console.log("⏳ Status code 0: Retrying in 5 seconds...");
-          pollingTimeout = setTimeout(fetchTestCasesFromAPI, 5000);
-          return;
-        }
+  //   const fetchTestCasesFromAPI = async () => {
+  //     try {
+  //       const response = await adminAxios.get(`/get-test-cases/${fileId}`);
+  //       const resultData = response.data;
 
-        // ✅ Only process when status_code is 1
-        console.log("✅ Status code 1: Final result received");
+  //       // ⏳ Keep polling until status_code is 1
+  //       if (resultData.status_code === 0) {
+  //         console.log("⏳ Status code 0: Retrying in 5 seconds...");
+  //         pollingTimeout = setTimeout(fetchTestCasesFromAPI, 5000);
+  //         return;
+  //       }
 
-        setLoading(true);
-        setError(false);
-        setDocumentId(null);
-        setParsedData([]);
-        setHeaders([]);
+  //       // ✅ Only process when status_code is 1
+  //       console.log("✅ Status code 1: Final result received");
 
-        if (resultData.test_cases?.length > 0) {
-          const rows = resultData.test_cases;
-          const headers = Object.keys(rows[0]);
-          setAllTestCases(rows);
-          setParsedData(filterByTab(rows, activeTab));
-          setHeaders(headers);
-        }
+  //       setLoading(true);
+  //       setError(false);
+  //       setDocumentId(null);
+  //       setParsedData([]);
+  //       setHeaders([]);
 
-        if (resultData.document_id) {
-          setDocumentId(resultData.document_id);
-        }
+  //       if (resultData.test_cases?.length > 0) {
+  //         const rows = resultData.test_cases;
+  //         const headers = Object.keys(rows[0]);
+  //         setAllTestCases(rows);
+  //         setParsedData(filterByTab(rows, activeTab));
+  //         setHeaders(headers);
+  //       }
 
-        if (resultData.combined_test_case_document?._id) {
-          setDocumentId(resultData.combined_test_case_document._id);
-        }
+  //       if (resultData.document_id) {
+  //         setDocumentId(resultData.document_id);
+  //       }
 
-        setLoading(false);
-      } catch (err) {
-        console.error("❌ Error fetching test cases from REST API:", err);
-        setError(true);
-        setLoading(false);
-      }
-    };
+  //       if (resultData.combined_test_case_document?._id) {
+  //         setDocumentId(resultData.combined_test_case_document._id);
+  //       }
 
-    if (taskId) {
-      // 🔁 WebSocket logic
-      setLoading(true);
-      setError(false);
-      setDocumentId(null);
-      setParsedData([]);
-      setHeaders([]);
+  //       setLoading(false);
+  //     } catch (err) {
+  //       console.error("❌ Error fetching test cases from REST API:", err);
+  //       setError(true);
+  //       setLoading(false);
+  //     }
+  //   };
 
-      const socketUrl = `${WebsocketAxios}/task_status/${taskId}?token=${token}`;
-      socketRef.current = new WebSocket(socketUrl);
+  //   if (taskId) {
+  //     // 🔁 WebSocket logic
+  //     setLoading(true);
+  //     setError(false);
+  //     setDocumentId(null);
+  //     setParsedData([]);
+  //     setHeaders([]);
 
-      socketRef.current.onopen = () => {
-        console.log("✅ WebSocket connected");
-        setError(false);
-      };
+  //     const socketUrl = `${WebsocketAxios}/task_status/${taskId}?token=${token}`;
+  //     socketRef.current = new WebSocket(socketUrl);
 
-      socketRef.current.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log("📨 WebSocket message received:", data);
+  //     socketRef.current.onopen = () => {
+  //       console.log("✅ WebSocket connected");
+  //       setError(false);
+  //     };
 
-        if (data.status === "SUCCESS" && data.result?.test_cases?.length > 0) {
-          const rows = data.result.test_cases;
-          const headers = Object.keys(rows[0]);
+  //     socketRef.current.onmessage = (event) => {
+  //       const data = JSON.parse(event.data);
+  //       console.log("📨 WebSocket message received:", data);
 
-          setAllTestCases(rows);
-          setParsedData(filterByTab(rows, activeTab));
-          setHeaders(headers);
+  //       if (data.status === "SUCCESS" && data.result?.test_cases?.length > 0) {
+  //         const rows = data.result.test_cases;
+  //         const headers = Object.keys(rows[0]);
 
-          if (data.result?.document_id) {
-            setDocumentId(data.result.document_id);
-          }
+  //         setAllTestCases(rows);
+  //         setParsedData(filterByTab(rows, activeTab));
+  //         setHeaders(headers);
 
-          setLoading(false);
-        }
-      };
+  //         if (data.result?.document_id) {
+  //           setDocumentId(data.result.document_id);
+  //         }
 
-      socketRef.current.onerror = (event) => {
-        console.error("🛑 WebSocket error:", event);
-        setError(true);
-        setLoading(false);
-      };
+  //         setLoading(false);
+  //       }
+  //     };
 
-      socketRef.current.onclose = () => {
-        console.log("🔌 WebSocket connection closed");
-      };
+  //     socketRef.current.onerror = (event) => {
+  //       console.error("🛑 WebSocket error:", event);
+  //       setError(true);
+  //       setLoading(false);
+  //     };
 
-      return () => {
-        socketRef.current?.close();
-      };
-    } else if (fileId) {
-      // ✅ Start polling if fileId is available
-      fetchTestCasesFromAPI();
-    }
+  //     socketRef.current.onclose = () => {
+  //       console.log("🔌 WebSocket connection closed");
+  //     };
 
-    return () => {
-      // Cleanup any scheduled polling
-      if (pollingTimeout) {
-        clearTimeout(pollingTimeout);
-      }
-    };
-  }, [taskId, fileId]);
+  //     return () => {
+  //       socketRef.current?.close();
+  //     };
+  //   } else if (fileId) {
+  //     // ✅ Start polling if fileId is available
+  //     fetchTestCasesFromAPI();
+  //   }
+
+  //   return () => {
+  //     // Cleanup any scheduled polling
+  //     if (pollingTimeout) {
+  //       clearTimeout(pollingTimeout);
+  //     }
+  //   };
+  // }, [taskId, fileId]);
 
 
   const handleTabChange = (event, newValue) => {
@@ -545,53 +557,89 @@ const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId,
 
 
 
-  useEffect(() => {
-    const fetchTestCaseSummary = async () => {
-      try {
-        const res = await adminAxios.get(`/test-case-summary/${fileId}`);
-        const summary = res.data;
+  // useEffect(() => {
+  //   const fetchTestCaseSummary = async () => {
+  //     try {
+  //       const res = await adminAxios.get(`/test-case-summary/${fileId}`);
+  //       const summary = res.data;
 
-        setTestCaseCounts({
-          All: summary.total_test_cases,
-          ...summary.counts_by_type
-        });
-      } catch (err) {
-        console.error("❌ Error fetching test case summary:", err);
-      }
-    };
+  //       setTestCaseCounts({
+  //         All: summary.total_test_cases,
+  //         ...summary.counts_by_type
+  //       });
+  //     } catch (err) {
+  //       console.error("❌ Error fetching test case summary:", err);
+  //     }
+  //   };
 
-    if (fileId) {
-      fetchTestCaseSummary();
-    }
-  }, [fileId]);
+  //   if (fileId) {
+  //     fetchTestCaseSummary();
+  //   }
+  // }, [fileId]);
 
 
-const exportCSV = async () => {
+// const exportCSV = async () => {
+//   try {
+//     // Join selectedDocs for file_ids
+//     const fileIdsParam = selectedDocs.join(',');
+//     // Join selectedSubTypes for types (make sure to lowercase them)
+//     const typesParam = selectedSubTypes.map(type => type.toLowerCase()).join(',');
+
+//     const url = `/api/v1/documents/download-testcases?file_ids=${fileIdsParam}&types=${typesParam}&mode=csv`;
+
+//     const response = await adminAxios.get(url, {
+//       responseType: 'blob',
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//       },
+//     });
+
+//     const blob = new Blob([response.data], { type: 'application/zip' });
+//     const downloadUrl = window.URL.createObjectURL(blob);
+//     const link = document.createElement('a');
+//     link.href = downloadUrl;
+//     link.setAttribute('download', 'test_cases_bundle.zip');
+//     document.body.appendChild(link);
+//     link.click();
+//     link.remove();
+//   } catch (error) {
+//     console.error("❌ Error downloading test cases ZIP:", error);
+//   }
+// };
+
+
+const exportCSV = () => {
   try {
-    // Join selectedDocs for file_ids
-    const fileIdsParam = selectedDocs.join(',');
-    // Join selectedSubTypes for types (make sure to lowercase them)
-    const typesParam = selectedSubTypes.map(type => type.toLowerCase()).join(',');
+    const allRows = [];
+    const headersSet = new Set();
 
-    const url = `/api/v1/documents/download-testcases?file_ids=${fileIdsParam}&types=${typesParam}&mode=csv`;
-
-    const response = await adminAxios.get(url, {
-      responseType: 'blob',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    // Flatten all test cases and collect unique headers (excluding "file_name")
+    Object.values(allTestCases).forEach(testCases => {
+      testCases.forEach(row => {
+        allRows.push(row);
+        Object.keys(row).forEach(h => {
+          if (h !== 'file_name') headersSet.add(h);
+        });
+      });
     });
 
-    const blob = new Blob([response.data], { type: 'application/zip' });
-    const downloadUrl = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.setAttribute('download', 'test_cases_bundle.zip');
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
+    const headers = Array.from(headersSet);
+
+    const csvContent = [
+      headers.join(','), // Header row
+      ...allRows.map(row =>
+        headers.map(h => {
+          const cell = row[h] || '';
+          const safeCell = typeof cell === 'string' ? `"${cell.replace(/"/g, '""')}"` : cell;
+          return safeCell;
+        }).join(',')
+      )
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, 'All_Test_Cases.csv');
   } catch (error) {
-    console.error("❌ Error downloading test cases ZIP:", error);
+    console.error("❌ Error generating CSV:", error);
   }
 };
 

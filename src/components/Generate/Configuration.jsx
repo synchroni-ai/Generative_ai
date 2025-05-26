@@ -10,8 +10,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CircularProgress from '@mui/material/CircularProgress';
 
 const Configuration = ({selectedDocs, setSelectedDocs,  selectedUseCase, setSelectedUseCase, selectedSubTypes, setSelectedSubTypes, onGenerate, dataSpaceId, generationId }) => {
-  console.log("Received dataSpaceId:", dataSpaceId);
-  console.log("Received generationId:", generationId);
+  // console.log("Received dataSpaceId:", dataSpaceId);
+  // console.log("Received generationId:", generationId);
   const [documentsData, setDocumentsData] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
