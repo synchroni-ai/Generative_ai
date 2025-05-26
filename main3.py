@@ -746,142 +746,142 @@ async def download_test_cases_csv_for_document(file_id: str):
     if not os.path.exists(csv_p): raise HTTPException(status_code=404, detail="CSV file missing post-parse attempt. Generation might have failed.")
     return FileResponse(csv_p, media_type="text/csv", filename=f"{Path(fname).stem}_test_cases.csv")
 
-def split_test_cases(content):
-    """
-    Split a big test cases content block into individual cases.
-    Splits on --- or the start of a new TCID.
-    """
-    # Normalize line endings and strip
-    content = content.replace('\r\n', '\n').strip()
-    # Remove initial "Test Cases:" label if present
-    content = re.sub(r"^#+\s*Test Cases:\s*", "", content, flags=re.IGNORECASE)
-    # Split on --- or lines starting with (**)TCID
-    split_regex = r'(?:^|\n)(?:-{3,}|(?:\*\*)?TCID\s*[:：])'
-    parts = re.split(split_regex, content)
-    # Each part may be a header, drop if too short or not a real test case
-    cases = []
-    for p in parts:
-        chunk = p.strip()
-        if not chunk:
-            continue
-        # Add back the TCID line for parsing
-        if not chunk.startswith("TCID"):
-            chunk = "TCID: " + chunk
-        cases.append(chunk)
-    return cases
+# def split_test_cases(content):
+#     """
+#     Split a big test cases content block into individual cases.
+#     Splits on --- or the start of a new TCID.
+#     """
+#     # Normalize line endings and strip
+#     content = content.replace('\r\n', '\n').strip()
+#     # Remove initial "Test Cases:" label if present
+#     content = re.sub(r"^#+\s*Test Cases:\s*", "", content, flags=re.IGNORECASE)
+#     # Split on --- or lines starting with (**)TCID
+#     split_regex = r'(?:^|\n)(?:-{3,}|(?:\*\*)?TCID\s*[:：])'
+#     parts = re.split(split_regex, content)
+#     # Each part may be a header, drop if too short or not a real test case
+#     cases = []
+#     for p in parts:
+#         chunk = p.strip()
+#         if not chunk:
+#             continue
+#         # Add back the TCID line for parsing
+#         if not chunk.startswith("TCID"):
+#             chunk = "TCID: " + chunk
+#         cases.append(chunk)
+#     return cases
 
-def parse_test_case_block(case_str):
-    """
-    Parse a single test case string into a dictionary of fields.
-    Supports both "**Field:**" and "Field:" style, both with and without bold, and flexible order.
-    """
-    fields = [
-        'TCID', 'Test type', 'Title', 'Description', 'Precondition', 'Steps',
-        'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
-    ]
-    result = {f: '' for f in fields}
-    for f in fields:
-        # Match **Field:** value OR Field: value (with optional bold)
-        # Uses lookahead to stop at the next field or end of string
-        pattern = rf'(?:\*\*)?{re.escape(f)}(?:\*\*)?\s*[:：]\s*(.*?)(?=(?:\n(?:\*\*)?[A-Za-z ]+(?:\*\*)?\s*[:：])|\Z)'
-        match = re.search(pattern, case_str, flags=re.DOTALL | re.IGNORECASE)
-        if match:
-            value = match.group(1).strip().replace('\n', ' ')
-            result[f] = value
-    return result
+# def parse_test_case_block(case_str):
+#     """
+#     Parse a single test case string into a dictionary of fields.
+#     Supports both "**Field:**" and "Field:" style, both with and without bold, and flexible order.
+#     """
+#     fields = [
+#         'TCID', 'Test type', 'Title', 'Description', 'Precondition', 'Steps',
+#         'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
+#     ]
+#     result = {f: '' for f in fields}
+#     for f in fields:
+#         # Match **Field:** value OR Field: value (with optional bold)
+#         # Uses lookahead to stop at the next field or end of string
+#         pattern = rf'(?:\*\*)?{re.escape(f)}(?:\*\*)?\s*[:：]\s*(.*?)(?=(?:\n(?:\*\*)?[A-Za-z ]+(?:\*\*)?\s*[:：])|\Z)'
+#         match = re.search(pattern, case_str, flags=re.DOTALL | re.IGNORECASE)
+#         if match:
+#             value = match.group(1).strip().replace('\n', ' ')
+#             result[f] = value
+#     return result
 
-@api_v1_router.get("/documents/{file_id}/download-csv/", tags=["Document Test Cases"])
-async def download_test_cases_csv_for_document(file_id: str):
-    try:
-        doc_obj_id = ObjectId(file_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid file_id.")
+# @api_v1_router.get("/documents/{file_id}/download-csv/", tags=["Document Test Cases"])
+# async def download_test_cases_csv_for_document(file_id: str):
+#     try:
+#         doc_obj_id = ObjectId(file_id)
+#     except Exception:
+#         raise HTTPException(status_code=400, detail="Invalid file_id.")
 
-    doc = documents_collection.find_one({"_id": doc_obj_id})
+#     doc = documents_collection.find_one({"_id": doc_obj_id})
 
-    # Batch document
-    if not doc or doc.get("status", -1) != 1 or not doc.get("test_cases"):
-        batch = documents_collection.find_one({
-            "is_test_case_generation_batch": True,
-            "files.file_id": doc_obj_id
-        })
-        if not batch:
-            raise HTTPException(status_code=404, detail="No test case results found for this document.")
+#     # Batch document
+#     if not doc or doc.get("status", -1) != 1 or not doc.get("test_cases"):
+#         batch = documents_collection.find_one({
+#             "is_test_case_generation_batch": True,
+#             "files.file_id": doc_obj_id
+#         })
+#         if not batch:
+#             raise HTTPException(status_code=404, detail="No test case results found for this document.")
 
-        file_entry = None
-        for f in batch["files"]:
-            if str(f["file_id"]) == file_id or str(f["file_id"]) == str(doc_obj_id):
-                file_entry = f
-                break
-        if not file_entry:
-            raise HTTPException(status_code=404, detail="File not found in batch.")
-        if file_entry.get("status", -1) != 1:
-            raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed (batch mode).")
+#         file_entry = None
+#         for f in batch["files"]:
+#             if str(f["file_id"]) == file_id or str(f["file_id"]) == str(doc_obj_id):
+#                 file_entry = f
+#                 break
+#         if not file_entry:
+#             raise HTTPException(status_code=404, detail="File not found in batch.")
+#         if file_entry.get("status", -1) != 1:
+#             raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed (batch mode).")
 
-        tc_dict = file_entry.get("test_cases", {})
-        all_rows = []
-        for tc_type, tc_obj in tc_dict.items():
-            content = tc_obj.get("content", "")
-            cases = split_test_cases(content)
-            for case in cases:
-                case_fields = parse_test_case_block(case)
-                case_fields["Test type"] = tc_type  # Always override to guarantee
-                all_rows.append(case_fields)
-        if not all_rows:
-            raise HTTPException(status_code=404, detail="No test cases found to export.")
+#         tc_dict = file_entry.get("test_cases", {})
+#         all_rows = []
+#         for tc_type, tc_obj in tc_dict.items():
+#             content = tc_obj.get("content", "")
+#             cases = split_test_cases(content)
+#             for case in cases:
+#                 case_fields = parse_test_case_block(case)
+#                 case_fields["Test type"] = tc_type  # Always override to guarantee
+#                 all_rows.append(case_fields)
+#         if not all_rows:
+#             raise HTTPException(status_code=404, detail="No test cases found to export.")
 
-        headers = [
-            'Test type', 'TCID', 'Title', 'Description', 'Precondition', 'Steps',
-            'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
-        ]
-        with tempfile.NamedTemporaryFile("w+", newline='', delete=False, suffix=".csv") as tmp_csv:
-            writer = csv.DictWriter(tmp_csv, fieldnames=headers)
-            writer.writeheader()
-            for row in all_rows:
-                writer.writerow(row)
-            tmp_csv_path = tmp_csv.name
+#         headers = [
+#             'Test type', 'TCID', 'Title', 'Description', 'Precondition', 'Steps',
+#             'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
+#         ]
+#         with tempfile.NamedTemporaryFile("w+", newline='', delete=False, suffix=".csv") as tmp_csv:
+#             writer = csv.DictWriter(tmp_csv, fieldnames=headers)
+#             writer.writeheader()
+#             for row in all_rows:
+#                 writer.writerow(row)
+#             tmp_csv_path = tmp_csv.name
 
-        filename = file_entry.get("file_name", "testcases") + "_test_cases.csv"
-        return FileResponse(tmp_csv_path, media_type="text/csv", filename=filename)
+#         filename = file_entry.get("file_name", "testcases") + "_test_cases.csv"
+#         return FileResponse(tmp_csv_path, media_type="text/csv", filename=filename)
 
-    # === OLD DIRECT DOCUMENT MODE ===
-    if doc.get("status") != 1:
-        raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed.")
+#     # === OLD DIRECT DOCUMENT MODE ===
+#     if doc.get("status") != 1:
+#         raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed.")
 
-    fname = doc.get("file_name", "doc.pdf")
-    db_test_cases = doc.get("test_cases")
-    all_rows = []
-    if isinstance(db_test_cases, dict):
-        for tc_type, cases in db_test_cases.items():
-            if isinstance(cases, list):
-                for c in cases:
-                    c['Test type'] = tc_type
-                    all_rows.append(c)
-            elif isinstance(cases, dict):
-                content = cases.get("content", "")
-                for case in split_test_cases(content):
-                    case_fields = parse_test_case_block(case)
-                    case_fields["Test type"] = tc_type
-                    all_rows.append(case_fields)
-    elif isinstance(db_test_cases, list):
-        for c in db_test_cases:
-            all_rows.append(c)
+#     fname = doc.get("file_name", "doc.pdf")
+#     db_test_cases = doc.get("test_cases")
+#     all_rows = []
+#     if isinstance(db_test_cases, dict):
+#         for tc_type, cases in db_test_cases.items():
+#             if isinstance(cases, list):
+#                 for c in cases:
+#                     c['Test type'] = tc_type
+#                     all_rows.append(c)
+#             elif isinstance(cases, dict):
+#                 content = cases.get("content", "")
+#                 for case in split_test_cases(content):
+#                     case_fields = parse_test_case_block(case)
+#                     case_fields["Test type"] = tc_type
+#                     all_rows.append(case_fields)
+#     elif isinstance(db_test_cases, list):
+#         for c in db_test_cases:
+#             all_rows.append(c)
 
-    if not all_rows:
-        raise HTTPException(status_code=404, detail="No test cases found to export.")
+#     if not all_rows:
+#         raise HTTPException(status_code=404, detail="No test cases found to export.")
 
-    headers = [
-        'Test type', 'TCID', 'Title', 'Description', 'Precondition', 'Steps',
-        'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
-    ]
-    with tempfile.NamedTemporaryFile("w+", newline='', delete=False, suffix=".csv") as tmp_csv:
-        writer = csv.DictWriter(tmp_csv, fieldnames=headers)
-        writer.writeheader()
-        for row in all_rows:
-            writer.writerow(row)
-        tmp_csv_path = tmp_csv.name
+#     headers = [
+#         'Test type', 'TCID', 'Title', 'Description', 'Precondition', 'Steps',
+#         'Action', 'Data', 'Result', 'Test Nature', 'Test priority'
+#     ]
+#     with tempfile.NamedTemporaryFile("w+", newline='', delete=False, suffix=".csv") as tmp_csv:
+#         writer = csv.DictWriter(tmp_csv, fieldnames=headers)
+#         writer.writeheader()
+#         for row in all_rows:
+#             writer.writerow(row)
+#         tmp_csv_path = tmp_csv.name
 
-    return FileResponse(tmp_csv_path, media_type="text/csv", filename=f"{fname.rsplit('.', 1)[0]}_test_cases.csv")
+#     return FileResponse(tmp_csv_path, media_type="text/csv", filename=f"{fname.rsplit('.', 1)[0]}_test_cases.csv")
 
 
 
@@ -976,6 +976,70 @@ def get_case_insensitive_from_dict(data_dict: Dict, target_key: str):
     return None, None
 
 
+
+
+ 
+from fastapi import APIRouter, Query, HTTPException
+from bson import ObjectId
+from typing import List, Dict, Any
+ 
+@api_v1_router.get("/documents/generation-status/", tags=["Document Test Cases"])
+async def get_test_case_generation_status(
+    data_space_id: str = Query(..., description="Data Space ID")
+):
+    # Step 1: Validate and convert data_space_id
+    try:
+        ds_obj_id = ObjectId(data_space_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid data_space_id.")
+ 
+    # Step 2: Fetch the data space
+    data_space = data_spaces_collection.find_one({"_id": ds_obj_id})
+    if not data_space:
+        raise HTTPException(status_code=404, detail="Data space not found.")
+ 
+    generation_id = data_space.get("generation_id")
+    if not generation_id:
+        return {
+            "status": -1,
+            "message": "No test case generation initiated for this data space."
+        }
+ 
+    # Step 3: Ensure generation_id is an ObjectId
+    try:
+        gen_obj_id = ObjectId(generation_id) if isinstance(generation_id, str) else generation_id
+    except Exception:
+        raise HTTPException(status_code=500, detail="Stored generation_id is invalid.")
+ 
+    # Step 4: Fetch the generation document
+    generation_doc = documents_collection.find_one({
+        "_id": gen_obj_id,
+        "is_test_case_generation_batch": True
+    })
+    if not generation_doc:
+        raise HTTPException(status_code=404, detail="Generation document not found.")
+ 
+    # Step 5: Safely serialize the files list
+    serialized_files = []
+    for file in generation_doc.get("files", []):
+        serialized_files.append({
+            "batch_id": str(file.get("batch_id")),
+            "file_id": str(file.get("file_id")),
+            "file_name": file.get("file_name"),
+            "status": file.get("status"),
+            "error_info": file.get("error_info"),
+            "last_task_id": file.get("last_task_id"),
+            "test_cases": file.get("test_cases", {})
+        })
+ 
+    # Step 6: Return the response
+    return {
+        "generation_id": str(generation_doc["_id"]),
+        "status": generation_doc.get("status", -1),
+        "progress": generation_doc.get("progress", []),
+        "files": serialized_files
+    }
+ 
 @api_v1_router.get("/documents/download-testcases", tags=["Document Test Cases"], summary="Download test cases for multiple files and types as CSV or ZIP")
 async def download_testcases(
     file_ids: str = Query(..., description="Comma-separated string of original document file_ids."),
