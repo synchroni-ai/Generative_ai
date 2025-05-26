@@ -938,6 +938,34 @@ const triggerSimulatedProgress = (selectedFile) => {
 
   setTimeout(() => clearInterval(interval), 5000);
 };
+const handleCancel = () => {
+
+    // Reset all state variables
+
+    setDataSpaceName('');
+
+    setDataSpaceDescription('');
+
+    setCategory('');
+
+    setSubCategory('');
+
+
+    setFile(null);
+
+    setUploadProgress([]);
+
+    setProgress(0);
+
+    setUploadCompleted(false);
+
+    setCollapsed(true);
+
+    // Close the drawer
+
+    onClose();
+
+  };
 
   const inputStyle = {
      '& .MuiOutlinedInput-root': {
@@ -979,7 +1007,7 @@ overflow: "auto",
   <Typography variant="h5" fontWeight={700}>
     New DataSpace 
   </Typography>
-  <IconButton onClick={onClose} >
+  <IconButton onClick={handleCancel}  >
     <CloseIcon />
   </IconButton>
 </Box>
@@ -1257,7 +1285,7 @@ overflow: "auto",
        {/* Buttons directly under upload list */}
             <Box display="flex" justifyContent="flex-end" gap={2} mt={5} mr={3}>
               <Button disableRipple
-                            onClick={onClose}
+                            onClick={handleCancel}
                 sx={{ borderRadius: '20px', textTransform: 'none',padding:'6px 16px',color:"grey" }}
               >
                 Cancel
@@ -1569,35 +1597,35 @@ export default GenAIUploader;
 //       fontSize: '14px', // label size
 //     },
 //   };
-//   const handleCancel = () => {
+  // const handleCancel = () => {
 
-//     // Reset all state variables
+  //   // Reset all state variables
 
-//     setDataSpaceName('');
+  //   setDataSpaceName('');
 
-//     setDataSpaceDescription('');
+  //   setDataSpaceDescription('');
 
-//     setCategory('');
+  //   setCategory('');
 
-//     setSubCategory('');
+  //   setSubCategory('');
 
-//     setSelectedFiles([]);
+  //   setSelectedFiles([]);
 
-//     setFile(null);
+  //   setFile(null);
 
-//     setUploadProgress([]);
+  //   setUploadProgress([]);
 
-//     setProgress(0);
+  //   setProgress(0);
 
-//     setUploadCompleted(false);
+  //   setUploadCompleted(false);
 
-//     setCollapsed(true);
+  //   setCollapsed(true);
 
-//     // Close the drawer
+  //   // Close the drawer
 
-//     onClose();
+  //   onClose();
 
-//   };
+  // };
 
 
 //   const handleFileChange = (e) => {

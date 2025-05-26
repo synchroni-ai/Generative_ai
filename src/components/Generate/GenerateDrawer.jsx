@@ -27,7 +27,7 @@ const GenerateDrawer = ({ open, onClose, documentName, taskId   }) => {
   const socketRef = useRef(null);
 const [error, setError] = useState(false);
 const [documentId, setDocumentId] = useState(null);
-        console.log("Documensst ID received:", documentId);
+        // console.log("Documensst ID received:", documentId);
 
  useEffect(() => {
   if (!taskId) return;

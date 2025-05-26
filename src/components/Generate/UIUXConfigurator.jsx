@@ -98,6 +98,7 @@ const [selectedDocs, setSelectedDocs] = useState([]);
 const [selectedUseCase, setSelectedUseCase] = useState('');
   const pollingIdRef = useRef(null);
 const [generationLoading, setGenerationLoading] = useState(false);
+const [hasFetchedInitialResults, setHasFetchedInitialResults] = useState(false);
 
 // const triggerTestCaseGeneration = async () => {
 //   try {
@@ -185,11 +186,11 @@ const triggerTestCaseGeneration = async () => {
   const progressInterval = setInterval(() => {
     simulatedProgress = Math.min(simulatedProgress + 1, 95);
     setProgress(simulatedProgress);
-  }, 300);
+  }, 500);
 
   // Try initial trigger, but do not block if it fails
   try {
-    await adminAxios.post("/api/v1/test-case-batch/results", payload);
+    await adminAxios.post("/api/v1/test-case-batch/results/", payload);
     console.log("🚀 Initial test case generation triggered.");
   } catch (err) {
     console.warn("⚠️ Initial trigger failed, starting polling anyway:", err.response?.data || err.message);
@@ -198,7 +199,7 @@ const triggerTestCaseGeneration = async () => {
   // Poll every 2 seconds to check if generation is complete
   pollingIdRef.current = setInterval(async () => {
     try {
-      const res = await adminAxios.post("/api/v1/test-case-batch/results", payload);
+      const res = await adminAxios.post("/api/v1/test-case-batch/results/", payload);
       const latestResults = res.data.results || [];
       const allDone = latestResults.every(r => r.status === 1);
 
@@ -238,6 +239,36 @@ const triggerTestCaseGeneration = async () => {
       }
     };
   }, []);
+
+
+  const fetchInitialTestCases = async () => {
+  try {
+    setGenerationLoading(true);
+    const response = await adminAxios.get(`/api/v1/documents/${fileId}/get-test-cases/`);
+
+    const results = response.data.results || [];
+    setGeneratedResults(results);
+    setHasFetchedInitialResults(true);
+    console.log("✅ Initial results fetched successfully");
+  } catch (err) {
+    console.error("❌ Error fetching initial test cases:", err.response?.data || err.message);
+  } finally {
+    setGenerationLoading(false);
+  }
+};
+
+const handleTabSwitch = async (tab) => {
+  if (tab === 'Results') {
+    setSelectedHistoryDoc(null);
+    setFromHistory(false);
+
+    // 🔁 Only fetch if not already generated
+    if (!hasFetchedInitialResults && !generatedResults.length && fileId) {
+      await fetchInitialTestCases(); // uses fileId from state
+    }
+  }
+  setActiveTab(tab);
+};
 
 
 
@@ -311,14 +342,7 @@ const isDisabled = false; // Always allow Results tab
         key={tab}
         px={2}
         py={1}
-        onClick={() => {
-          if (isDisabled) return; // ⛔ Prevent Results tab click
-          setActiveTab(tab);
-          if (tab === 'Results') {
-            setSelectedHistoryDoc(null);
-            setFromHistory(false);
-          }
-        }}
+        onClick={() => handleTabSwitch(tab)}
         sx={{
           fontSize: 14,
           fontWeight: 500,
