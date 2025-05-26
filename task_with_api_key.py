@@ -341,7 +341,7 @@ OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_files")
 Path(INPUT_DIR).mkdir(parents=True, exist_ok=True)
 Path(OUTPUT_DIR).mkdir(parents=True, exist_ok=True)
 
-DEFAULT_CHUNK_SIZE = 7000 # Characters. Approx 1750 tokens. Adjust if needed.
+DEFAULT_CHUNK_SIZE = 14000 # Characters. Approx 1750 tokens. Adjust if needed.
 
 MODEL_DISPATCHER = {
     "Mistral": Mistral.generate_with_mistral,

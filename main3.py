@@ -34,6 +34,10 @@ import asyncio
 from starlette.websockets import WebSocketState
 from collections import Counter
 
+from fastapi import APIRouter, Query, HTTPException
+from bson import ObjectId
+from typing import List, Dict, Any
+
 from fastapi.responses import FileResponse
 from bson import ObjectId
 import os
@@ -131,6 +135,7 @@ class TestCaseBatchRequest(BaseModel):
     generation_id: str
     file_ids: List[str]
     types: Optional[List[str]] = None
+    download_csv: Optional[bool] = False 
 
 class TestCaseFileResult(BaseModel):
     file_id: str
@@ -297,6 +302,7 @@ async def create_dataspace_and_upload_documents(
     )
 
 
+
 @api_v1_router.get("/data-spaces/", response_model=List[DataSpaceResponse], tags=["Data Spaces"])
 async def list_data_spaces(skip: int = 0, limit: int = 20):
     spaces_cursor = data_spaces_collection.find().sort("created_at", -1).skip(skip).limit(limit)
@@ -347,6 +353,66 @@ async def list_data_spaces(skip: int = 0, limit: int = 20):
             )
         )
     return data_spaces_list
+
+
+
+
+@api_v1_router.get("/documents/generation-status/", tags=["Document Test Cases"])
+async def get_test_case_generation_status(
+    data_space_id: str = Query(..., description="Data Space ID")
+):
+    # Step 1: Validate and convert data_space_id
+    try:
+        ds_obj_id = ObjectId(data_space_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid data_space_id.")
+
+    # Step 2: Fetch the data space
+    data_space = data_spaces_collection.find_one({"_id": ds_obj_id})
+    if not data_space:
+        raise HTTPException(status_code=404, detail="Data space not found.")
+
+    generation_id = data_space.get("generation_id")
+    if not generation_id:
+        return {
+            "status": -1,
+            "message": "No test case generation initiated for this data space."
+        }
+
+    # Step 3: Ensure generation_id is an ObjectId
+    try:
+        gen_obj_id = ObjectId(generation_id) if isinstance(generation_id, str) else generation_id
+    except Exception:
+        raise HTTPException(status_code=500, detail="Stored generation_id is invalid.")
+
+    # Step 4: Fetch the generation document
+    generation_doc = documents_collection.find_one({
+        "_id": gen_obj_id,
+        "is_test_case_generation_batch": True
+    })
+    if not generation_doc:
+        raise HTTPException(status_code=404, detail="Generation document not found.")
+
+    # Step 5: Safely serialize the files list
+    serialized_files = []
+    for file in generation_doc.get("files", []):
+        serialized_files.append({
+            "batch_id": str(file.get("batch_id")),
+            "file_id": str(file.get("file_id")),
+            "file_name": file.get("file_name"),
+            "status": file.get("status"),
+            "error_info": file.get("error_info"),
+            "last_task_id": file.get("last_task_id"),
+            "test_cases": file.get("test_cases", {})
+        })
+
+    # Step 6: Return the response
+    return {
+        "generation_id": str(generation_doc["_id"]),
+        "status": generation_doc.get("status", -1),
+        "progress": generation_doc.get("progress", []),
+        "files": serialized_files
+    }
 
 
 @api_v1_router.get("/data-spaces/{data_space_id}/documents/", response_model=List[DocumentMetadataResponse], tags=["Data Spaces"])
@@ -728,23 +794,33 @@ async def get_batch_test_case_summary(file_id: str):
         "counts_by_type": counts_by_type,
         "total_test_cases": total
     }
+@api_v1_router.get("/documents/{file_id}/download-csv/", tags=["Document Test Cases"])
+async def download_test_cases_csv_for_document(file_id: str):
+    try:
+        doc_obj_id = ObjectId(file_id)
+    except InvalidId:
+        raise HTTPException(status_code=400, detail="Invalid file_id.")
 
-# @api_v1_router.get("/documents/{file_id}/download-csv/", tags=["Document Test Cases"])
-# async def download_test_cases_csv_for_document(file_id: str):
-#     try: doc_obj_id = ObjectId(file_id)
-#     except InvalidId: raise HTTPException(status_code=400, detail="Invalid file_id.")
-#     doc = documents_collection.find_one({"_id": doc_obj_id})
-#     if not doc: raise HTTPException(status_code=404, detail="Doc not found.")
-#     if doc.get("status") != 1: raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed.")
-#     fname = doc.get("file_name", "doc.pdf")
-#     try:
-#         # This function should create the CSV if not exists or outdated, and return path
-#         csv_p, _ = test_case_utils.parse_test_cases_to_csv(file_id, documents_collection)
-#     except Exception as e_parse_csv:
-#         print(f"Error generating CSV for {file_id}: {e_parse_csv}")
-#         raise HTTPException(status_code=500, detail=f"Failed to generate CSV file: {str(e_parse_csv)}")
-#     if not os.path.exists(csv_p): raise HTTPException(status_code=404, detail="CSV file missing post-parse attempt. Generation might have failed.")
-#     return FileResponse(csv_p, media_type="text/csv", filename=f"{Path(fname).stem}_test_cases.csv")
+    doc = documents_collection.find_one({"_id": doc_obj_id})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Doc not found.")
+    if doc.get("status") != 1:
+        raise HTTPException(status_code=409, detail="CSV not ready. Document processing not complete or failed.")
+
+    fname = doc.get("file_name", "doc.pdf")
+
+    try:
+        # This function should create the CSV if not exists or outdated, and return path
+        csv_p, _ = test_case_utils.parse_test_cases_to_csv(file_id, documents_collection)
+    except Exception as e_parse_csv:
+        print(f"Error generating CSV for {file_id}: {e_parse_csv}")
+        raise HTTPException(status_code=500, detail=f"Failed to generate CSV file: {str(e_parse_csv)}")
+
+    if not os.path.exists(csv_p):
+        raise HTTPException(status_code=404, detail="CSV file missing post-parse attempt. Generation might have failed.")
+
+    return FileResponse(csv_p, media_type="text/csv", filename=f"{Path(fname).stem}_test_cases.csv")
+
 
 def split_test_cases(content):
     """
@@ -790,7 +866,7 @@ def parse_test_case_block(case_str):
             result[f] = value
     return result
 
-@api_v1_router.get("/documents/{file_id}/download-csv/", tags=["Document Test Cases"])
+@api_v1_router.get("/download-csv/{file_id}", tags=["Document Test Cases"])
 async def download_test_cases_csv_for_document(file_id: str):
     try:
         doc_obj_id = ObjectId(file_id)
@@ -891,7 +967,6 @@ from fastapi.responses import StreamingResponse # FileResponse might not be need
 from typing import List, Optional # Already in your main file likely
 from io import StringIO, BytesIO
 import csv
-# import tempfile # Not strictly needed if using BytesIO for zip
 import zipfile
 from bson import ObjectId # Already in your main file likely
 import io # Already imported, but good to note
@@ -1127,32 +1202,6 @@ async def download_testcases(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid mode specified. Choose 'zip' or 'csv'.")
 
 
-# @api_v1_router.delete("/documents/", tags=["Document Test Cases"]) # Note: Query param for list of IDs
-# async def delete_multiple_documents(document_ids: List[str] = Query(...)):
-#     del_c, errs = 0, []
-#     if not document_ids:
-#         raise HTTPException(status_code=400, detail="No document_ids provided for deletion.")
-#     for id_str in document_ids:
-#         try:
-#             obj_id = ObjectId(id_str)
-#             doc = documents_collection.find_one_and_delete({"_id":obj_id})
-#             if doc:
-#                 del_c+=1
-#                 if doc.get("file_path") and os.path.exists(doc["file_path"]):
-#                     try: os.remove(doc["file_path"])
-#                     except Exception as e_fdel: print(f"Error deleting file {doc['file_path']}: {e_fdel}")
-#                 if hasattr(test_case_utils, 'CSV_OUTPUT_DIR'):
-#                     csv_p = os.path.join(test_case_utils.CSV_OUTPUT_DIR, f"{id_str}_test_cases.csv")
-#                     if os.path.exists(csv_p):
-#                         try: os.remove(csv_p)
-#                         except Exception as e_csvdel: print(f"Error deleting CSV {csv_p}: {e_csvdel}")
-#             else: errs.append({"id":id_str, "error":"Not found"})
-#         except InvalidId: errs.append({"id":id_str, "error":"Invalid ID format"})
-#         except Exception as e_del: errs.append({"id":id_str, "error":str(e_del)})
-#     if del_c == 0 and not errs and document_ids: # If IDs were provided but none were found and no other errors
-#         return {"deleted_count": 0, "errors": [{"id": "all_provided", "error": "None of the provided document IDs were found."}]}
-#     return {"deleted_count":del_c, "errors":errs if errs else None}
-
 
 # MOVED ENDPOINT DEFINITION for /test-case-batch/results
 @api_v1_router.post(
@@ -1268,6 +1317,7 @@ async def get_test_case_batch_results(body: TestCaseBatchRequest = Body(...)):
         requested_types=body.types,     # Echo back what was requested
         results=results
     )
+
 
 # --- Auth & Utility Endpoints ---
 @api_v1_router.post("/auth/token", response_model=Dict[str, str], tags=["Authentication"])
