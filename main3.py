@@ -1,7 +1,6 @@
 
-import uuid
-import base64
-import fitz
+
+
 from fastapi import BackgroundTasks, HTTPException, Body # <-- Moved Body here
 from task_with_api_key import process_and_generate_task # Ensure this path is correct
 from celery.result import AsyncResult
@@ -67,22 +66,6 @@ INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
 OUTPUT_DIR = os.getenv("OUTPUT_DIR", "output_files")
 MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017/")
 MONGO_DB_NAME = os.getenv("MONGO_DB_NAME", "Gen_AI")
-
-MONGO_URI = "mongodb://localhost:27017"  # Modify if needed
-
-client = MongoClient(MONGO_URI)
-
-db = client.document_tags_db
-
-tags_collection = db.tags
- 
-
-
-
-# Simulated DB for storing tags
-document_tags_db = {}
-
-
 
 # --- Pydantic Models (Defined BEFORE app instance and routers) ---
 class DataSpaceCreate(BaseModel): # Used by the old /data-spaces/ endpoint if you keep it
@@ -197,7 +180,7 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"],
 )
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Body
 
 from pymongo import MongoClient
 
@@ -206,6 +189,8 @@ from keybert import KeyBERT
 import fitz  # PyMuPDF
 
 import uuid
+
+import base64
  
 app = FastAPI()
  
@@ -217,26 +202,8 @@ db = client.document_tags_db
 
 tags_collection = db.tags
  
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+# 🔁 Endpoint 1: Original multipart/form-data upload
 
-from pymongo import MongoClient
-
-from keybert import KeyBERT
-
-import fitz  # PyMuPDF
-
-import uuid
- 
-app = FastAPI()
- 
-# MongoDB setup
-
-client = MongoClient("mongodb://localhost:27017")
-
-db = client.document_tags_db
-
-tags_collection = db.tags
- 
 @app.post("/process-document")
 
 async def process_document(file: UploadFile = File(...), filename: str = Form(...)):
@@ -245,14 +212,10 @@ async def process_document(file: UploadFile = File(...), filename: str = Form(..
 
         file_bytes = await file.read()
  
-        # Generate tags from PDF content
-
         doc_id = str(uuid.uuid4())
 
         tags = generate_tags(file_bytes)
  
-        # Store in MongoDB
-
         document_data = {
 
             "_id": doc_id,
@@ -271,6 +234,50 @@ async def process_document(file: UploadFile = File(...), filename: str = Form(..
 
         raise HTTPException(status_code=500, detail=str(e))
  
+ 
+# 🆕 Endpoint 2: Base64 + JSON (Power Automate-friendly)
+
+@app.post("/process-document-base64")
+
+async def process_document_base64(payload: dict = Body(...)):
+
+    try:
+
+        file_base64 = payload.get("file_base64")
+
+        filename = payload.get("filename")
+ 
+        if not file_base64 or not filename:
+
+            raise ValueError("Missing 'file_base64' or 'filename' in request body")
+ 
+        file_bytes = base64.b64decode(file_base64)
+ 
+        doc_id = str(uuid.uuid4())
+
+        tags = generate_tags(file_bytes)
+ 
+        document_data = {
+
+            "_id": doc_id,
+
+            "filename": filename,
+
+            "tags": tags
+
+        }
+
+        tags_collection.insert_one(document_data)
+ 
+        return {"document_id": doc_id, "tags": tags}
+
+    except Exception as e:
+
+        raise HTTPException(status_code=500, detail=str(e))
+ 
+ 
+# 📄 Endpoint 3: Retrieve tags by document ID
+
 @app.get("/get-tags/{doc_id}")
 
 def get_tags(doc_id: str):
@@ -283,6 +290,9 @@ def get_tags(doc_id: str):
 
     raise HTTPException(status_code=404, detail="Document not found")
  
+ 
+# 🔍 Utility: Extract text from PDF bytes
+
 def extract_text(file_bytes: bytes) -> str:
 
     doc = fitz.open(stream=file_bytes, filetype="pdf")
@@ -295,6 +305,9 @@ def extract_text(file_bytes: bytes) -> str:
 
     return text
  
+ 
+# 🧠 Utility: Generate tags using KeyBERT
+
 def generate_tags(file_bytes):
 
     text = extract_text(file_bytes)
@@ -305,7 +318,6 @@ def generate_tags(file_bytes):
 
     return [kw[0] for kw in keywords[:5]]
 
- 
  
 # --- API Routers ---
 api_v1_router = APIRouter(prefix="/api/v1")
