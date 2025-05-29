@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+beanie
+motor
+pydantic[email]
+boto3
+dnspython
+werkzeug
+tzdata 
