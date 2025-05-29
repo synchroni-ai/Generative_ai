@@ -1,90 +1,91 @@
-# Byte-compiled / optimized / DLL files
+# === Operating System files ===
+.DS_Store
+Thumbs.db
+ 
+# === Logs ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bower_components/
+vendor/
+ 
+# === Environment files ===
+.env
+.env.* 
+!.env.example
+ 
+# === Build output ===
+dist/
+build/
+tmp/
+temp/
+*.tmp
+ 
+# === IDE and Editor files ===
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+ 
+# === Python-specific ===
 __pycache__/
 *.py[cod]
-*$py.class
-
-# Virtual environment
-.env/
-.venv/
-env/
-venv/
-ENV/
-
-# VS Code settings
-.vscode/
-
-# PyCharm settings
-.idea/
-
-# Jupyter Notebook checkpoints
-.ipynb_checkpoints/
-
-# macOS
-.DS_Store
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Logs and databases
-*.log
-*.sqlite3
-
-# Python egg files
+*.so
 *.egg
 *.egg-info/
 dist/
 build/
-eggs/
-parts/
-var/
-sdist/
-wheels/
 pip-wheel-metadata/
-share/python-wheels/
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
+.venv/
+venv/
+ENV/
+env/
+ 
+# === macOS ===
+*.DS_Store
+ 
+# === Windows ===
+*.lnk
+ehthumbs.db
+Icon?
+ 
+# === Test output ===
+coverage/
 *.cover
+*.py,cover
 .hypothesis/
+ 
+# === Git directory ===
+.git/
+.gitmodules/
+.gitignore
+.gitattributes
+ 
+# === Misc ===
+*.swp
+*.bak
+*.tmp
+*.orig
+*.old
+*.rej
+ 
+# === Docker ===
+*.pid
+*.seed
+*.pid.lock
+Dockerfile
+docker-compose*.yml
+.dockerignore
+ 
+# === Jupyter Notebooks ===
+.ipynb_checkpoints
+ 
+# === Package managers ===
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
-# MyPy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# Test output
-test-output/
-
-# Local settings
-*.env
-*.local
-.env.*.local
-
-# Node.js stuff (if present)
-node_modules/
-
-# dotenv
-.env
-
-# Celery
-celerybeat-schedule
-celerybeat.pid
-
-# FastAPI auto-generated
-*.db
+ 
+ 
