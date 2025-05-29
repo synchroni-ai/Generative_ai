@@ -1,0 +1,91 @@
+# === Operating System files ===
+.DS_Store
+Thumbs.db
+ 
+# === Logs ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bower_components/
+vendor/
+ 
+# === Environment files ===
+.env
+.env.* 
+!.env.example
+ 
+# === Build output ===
+dist/
+build/
+tmp/
+temp/
+*.tmp
+ 
+# === IDE and Editor files ===
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+ 
+# === Python-specific ===
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+.venv/
+venv/
+ENV/
+env/
+ 
+# === macOS ===
+*.DS_Store
+ 
+# === Windows ===
+*.lnk
+ehthumbs.db
+Icon?
+ 
+# === Test output ===
+coverage/
+*.cover
+*.py,cover
+.hypothesis/
+ 
+# === Git directory ===
+.git/
+.gitmodules/
+.gitignore
+.gitattributes
+ 
+# === Misc ===
+*.swp
+*.bak
+*.tmp
+*.orig
+*.old
+*.rej
+ 
+# === Docker ===
+*.pid
+*.seed
+*.pid.lock
+Dockerfile
+docker-compose*.yml
+.dockerignore
+ 
+# === Jupyter Notebooks ===
+.ipynb_checkpoints
+ 
+# === Package managers ===
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+ 
+ 
