@@ -1,5 +1,5 @@
 from fastapi import BackgroundTasks, HTTPException
-from task_with_api_key import process_and_generate_task
+from task_with_api_key  import  process_and_generate_task_multiple
 from celery.result import AsyncResult
 from fastapi import (
     FastAPI,
@@ -18,6 +18,8 @@ from utils.jwt_auth import (
     create_jwt_token,
 )
 from pydantic import BaseModel
+from celery_worker import celery_app
+
 
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional, List, Dict
@@ -90,60 +92,103 @@ VALID_TEST_CASE_TYPES = [
 
 
 @app.post("/upload_document/")
-async def upload_document(file: UploadFile = File(...)):
-    file_name = file.filename
-    file_path = Path(INPUT_DIR) / file_name
+async def upload_document(files: List[UploadFile] = File(...)):  # Changed to List[UploadFile]
+    """
+    Uploads multiple documents and returns a list of file IDs.
+    """
 
-    try:
-        contents = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(contents)
-    finally:
-        await file.close()
+    uploaded_files = []
+    file_ids = []
 
-    # Insert file metadata into MongoDB
-    document_data = {
-        "file_name": file_name,
-        "file_path": str(file_path),
-        "status": -1,  # Document uploaded but not processed
-    }
+    for file in files:
+        file_name = file.filename
+        file_path = Path(INPUT_DIR) / file_name
 
-    result = collection.insert_one(document_data)
-    file_id = str(result.inserted_id)
+        try:
+            contents = await file.read()
+            with open(file_path, "wb") as f:
+                f.write(contents)
+        except Exception as e:
+            # Handle file writing errors gracefully
+            return {"error": f"Failed to write file {file_name}: {str(e)}"}
+        finally:
+            await file.close()
 
+        # Insert file metadata into MongoDB
+        document_data = {
+            "file_name": file_name,
+            "file_path": str(file_path),
+            "status": -1,  # Document uploaded but not processed
+        }
+
+        try:
+            result = collection.insert_one(document_data)
+            file_id = str(result.inserted_id)  # inserted_id is ObjectId
+            file_ids.append(file_id)
+
+            uploaded_files.append(
+                {
+                    "file_name": file_name,
+                    "file_path": str(file_path),
+                    "file_id": file_id,
+                }
+            )
+
+        except Exception as e:
+            # Handle MongoDB insertion errors
+            return {"error": f"Failed to insert metadata for {file_name}: {str(e)}"}
+
+    # Construct a unified response with information for all uploaded files.
     return {
-        "message": "File uploaded successfully",
-        "file_name": file_name,
-        "file_path": str(file_path),
-        "file_id": file_id,
+        "message": "Files uploaded successfully",
+        "files": uploaded_files,
+        "file_ids": file_ids,
     }
 
 
-@app.post("/generate_test_cases/")
-async def generate_test_cases(
-    file_id: str = Form(...),
+@app.post("/generate_test_cases_multiple/")  # New endpoint for multiple files
+async def generate_test_cases_multiple(
+    file_ids: List[str] = Form(...),  # List of file IDs
     model_name: Optional[str] = Form("Mistral"),
     chunk_size: Optional[int] = Query(default=None),
     cache_key: Optional[str] = Query(default=None),
     api_key: Optional[str] = Form(None),
     test_case_types: Optional[str] = Form("all"),
 ):
-    # Fetch document from MongoDB
-    try:
-        document = collection.find_one({"_id": ObjectId(file_id)})
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid file_id format.")
+    """
+    Generates test cases for multiple files, processing all test case types for one file before moving to the next.
+    """
 
-    if not document:
-        raise HTTPException(
-            status_code=404, detail="Document not found in the database."
+    # Validate file_ids
+    documents_data = []
+    for file_id in file_ids:
+        try:
+            document = collection.find_one({"_id": ObjectId(file_id)})
+        except Exception:
+            raise HTTPException(
+                status_code=400, detail=f"Invalid file_id format: {file_id}"
+            )
+
+        if not document:
+            raise HTTPException(
+                status_code=404, detail=f"Document not found in the database: {file_id}"
+            )
+
+        file_path = Path(document.get("file_path"))
+        if not file_path.exists():
+            raise HTTPException(
+                status_code=404, detail=f"File not found on disk: {file_id}"
+            )
+
+        documents_data.append(
+            {
+                "file_id": file_id,
+                "file_path": str(file_path),
+                "file_name": file_path.name,  # Add file name for tracking
+            }
         )
 
-    file_path = Path(document.get("file_path"))
-    if not file_path.exists():
-        raise HTTPException(status_code=404, detail="File not found on disk.")
-
-    # Parse and validate test_case_types
+    # Parse and validate test_case_types (same as before)
     test_case_types_list = [t.strip().lower() for t in test_case_types.split(",")]
     if "all" in test_case_types_list:
         test_case_types_list = VALID_TEST_CASE_TYPES
@@ -155,7 +200,7 @@ async def generate_test_cases(
                     detail=f"Invalid test_case_type: {test_case_type}. Must be one of {VALID_TEST_CASE_TYPES} or 'all'.",
                 )
 
-    # API key fallback logic
+    # API key fallback logic (same as before)
     api_key_to_use = api_key or os.getenv("TOGETHER_API_KEY")
     warning = (
         "Using default API key. Consider providing your own to avoid shared limits."
@@ -163,42 +208,62 @@ async def generate_test_cases(
         else None
     )
 
-    # ✅ Set initial status = 0 (processing)
-    collection.update_one(
-        {"_id": ObjectId(file_id)},
+    # Create a single document ID for tracking the multiple files job
+    multiple_files_document_id = str(ObjectId())
+
+    # ✅ Set initial status = 0 (processing) for multiple files document ID
+    collection.insert_one(
         {
-            "$set": {
-                "status": 0,
-                "selected_model": model_name,
-                "api_key_used": f"...{api_key_to_use[-5:]}",
-            }
-        },
+            "_id": ObjectId(multiple_files_document_id),  # Store ID as ObjectId
+            "status": 0,
+            "selected_model": model_name,
+            "api_key_used": f"...{api_key_to_use[-5:]}",
+            "file_ids": file_ids,  # Store the file_ids being processed
+            "file_names": [
+                doc["file_name"] for doc in documents_data
+            ],  # store the file names being proccessed
+            "test_case_types": test_case_types_list,
+            "type": "multiple",
+        }
     )
 
-    # Trigger Celery task with document_id
-    task = process_and_generate_task.delay(
-        str(file_path),
-        model_name,
-        chunk_size,
-        api_key_to_use,
-        test_case_types_list,
-        file_id,  # this is used as document_id inside celery
+    # Trigger Celery task FOR MULTIPLE DOCUMENTS. This now loops through the documents
+    task = process_and_generate_task_multiple.delay(
+        file_ids=documents_data,  # Changed this to pass a list of file data
+        model_name=model_name,
+        chunk_size=chunk_size,
+        api_key=api_key_to_use,
+        test_case_types=test_case_types_list,
+        document_id=multiple_files_document_id,  # this is used as document_id inside celery
     )
 
     collection.update_one(
-        {"_id": ObjectId(file_id)}, {"$set": {"last_task_id": task.id}}
+        {"_id": ObjectId(multiple_files_document_id)},
+        {"$set": {"last_task_id": task.id}},
     )
 
     return {
-        "message": "✅ Test case generation task started.",
+        "message": "✅ Test case generation task started for multiple files.",
         "task_id": task.id,
-        "file_id": file_id,
+        "file_ids": file_ids,
+        "document_id": multiple_files_document_id,
         "test_case_types": test_case_types_list,
         "api_key_being_used": f"...{api_key_to_use[-5:]}",
         "warning": warning,
     }
 
-
+@app.get("/tasks/{task_id}")
+def get_task_status(task_id):
+    """
+    Get the status of a Celery task.
+    """
+    task_result = AsyncResult(task_id, app=celery_app)
+    result = {
+        "task_id": task_id,
+        "task_status": task_result.status,
+        "task_result": task_result.result,
+    }
+    return result
 # ----------------- MongoDB Fetch Endpoints -----------------
 @app.get("/documents/")
 def get_all_documents():

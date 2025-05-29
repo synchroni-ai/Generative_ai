@@ -1,11 +1,11 @@
 # app/services/s3_service.py
-
+ 
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
 from fastapi import UploadFile, HTTPException, status
-
+ 
 from app.core.config import AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION_NAME, S3_BUCKET_NAME
-
+ 
 # Initialize S3 client globally when the module is imported
 s3_client = None
 if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_REGION_NAME:
@@ -25,25 +25,25 @@ if AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY and AWS_REGION_NAME:
         s3_client = None
 else:
     print("AWS S3 environment variables not fully set. S3 uploads will not work.")
-
-
+ 
+ 
 async def upload_file_to_s3(file: UploadFile, object_key: str) -> str:
     """
     Uploads a file to the configured S3 bucket.
-
+ 
     Args:
         file: The UploadFile object from the FastAPI request.
         object_key: The desired key (path) in the S3 bucket.
-
+ 
     Returns:
         The S3 URL of the uploaded file.
-
+ 
     Raises:
         HTTPException: If S3 is not configured or upload fails.
     """
     if s3_client is None or S3_BUCKET_NAME is None:
          raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="S3 storage is not configured on the server.")
-
+ 
     try:
         s3_client.upload_fileobj(
             file.file,      # The file-like object from UploadFile
@@ -53,7 +53,7 @@ async def upload_file_to_s3(file: UploadFile, object_key: str) -> str:
         print(f"Successfully uploaded file to s3://{S3_BUCKET_NAME}/{object_key}")
         s3_url = f"s3://{S3_BUCKET_NAME}/{object_key}"
         return s3_url
-
+ 
     except (NoCredentialsError, PartialCredentialsError):
          print("AWS credentials not configured properly.")
          raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="AWS credentials not configured.")
@@ -69,10 +69,10 @@ async def upload_file_to_s3(file: UploadFile, object_key: str) -> str:
 async def delete_file_from_s3(object_key: str):
     """
     Deletes a file from the configured S3 bucket.
-
+ 
     Args:
         object_key: The key (path) of the object in the S3 bucket.
-
+ 
     Raises:
         HTTPException: If S3 is not configured or delete fails (excluding 404).
     """
@@ -81,7 +81,7 @@ async def delete_file_from_s3(object_key: str):
          # Or perhaps raise an error depending on business rules.
          # For now, raise an error.
          raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="S3 storage is not configured on the server.")
-
+ 
     try:
         s3_client.delete_object(Bucket=S3_BUCKET_NAME, Key=object_key)
         print(f"Successfully deleted S3 object: {object_key}")
@@ -100,3 +100,5 @@ async def delete_file_from_s3(object_key: str):
     except Exception as e:
         print(f"An unexpected error occurred during S3 delete for {object_key}: {e}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"An unexpected error occurred during delete: {e}")
+ 
+ 

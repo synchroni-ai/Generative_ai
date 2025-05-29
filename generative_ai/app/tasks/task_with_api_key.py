@@ -1,4 +1,4 @@
-from celery_worker import celery_app
+from app.core.celery_app import celery_app
 from utils import data_ingestion, test_case_utils
 from utils.llms import Mistral, openai, llama
 from fastapi import HTTPException
@@ -9,6 +9,8 @@ import re
 from pathlib import Path
 from pymongo import MongoClient
 import pandas as pd
+# from app.core.celery_app import celery_app
+
 
 mongo_client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017/"))
 db = mongo_client["Gen_AI"]
