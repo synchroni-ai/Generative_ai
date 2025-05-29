@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+.env
+/tmp/
+
+test_cases.csv
+test_cases.txt
+
+output_files/

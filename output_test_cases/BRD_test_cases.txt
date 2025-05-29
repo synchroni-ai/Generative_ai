@@ -1,0 +1,168 @@
+**Test Cases:**
+
+*   **Test Case ID:** TC_001
+    *   **Description:** Verify successful user registration with valid inputs.
+    *   **Steps:**
+        1. Navigate to the registration page.
+        2. Enter valid details (Name, Contact Number, Email Address).
+        3. Click on the "Register" button.
+    *   **Expected Result:** User account is created successfully, and a confirmation message is displayed.
+
+*   **Test Case ID:** TC_002
+    *   **Description:** Verify user registration with an existing email address.
+    *   **Steps:**
+        1. Navigate to the registration page.
+        2. Enter details that include an email address already registered.
+        3. Click on the "Register" button.
+    *   **Expected Result:** An error message is displayed indicating that the email is already in use.
+
+*   **Test Case ID:** TC_003
+    *   **Description:** Verify user login with valid credentials.
+    *   **Steps:**
+        1. Navigate to the login page.
+        2. Enter valid email and password.
+        3. Click on the "Login" button.
+    *   **Expected Result:** User is logged in successfully, and the dashboard is displayed.
+
+*   **Test Case ID:** TC_004
+    *   **Description:** Verify user login with invalid credentials.
+    *   **Steps:**
+        1. Navigate to the login page.
+        2. Enter an invalid email or password.
+        3. Click on the "Login" button.
+    *   **Expected Result:** An error message is displayed indicating incorrect credentials.
+
+*   **Test Case ID:** TC_005
+    *   **Description:** Verify admin can add a new product.
+    *   **Steps:**
+        1. Log in as an admin.
+        2. Navigate to the product management section.
+        3. Click on "Add Product."
+        4. Enter valid product details.
+        5. Click on the "Save" button.
+    *   **Expected Result:** The product is added successfully, and a confirmation message is displayed.
+
+*   **Test Case ID:** TC_006
+    *   **Description:** Verify admin can edit an existing product.
+    *   **Steps:**
+        1. Log in as an admin.
+        2. Navigate to the product management section.
+        3. Select a product to edit.
+        4. Modify the product details.
+        5. Click on the "Save" button.
+    *   **Expected Result:** The product details are updated successfully, and a confirmation message is displayed.
+
+*   **Test Case ID:** TC_007
+    *   **Description:** Verify admin can delete a product.
+    *   **Steps:**
+        1. Log in as an admin.
+        2. Navigate to the product management section.
+        3. Select a product to delete.
+        4. Click on the "Delete" button.
+    *   **Expected Result:** The product is deleted successfully, and a confirmation message is displayed.
+
+*   **Test Case ID:** TC_008
+    *   **Description:** Verify stock levels are updated after a purchase.
+    *   **Steps:**
+        1. Add a product to the cart.
+        2. Proceed to checkout.
+        3. Complete the purchase.
+    *   **Expected Result:** The stock level of the purchased product is updated in the admin panel.
+
+*   **Test Case ID:** TC_009
+    *   **Description:** Verify a fashion designer can create a blog post.
+    *   **Steps:**
+        1. Log in as a fashion designer.
+        2. Navigate to the blog management section.
+        3. Click on "Create Blog Post."
+        4. Enter valid blog details.
+        5. Click on the "Publish" button.
+    *   **Expected Result:** The blog post is created successfully, and a confirmation message is displayed.
+
+*   **Test Case ID:** TC_010
+    *   **Description:** Verify a customer can view and leave feedback on a blog post.
+    *   **Steps:**
+        1. Navigate to a blog post.
+        2. Scroll down to the feedback section.
+        3. Enter feedback and click on the "Submit" button.
+    *   **Expected Result:** The feedback is submitted successfully, and a confirmation message is displayed.
+
+*   **Test Case ID:** TC_011
+    *   **Description:** Verify a customer can add products to the cart and edit quantities.
+    *   **Steps:**
+        1. Navigate to a product page.
+        2. Click on "Add to Cart."
+        3. Go to the cart page.
+        4. Edit the quantity of the product.
+    *   **Expected Result:** The quantity of the product in the cart is updated successfully.
+
+*   **Test Case ID:** TC_012
+    *   **Description:** Verify guest checkout functionality.
+    *   **Steps:**
+        1. Add products to the cart.
+        2. Proceed to checkout.
+        3. Click on "Checkout as Guest."
+        4. Enter shipping and payment details.
+        5. Complete the purchase.
+    *   **Expected Result:** The order is placed successfully without requiring account creation.
+
+*   **Test Case ID:** TC_013
+    *   **Description:** Verify search functionality with valid keywords.
+    *   **Steps:**
+        1. Navigate to the search bar.
+        2. Enter valid keywords.
+        3. Click on the "Search" button.
+    *   **Expected Result:** Relevant products are displayed in the search results.
+
+*   **Test Case ID:** TC_014
+    *   **Description:** Verify search functionality with invalid keywords.
+    *   **Steps:**
+        1. Navigate to the search bar.
+        2. Enter invalid keywords.
+        3. Click on the "Search" button.
+    *   **Expected Result:** A message is displayed indicating no results found.
+
+*   **Test Case ID:** TC_015
+    *   **Description:** Verify filter functionality by category.
+    *   **Steps:**
+        1. Navigate to the product listing page.
+        2. Select a category from the filter options.
+    *   **Expected Result:** Products are filtered and displayed based on the selected category.
+
+*   **Test Case ID:** TC_016
+    *   **Description:** Verify filter functionality by price range.
+    *   **Steps:**
+        1. Navigate to the product listing page.
+        2. Enter a price range in the filter options.
+    *   **Expected Result:** Products are filtered and displayed based on the selected price range.
+
+*   **Test Case ID:** TC_017
+    *   **Description:** Verify admin can set up discounts and promotions.
+    *   **Steps:**
+        1. Log in as an admin.
+        2. Navigate to the discount management section.
+        3. Click on "Add Discount."
+        4. Enter valid discount details.
+        5. Click on the "Save" button.
+    *   **Expected Result:** The discount is set up successfully, and a confirmation message is displayed.
+
+*   **Test Case ID:** TC_018
+    *   **Description:** Verify customers can view discounts and promotions.
+    *   **Steps:**
+        1. Navigate to the product listing page.
+        2. Check for visible discounts and promotions.
+    *   **Expected Result:** Discounts and promotions are visible to signed-up customers.
+
+*   **Test Case ID:** TC_019
+    *   **Description:** Verify the system handles a large number of concurrent users.
+    *   **Steps:**
+        1. Simulate a high volume of concurrent users accessing the website.
+        2. Monitor the system performance and response times.
+    *   **Expected Result:** The system remains stable and responsive under high load.
+
+*   **Test Case ID:** TC_020
+    *   **Description:** Verify the system handles unexpected errors gracefully.
+    *   **Steps:**
+        1. Induce an unexpected error (e.g., server timeout, database connection failure).
+        2. Observe the system's error handling and user notifications.
+    *   **Expected Result:** The system displays a user-friendly error message and logs the error for troubleshooting.

@@ -1,0 +1,27 @@
+You are an expert in translating Business Requirements Documents (BRDs) into well-formed user stories and acceptance criteria. Your goal is to extract valuable, user-centric stories that can be used in an Agile development process.
+**BRD:** {brd_text}
+**Instructions:**1.  Carefully analyze the BRD to identify the key functionalities and requirements. Focus on extracting user-centric stories for use in an Agile development process.
+2.  To translate the BRD into user stories, follow these steps:
+    *   **Understand the Big Picture:** Read the entire BRD to grasp the overall project goals, scope, and intended outcomes.
+    *   **Identify Users/Roles:** Examine the BRD for mentions of user types, roles, job titles, or departments that will interact with the system.
+    *   **Extract Actions/Functionality:** Identify the specific actions, tasks, or features that the system must perform based on the BRD's functional requirements.
+    *   **Determine Goals/Benefits:** Determine the reason *why* an action/functionality is needed. What is the desired outcome, value, or benefit that the user or business will gain?
+    *   **Construct User Stories:** Combine the identified User/Role, Action/Functionality, and Goal/Benefit into a user story: "As a [User/Role], I want [Action/Functionality], so that [Goal/Benefit]."
+    *   **Define Acceptance Criteria:** Based on the detailed requirements in the BRD, formulate acceptance criteria for each user story that clearly define what constitutes a "done" implementation.
+    *   **Consider NFRs:** Incorporate non-functional requirements into user stories or as acceptance criteria where appropriate.
+    *   **Refine and Chunk:** Ensure stories are clear, concise, and valuable, breaking down complex requirements and grouping related stories when necessary.
+
+3.  Format the user stories and acceptance criteria as follows:
+
+**User Stories:**
+
+*   **User Story ID:** [Unique ID (e.g., US_001)]
+    *   **Title:** [A concise title for the user story]
+    *   **Description:** As a [User/Role], I want [Action/Functionality], so that [Goal/Benefit].
+    *   **Acceptance Criteria:**
+        *   [Criterion 1]
+        *   [Criterion 2]
+        *   [Criterion 3]
+
+Generate 5 User Stories. Only return the user stories in the specified output format and not any other text.
+ 
