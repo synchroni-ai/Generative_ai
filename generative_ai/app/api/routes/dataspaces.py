@@ -23,9 +23,6 @@ class DataspaceUpdate(Dataspace):
     sub_category: Optional[str] = None
 
     class Settings:
-        # Override settings from base Dataspace if needed for update logic
-        # For simple field updates, this might not be strictly necessary
-        # but it's good practice for update models.
         keep_nulls = False # Do not save fields that are explicitly set to null in the request body
         use_revision = False # Disable revision tracking for update model
 
@@ -156,6 +153,8 @@ async def delete_dataspace(
         # Beanie's delete method
         await dataspace.delete()
         # No content is returned for 204
+        print(f"Dataspace deleted successfully")
+
     except Exception as e:
         print(f"Error deleting dataspace {dataspace.id}: {e}")
         raise HTTPException(

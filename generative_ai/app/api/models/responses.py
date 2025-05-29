@@ -4,15 +4,7 @@ import datetime
 from typing import Optional, Dict, Any
 from pydantic import BaseModel, Field # Import Field for aliases
 from beanie import PydanticObjectId # Needed if you include _id
-
-# Sub-model for the config details in the response
-# This should match the structure embedded in the Document model
-class DocumentConfigDetailsResponse(BaseModel):
-    llm_model: Optional[str] = None # Make Optional for response if config can be null
-    temperature: Optional[float] = None
-    subtype: Optional[str] = None
-    use_case: Optional[str] = None
-    # Add other config fields here, make them Optional
+from app.models import ConfigModel
 
 # Sub-model for timestamps in the response
 class DocumentTimestampsResponse(BaseModel):
@@ -29,7 +21,7 @@ class DocumentDetailResponse(BaseModel):
     # Use Field(alias=...) to map internal model names to desired response names
     name: str = Field(alias="file_name") # Map file_name from Document model to 'name' in response
     status: int # The integer status code
-    config: Optional[DocumentConfigDetailsResponse] = None # Embed the config sub-model
+    config: Optional[ConfigModel] = None # Embed the config sub-model
     timestamps: DocumentTimestampsResponse # Embed the timestamps sub-model
 
     class Config:

@@ -9,13 +9,13 @@ from beanie import PydanticObjectId
 # import httpx # No need
 
 # Import models and response models
-from app.models import Document, Dataspace, DocumentConfigDetails, DocumentStatusEnum
+from app.models import Document, Dataspace, DocumentStatusEnum
 from app.api import deps
 from app.core.config import get_ist_now
 from app.services.s3_service import upload_file_to_s3, delete_file_from_s3
 
 # Import response models
-from app.api.models.responses import DocumentDetailResponse, DocumentConfigDetailsResponse, DocumentTimestampsResponse
+from app.api.models.responses import DocumentDetailResponse, DocumentTimestampsResponse
 router = APIRouter()
 
 # Function to map internal status enum to required integer code
