@@ -1,7 +1,76 @@
 import fitz  # PyMuPDF
 import time
 import tiktoken
+from io import BytesIO
+from PyPDF2 import PdfReader
+import traceback
 
+import boto3
+import tempfile
+import os
+
+s3_client = boto3.client(
+    "s3",
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION"),
+)
+
+def download_file_from_s3(s3_url: str) -> str:
+    """
+    Downloads a file from S3 given its S3 URL and returns the local path.
+    """
+    from urllib.parse import urlparse
+
+    parsed = urlparse(s3_url)
+    bucket_name = parsed.netloc
+    key = parsed.path.lstrip('/')
+
+    # Create a temporary file
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(key)[-1])
+    temp_file.close()  # Close the file so boto3 can write into it
+
+    # Download the file
+    s3_client.download_file(bucket_name, key, temp_file.name)
+
+    return temp_file.name
+
+
+def load_pdf_text_from_bytes(pdf_data, password=None):
+    """
+    Extracts text from a PDF file given its content as bytes.
+
+    Args:
+        pdf_data (bytes): The PDF file content as bytes.
+        password (str, optional): The password for the PDF, if it's encrypted. Defaults to None.
+
+    Returns:
+        str: The extracted text from the PDF, or None if extraction fails.
+    """
+    try:
+        pdf_file = BytesIO(pdf_data)
+        reader = PdfReader(pdf_file)
+
+        if reader.is_encrypted:
+            if password:
+                try:
+                    reader.decrypt(password)
+                except Exception as e:
+                    print(f"Decryption failed with provided password: {e}")
+                    print(traceback.format_exc())
+                    return None
+            else:
+                print("PDF is encrypted but no password provided.")
+                return None  # or raise an exception
+
+        text = ""
+        for page in reader.pages:
+            text += page.extract_text()
+        return text
+    except Exception as e:
+        print(f"Error extracting text from PDF bytes: {e}")
+        print(traceback.format_exc())
+        return None
 
 def load_pdf_text(pdf_path):
     """

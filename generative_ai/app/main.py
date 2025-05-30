@@ -4,9 +4,9 @@ from fastapi import FastAPI
  
 from app.api import api_router # Import the combined router
 from app.db.mongodb import connect_db, close_db # Import DB connection functions
-from app.api.routes import documents ,configs
-from app.api.routes import test_generation  # Replace with the actual path to your new router file
-
+from app.api.routes import documents ,configs,test_generation
+#from app.api.routes import test_generation  # Replace with the actual path to your new router file
+ 
  
  
  
@@ -25,16 +25,11 @@ async def shutdown_event():
     await close_db()
  
 # Include the main API router
+app.include_router(test_generation.router, prefix="/api")
 app.include_router(api_router, prefix="/api/v1") # Optional: Add a version prefix
 app.include_router(documents.router)
 app.include_router(configs.router)
-app.include_router(test_generation.router)  # Include the router
-
- 
-# Basic root endpoint (optional)
+# app.include_router(test_generation.router)  # Include the router
 @app.get("/")
 async def read_root():
     return {"message": "GenAI Project API is running. Access /api/v1/docs for documentation."}
- 
- 
- 

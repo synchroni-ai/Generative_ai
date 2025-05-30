@@ -1,6 +1,10 @@
-from app.core.celery_app import celery_app
-from utils import data_ingestion, test_case_utils
-from utils.llms import Mistral, openai, llama
+from celery import Celery
+import boto3
+import io
+from PyPDF2 import PdfReader  # or your PDF processing library
+from app.core.celery_app import celery_app  # Keep this as is!
+from app.utils import data_ingestion, test_case_utils
+from app.utils.llms import Mistral, openai, llama
 from fastapi import HTTPException
 from bson import ObjectId
 import uuid
@@ -9,13 +13,11 @@ import re
 from pathlib import Path
 from pymongo import MongoClient
 import pandas as pd
-# from app.core.celery_app import celery_app
 
-
-mongo_client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017/"))
-db = mongo_client["Gen_AI"]
-collection = db["test_case_generation"]
-cost_collection = db["cost_tracking"]
+#mongo_client = MongoClient(os.getenv("MONGODB_URL", "mongodb://localhost:27017/")) #remove this too. This creates a new connection
+#db = mongo_client["generative_ai"]  #use same collection for both to make things simple. You can also use other #remove this too
+#collection = db["documents"] #remove this too
+#cost_collection = db["cost_tracking"] #remove this too
 
 COST_PER_1M_TOKENS = {"Llama": 0.20, "Mistral": 0.80}
 INPUT_DIR = os.getenv("INPUT_DIR", "input_pdfs")
@@ -32,11 +34,14 @@ MODEL_DISPATCHER = {
     "Llama": llama.generate_with_llama,
 }
 
+# AWS S3 configuration (ideally, credentials should be handled via IAM role)
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")  # VERY IMPORTANT: Set this in your environment!
+AWS_REGION = os.getenv("AWS_REGION", "us-east-1")  # Or your AWS region
 
 
-
-def process_document(file_path, model_name, chunk_size):
-    brd_text, _ = data_ingestion.load_pdf_text(str(file_path))
+def process_document(pdf_data, model_name, chunk_size): # modified this to get pdf data
+    #brd_text, _ = data_ingestion.load_pdf_text(str(file_path)) #no more needed because we have s3 object
+    brd_text = data_ingestion.load_pdf_text_from_bytes(pdf_data) # reads the binary data
     if not brd_text:
         raise HTTPException(status_code=500, detail="Failed to extract text from PDF.")
 
@@ -70,9 +75,13 @@ def process_and_generate_task_multiple(
 
     all_documents_results = []
 
+    # Initialize s3 client
+    s3 = boto3.client("s3", region_name=AWS_REGION)
+
     try:
         # Initialize progress array in MongoDB (empty list) and status = 0 (processing)
         try:
+            # Use the injected `collection` from the endpoint (more robust)
             collection.update_one(
                 {"_id": ObjectId(document_id)},
                 {
@@ -89,15 +98,32 @@ def process_and_generate_task_multiple(
 
         processed_count = 0 # Track progress
         for file_data in file_ids: # Iterate through documents
-            file_path = file_data['file_path'] # use file_path from dictionary now
+            s3_url = file_data['file_path'] # this field had local file path, but now s3 url. KEEP SAME NAME FOR NOW
             file_id = file_data['file_id']
-            print(f"Processing file: {file_path}")
+            file_name = file_data['file_name']  # Get file name from the dictionary
+
+            print(f"Processing file: {file_name} from S3 URL: {s3_url}")  # Log S3 URL
 
             try:
+                # Extract bucket name and key from the S3 URL
+                from urllib.parse import urlparse
+                parsed_url = urlparse(s3_url)
+                bucket_name = parsed_url.netloc  # Bucket name
+                s3_key = parsed_url.path.lstrip('/')   # Key
+
+                # Download the PDF from S3
+                try:
+                    obj = s3.get_object(Bucket=bucket_name, Key=s3_key)
+                    pdf_data = obj['Body'].read() # reads as bytes
+                except Exception as e:
+                    raise HTTPException(
+                        status_code=500,
+                        detail=f"Failed to download PDF from S3: {e}",
+                    )
 
                 generation_function = MODEL_DISPATCHER[model_name]
                 chunks, cleaned_text = process_document(
-                    file_path, model_name, chunk_size
+                    pdf_data, model_name, chunk_size # pass the content here
                 )
 
                 all_results = [] # stores results of different test cases for this file
@@ -105,7 +131,7 @@ def process_and_generate_task_multiple(
 
 
                 for test_case_type in test_case_types:  # Loop inside for all test cases
-                    prompt_dir = Path("utils/prompts")
+                    prompt_dir = Path("app/utils/prompts")  # Corrected Path!
                     prompt_path = prompt_dir / f"{test_case_type}.txt"
 
                     if not prompt_path.exists():
@@ -156,21 +182,21 @@ def process_and_generate_task_multiple(
 
                 document_result = {
                     "file_id": file_id,
-                    "file_name": Path(file_path).name,  # Add file name
+                    "file_name": file_name,  # Add file name
                     "results": all_results,
                 }  # Store the results for the specific file
 
                 all_documents_results.append(document_result) # Results for all files
                 processed_count += 1
-                progress_message = f"✅ Processed file: {Path(file_path).name}  ({processed_count} / {len(file_ids)})"
+                progress_message = f"✅ Processed file: {file_name}  ({processed_count} / {len(file_ids)})"
 
 
             except Exception as e:
-                progress_message = f"❌ Error processing file: {Path(file_path).name}: {e}"
+                progress_message = f"❌ Error processing file: {file_name}: {e}"
                 print(progress_message)
                 document_result = { # To store the error
                     "file_id": file_id,
-                    "file_name": Path(file_path).name, # Add file name
+                    "file_name": file_name, # Add file name
                     "error": str(e)
                 }
                 all_documents_results.append(document_result)
@@ -178,6 +204,7 @@ def process_and_generate_task_multiple(
 
             # Update progress after each file
             try:
+                #Use the injected `collection` from the endpoint (more robust)
                 collection.update_one(
                     {"_id": ObjectId(document_id)},
                     {
@@ -189,13 +216,14 @@ def process_and_generate_task_multiple(
 
                     },
                 )
+                #Use the injected `collection` from the endpoint (more robust)
                 collection.update_one(
                      {"_id": ObjectId(document_id)},
                       {"$push": {"progress": progress_message}},
                 )
             except Exception as e:
                 print(
-                    f"MongoDB update error (progress after document {Path(file_path).name}): {str(e)}"
+                    f"MongoDB update error (progress after document {file_name}): {str(e)}"
                 )
 
             self.update_state(
@@ -210,6 +238,7 @@ def process_and_generate_task_multiple(
 
         # Final update: status=1 done, update progress with completion message
         try:
+            #Use the injected `collection` from the endpoint (more robust)
             collection.update_one(
                 {"_id": ObjectId(document_id)},
                 {

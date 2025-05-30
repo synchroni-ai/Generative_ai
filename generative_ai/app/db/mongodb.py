@@ -1,53 +1,46 @@
 # app/db/mongodb.py
 
 from typing import Optional
-from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase # <-- Import AsyncIOMotorDatabase
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from motor.core import AgnosticClient
 from pymongo.errors import ConnectionFailure, ConfigurationError, OperationFailure
 from beanie import init_beanie
-from fastapi import HTTPException, status # <-- Import HTTPException and status
+from fastapi import HTTPException, status
+import os # import OS here
 
-from app.core.config import MONGO_URI, MONGO_DB_NAME
-# Make sure these are imported and accessible
-# from app.models import Dataspace, Document
-# document_models = [Dataspace, Document]
+from app.core.config import MONGO_URI, MONGO_DB_NAME  # Make sure these are correctly defined and populated
+from app.models import Dataspace, Document  # Make sure these are imported
 
-
-# Add other models here as you create them (e.g., User, Config, Job, Result)
-# Make sure ALL Beanie Document models are listed here for init_beanie
-# Example:
-# from app.models import Dataspace, Document, User, Config, Job, Result
-# document_models = [Dataspace, Document, User, Config, Job, Result]
-
-# For this specific fix, ensure Dataspace and Document are imported
-from app.models import Dataspace, Document
 document_models = [Dataspace, Document]
-
 
 db_client: Optional[AgnosticClient] = None
 
 async def connect_db():
     """Initializes MongoDB connection and Beanie ODM."""
     global db_client
+
+    MONGO_URI = os.getenv("MONGO_URI")
+    MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
+
     print("Attempting to connect to MongoDB...")
     print(f"MONGO_URI: {MONGO_URI}")
     print(f"MONGO_DB_NAME: {MONGO_DB_NAME}")
 
     if not MONGO_URI or not MONGO_DB_NAME:
-         print("\n!!! WARNING: MongoDB connection not fully configured. Set MONGO_URI and MONGO_DB_NAME env vars. !!!\n")
-         return
+        print(
+            "\n!!! WARNING: MongoDB connection not fully configured. Set MONGO_URI and MONGO_DB_NAME env vars. !!!\n"
+        )
+        db_client = None # ensure this happens if no DB connection, so get_db() errors
+        return  # Stop here if not configured
 
     try:
         client = AsyncIOMotorClient(MONGO_URI, serverSelectionTimeoutMS=5000)
-        await client.admin.command('ismaster') # Check connection
+        await client.admin.command("ismaster")  # Check connection
 
         db_client = client
 
         print("MongoDB connection successful. Initializing Beanie...")
-        await init_beanie(
-            database=db_client[MONGO_DB_NAME],
-            document_models=document_models
-        )
+        await init_beanie(database=db_client[MONGO_DB_NAME], document_models=document_models)
         print("Beanie initialized.")
         print("DB connection function complete.")
 
@@ -63,31 +56,30 @@ async def close_db():
     global db_client
     print("Closing MongoDB connection.")
     if db_client:
-        db_client.close()
+        await db_client.close()  # Corrected: await client.close()
         print("MongoDB connection closed.")
     else:
         print("No MongoDB connection to close.")
 
 # This dependency will be used in your routes and services
 # CHANGE: Return the actual database object
-async def get_db() -> AsyncIOMotorDatabase: # Add type hint for clarity
+async def get_db() -> AsyncIOMotorDatabase:
     """Dependency to get the MongoDB database object."""
     global db_client
     if db_client is None:
         # Add print for debugging if this case is hit
         print("ERROR: Database client is None in get_db dependency.")
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Database connection not established."
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Database connection not established."
         )
+
     try:
         # Return the actual Motor database object
-        database: AsyncIOMotorDatabase = db_client[MONGO_DB_NAME]
+        database: AsyncIOMotorDatabase = db_client[os.getenv("MONGO_DB_NAME")] # gets name from ENV, not config
         return database
     except Exception as e:
-         # Add print for debugging if accessing the database fails
-         print(f"ERROR: Failed to get database object from client: {e}")
-         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to get database object: {e}"
+        # Add print for debugging if accessing the database fails
+        print(f"ERROR: Failed to get database object from client: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to get database object: {e}"
         )
