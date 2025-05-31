@@ -209,7 +209,7 @@ const UploadModal = ({ open, onClose,fetchDocuments }) => {
               variant="contained"
               onClick={handleUpload}
               disabled={!file}
-              sx={{backgroundColor:"#000080",color:"white"}}
+              sx={{backgroundColor:"var(--primary-blue)",color:"white"}}
             >
               Upload
             </Button>
@@ -221,10 +221,10 @@ const UploadModal = ({ open, onClose,fetchDocuments }) => {
             variant="outlined"
             onClick={() => handleClose(true)}
             disabled={!uploadCompleted}  // ✅ Only enable if backend confirmed success
-            sx={{backgroundColor:"#000080",color:"white",
+            sx={{backgroundColor:"var(--primary-blue)",color:"white",
               "&.Mui-disabled": {
         color: "white",
-        backgroundColor: "#000080",
+        backgroundColor: "var(--primary-blue)",
         opacity: 0.6, // optional: for a subtle disabled look
       },
             }}

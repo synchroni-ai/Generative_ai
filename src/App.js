@@ -51,13 +51,14 @@ import {
   Navigate,
   matchPath
 } from "react-router-dom";
-
 import LoginPage from "./components/Authentication/Loginpage";
 import Dashboard from "./components/DocumentList/Documentlist";
 import TokenChecker from "./components/Authentication/TokenChecker";
 import Header from "./Layout/Header";
 import Footer from "./Layout/Footer";
 import UIUXConfigurator from "./components/Generate/UIUXConfigurator";
+import "./App.css";
+
 
 // ✅ Layout wrapper for header/footer visibility logic
 const LayoutWrapper = ({ children }) => {

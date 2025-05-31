@@ -30,8 +30,6 @@ import DeleteIcon from "./../../asessts/images/deleteicon.png";
 import GenerateDrawer from "../Generate/GenerateDrawer"; // adjust the path accordingly
 import GenAIUploader from '../Upload/GenAi_Overview'; // import your component
 import "./../../asessts/css/documentlist.css";
-import "./header.css";
-import Footer from "../../Layout/Footer";
 
 const Documentlist = () => {
   const [activeTab, setActiveTab] = useState("testcase");
@@ -203,11 +201,6 @@ const handleGenerateClick = async (doc) => {
   }
 };
 
-
-
-
-
-
   useEffect(() => {
     fetchDocuments();
   }, []);
@@ -239,7 +232,7 @@ const handleGenerateClick = async (doc) => {
           sx={{
             borderRadius: '30px',
             textTransform: 'none',
-            color: '#000080',
+            color: 'var(--primary-blue)',
             borderColor: 'transparent',
             bgcolor: '#f9f9f9',
             '&:hover': {
@@ -324,153 +317,114 @@ const handleGenerateClick = async (doc) => {
     </TableRow>
   ))}
 </TableBody>
-
-
               </Table>
             </TableContainer>
           ) : (
-            <TableContainer sx={{ width: "100%", border: "1px solid #e6e6e6", borderRadius: "10px", borderBottom: "none" }}>
-              <Table aria-label="documents table">
-               <TableHead>
-  <TableRow>
-    <TableCell padding="checkbox">
-      {/* Optional: master checkbox for selecting all */}
-      <Checkbox
-      disableRipple
-        indeterminate={selectedRows.length > 0 && selectedRows.length < totalItems}
-        checked={selectedRows.length === totalItems}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          setSelectedRows(checked ? FilteredDocs.map(doc => doc._id) : []);
-        }}
-          sx={{
-    color: '#c4c4c4',
-    '&.Mui-checked': {
-      color: '#000080', // your desired checked color
-    },
-    '&.MuiCheckbox-indeterminate': {
-      color: '#000080', // minus icon color
-    },
-    '& .MuiSvgIcon-root': {
-      borderRadius: '4px',
-    },
-  }}
-      />
-    </TableCell>
-    <TableCell sx={{ fontWeight: "bold" }}>Data Space Name</TableCell>
-    <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
-    <TableCell sx={{ fontWeight: "bold" }}>Subcategory</TableCell>
-    <TableCell sx={{ fontWeight: "bold" }}>Documents</TableCell>
-    <TableCell sx={{ fontWeight: "bold" }}>Created At</TableCell>
-    <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
-  </TableRow>
-</TableHead>
+            <TableContainer className="documentlist_tableContainer">
+      <Table aria-label="documents table">
+        <TableHead>
+          <TableRow>
+            <TableCell padding="checkbox">
+              <Checkbox
+                disableRipple
+                indeterminate={selectedRows.length > 0 && selectedRows.length < totalItems}
+                checked={selectedRows.length === totalItems}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setSelectedRows(checked ? FilteredDocs.map(doc => doc._id) : []);
+                }}
+                className="documentlist_checkbox"
+              />
+            </TableCell>
+            <TableCell className="documentlist_header">Data Space Name</TableCell>
+            <TableCell className="documentlist_header">Category</TableCell>
+            <TableCell className="documentlist_header">Subcategory</TableCell>
+            <TableCell className="documentlist_header">Documents</TableCell>
+            <TableCell className="documentlist_header">Created At</TableCell>
+            <TableCell className="documentlist_header">Actions</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {documents
+            .filter(doc =>
+              doc.name?.toLowerCase().includes(searchTerm?.toLowerCase())
+            )
+            .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+            .map((doc) => (
+              <TableRow key={doc._id}>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    disableRipple
+                    checked={selectedRows.includes(doc._id)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      setSelectedRows((prev) =>
+                        checked ? [...prev, doc._id] : prev.filter(id => id !== doc._id)
+                      );
+                    }}
+                    className="documentlist_checkbox"
+                  />
+                </TableCell>
+                <TableCell
+                  onClick={() => handleGenerateClick(doc)}
+                  className="documentlist_clickableCell"
+                >
+                  {doc.name}
+                </TableCell>
 
-
-<TableBody>
-  {documents
-    .filter(doc =>
-      doc.name?.toLowerCase().includes(searchTerm?.toLowerCase())
-    )
-    .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-    .map((doc) => (
-      <TableRow key={doc._id}>
-        <TableCell padding="checkbox">
-          <Checkbox
-          disableRipple
-            checked={selectedRows.includes(doc._id)}
-            onChange={(e) => {
-              const checked = e.target.checked;
-              setSelectedRows((prev) =>
-                checked ? [...prev, doc._id] : prev.filter(id => id !== doc._id)
-              );
-            }}
-              sx={{
-    color: '#c4c4c4',
-    '&.Mui-checked': {
-      color: '#000080', // your desired checked color
-    },
-    '& .MuiSvgIcon-root': {
-      borderRadius: '4px',
-    },
-  }}
-          />
-        </TableCell>
-       <TableCell 
-  onClick={() => handleGenerateClick(doc)}
-  sx={{ cursor: "pointer", color: "navy" }}
->
-  {doc.name}
-</TableCell>
-
-        <TableCell sx={{ color: "#8e8e8e" }}>{doc.category}</TableCell>
-        <TableCell sx={{ color: "#8e8e8e" }}>{doc.sub_category}</TableCell>
-        <TableCell sx={{ color: "#8e8e8e" }}>{doc.document_count}</TableCell>
-        <TableCell sx={{ color: "#8e8e8e" }}>{new Date(doc.created_at).toLocaleDateString()}</TableCell>
-         <TableCell>
-          <IconButton
-            size="small"
-            onClick={handleClick}
-            sx={{ '&:hover': { backgroundColor: 'transparent' }, padding: 0 }}
-          >
-            <MoreVertIcon sx={{ fontSize: 22, color: "#8e8e8e" }} />
-          </IconButton>
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleClose}
-            disabled={true}
-            disableRipple
-            PaperProps={{
-              elevation: 0,
-              sx: {
-                backgroundColor: "#FBFBFB",
-                borderRadius: 5,
-                paddingY: 0,
-                minWidth: 100,
-              },
-            }}
-            anchorOrigin={{
-    vertical: "top",     // Align top of menu with anchor
-    horizontal: "right", // Anchor from the right edge of the icon
-  }}
-  transformOrigin={{
-    vertical: "top",      // Transform from top of the menu
-    horizontal: "left",   // Menu grows to the right
-  }}
-          >
-            <MenuItem onClick={handleClose} disabled={true}>
-              <ListItemIcon>
-                <img src={DeleteIcon} width={18} height={18} alt="Delete" />
-              </ListItemIcon>
-              <ListItemText primaryTypographyProps={{ sx: { color: "#666666" } }}>Delete</ListItemText>
-            </MenuItem>
-          </Menu>
-        </TableCell>
-      </TableRow>
-    ))}
-</TableBody>
-
-
-
-              </Table>
-            </TableContainer>
+                <TableCell className="documentlist_dimmedText">{doc.category}</TableCell>
+                <TableCell className="documentlist_dimmedText">{doc.sub_category}</TableCell>
+                <TableCell className="documentlist_dimmedText">{doc.document_count}</TableCell>
+                <TableCell className="documentlist_dimmedText">{new Date(doc.created_at).toLocaleDateString()}</TableCell>
+                <TableCell>
+                  <IconButton
+                  disableRipple
+                    size="small"
+                    onClick={handleClick}
+                    className="documentlist_actionIcon"
+                  >
+                    <MoreVertIcon className="documentlist_moreIcon" />
+                  </IconButton>
+                  <Menu
+                    anchorEl={anchorEl}
+                    open={open}
+                    onClose={handleClose}
+                    disabled
+                    disableRipple
+                    PaperProps={{
+                      elevation: 0,
+                      className: 'documentlist_menuPaper',
+                    }}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+                  >
+                    <MenuItem onClick={handleClose} disabled >
+                      <ListItemIcon>
+                        <img src={DeleteIcon} width={18} height={18} alt="Delete" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primaryTypographyProps={{ className: 'documentlist_deleteText' }}
+                      >
+                        Delete
+                      </ListItemText>
+                    </MenuItem>
+                  </Menu>
+                </TableCell>
+              </TableRow>
+            ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
           )}
 
-           <Box mt={3}>
-      <Box
-        display="flex"
-        justifyContent="space-between"
-        alignItems="center"
-        flexWrap="wrap"
-        gap={2}
-      >
-        {/* Left side: Show dropdown + Showing info */}
-        <Box display="flex" alignItems="center" gap={5} flexWrap="wrap">
-          <Box display="flex" alignItems="center" gap={1}>
-<Typography variant="body2" sx={{ color: "#8e8e8e" }}>
-  Show
-</Typography>
+           <Box className="documentlist_footerContainer">
+      <Box className="documentlist_footerRow">
+        {/* Left Controls */}
+        <Box className="documentlist_leftControls">
+          <Box className="documentlist_dropdownContainer">
+            <Typography variant="body2" className="documentlist_dropdownLabel">
+              Show
+            </Typography>
             <Select
               size="small"
               value={rowsPerPage}
@@ -478,16 +432,7 @@ const handleGenerateClick = async (doc) => {
                 setRowsPerPage(parseInt(e.target.value, 10));
                 setPage(0);
               }}
-              sx={{
-                minWidth: 50,
-                height: 30,
-                color:"#8e8e8e",
-                fontSize: '0.875rem',
-                '& .MuiSelect-select': {
-                  // paddingTop: '4px',
-                  // paddingBottom: '4px',
-                },
-              }}
+              className="documentlist_rowsPerPageSelect"
             >
               {[5, 10, 25].map((option) => (
                 <MenuItem key={option} value={option}>
@@ -495,87 +440,49 @@ const handleGenerateClick = async (doc) => {
                 </MenuItem>
               ))}
             </Select>
-            <Typography variant="body2" sx={{color:"#8e8e8e"}}>Entries</Typography>
+            <Typography variant="body2" className="documentlist_dropdownLabel">Entries</Typography>
           </Box>
 
-          <Typography variant="body2" sx={{color:"#8e8e8e"}}>
+          <Typography variant="body2" className="documentlist_entriesInfo">
             Showing {start} to {end} of {totalItems} entries
           </Typography>
         </Box>
-          {/* Right Side - Pagination with "Previous" and "Next" text */}
-   
-  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-  {/* Previous */}
-  <PaginationItem
-  disableRipple
-    type="previous"
-    disabled={currentPage === 1}
-    
-    onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
-    slots={{ previous: () => <span>Previous</span> }}
-    sx={{
-      padding: '6px 16px',
-      borderRadius: '50%',
-      minWidth: 'auto',
-      height: 'auto',
-      color:"#666666",
-      '&:hover': { backgroundColor: 'transparent' },
-    }}
-  />
 
-  {/* Dynamic page buttons */}
-  {getVisiblePages().map((pg) => (
-    <PaginationItem
-    disableRipple
-      key={pg}
-      page={pg}
-      selected={pg === currentPage}
-      onClick={() => setPage(pg - 1)}
-      sx={{
-        borderRadius: '50%',
-        minWidth: 32,
-        height: 32,
-        // backgroundColor: pg === currentPage ? '#000080' : 'transparent',
-        color: pg === currentPage ? '#fff' : '#666666',
-         '&:hover': {
-              backgroundColor: '',
-            },
-             '&.Mui-selected': {
-              backgroundColor: '#000080',
-              color: '#fff',
-              '&:hover': {
-                backgroundColor: '#000080',
-              },
-            },
-      }}
-    />
-  ))}
+        {/* Right Controls */}
+        <div className="documentlist_paginationControls">
+          <PaginationItem
+            disableRipple
+            type="previous"
+            disabled={currentPage === 1}
+            onClick={() => setPage((prev) => Math.max(prev - 1, 0))}
+            slots={{ previous: () => <span>Previous</span> }}
+            className="documentlist_paginationItem"
+          />
 
-  {/* Next */}
-  <PaginationItem
-  disableRipple
-    type="next"
-    disabled={currentPage === totalPages}
-    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
-    slots={{ next: () => <span>Next</span> }}
-    sx={{
-      padding: '6px 16px',
-      borderRadius: '50%',
-      minWidth: 'auto',
-      height: 'auto',
-      color:"#666666",
-      '&:hover': { backgroundColor: 'transparent' },
-    }}
-  />
-</div>
+          {getVisiblePages().map((pg) => (
+            <PaginationItem
+              disableRipple
+              key={pg}
+              page={pg}
+              selected={pg === currentPage}
+              onClick={() => setPage(pg - 1)}
+              className={`documentlist_paginationItem ${pg === currentPage ? 'Mui-selected' : ''}`}
+            />
+          ))}
 
-
-
+          <PaginationItem
+            disableRipple
+            type="next"
+            disabled={currentPage === totalPages}
+            onClick={() => setPage((prev) => Math.min(prev + 1, totalPages - 1))}
+            slots={{ next: () => <span>Next</span> }}
+            className="documentlist_paginationItem"
+          />
+        </div>
       </Box>
     </Box>
         </Container>
       </Box>
-      
 
       {/* <TestCaseDrawer
         open={drawerOpen}
@@ -593,9 +500,8 @@ const handleGenerateClick = async (doc) => {
         documentName={selectedDocumentName} // ✅ Correctly scoped and passed
           taskId={taskId} // 👈 Pass task_id here
       />
-      <UploadModal open={modalOpen} onClose={handleModalClose} fetchDocuments={fetchDocuments} />
-         
 
+      <UploadModal open={modalOpen} onClose={handleModalClose} fetchDocuments={fetchDocuments} />
     </Box>
   );
 };

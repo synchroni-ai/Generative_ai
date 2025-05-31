@@ -735,13 +735,13 @@ useEffect(() => {
           onClick={exportCSV}
           sx={{
             textTransform: 'none',
-            backgroundColor: '#000080',
+            backgroundColor: 'var(--primary-blue)',
             color: '#fff',
             fontWeight: 500,
             borderRadius: 5,
             px: 2,
             '&:hover': {
-              backgroundColor: '#000080',
+              backgroundColor: 'var(--primary-blue)',
             },
             display: 'flex',
             alignItems: 'center',
