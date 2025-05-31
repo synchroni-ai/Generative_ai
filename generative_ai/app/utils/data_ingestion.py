@@ -43,6 +43,21 @@ def clean_text(text):
     return text
 
 
+def split_text_into_chunks(text, chunk_size=7000):
+    chunks = []
+    current_chunk = ""
+    sentences = re.split(r"(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s", text)
+    for sentence in sentences:
+        if len(current_chunk) + len(sentence) + 1 <= chunk_size:
+            current_chunk += sentence + " "
+        else:
+            chunks.append(current_chunk.strip())
+            current_chunk = sentence + " "
+    if current_chunk:
+        chunks.append(current_chunk.strip())
+    return chunks
+
+
 def count_tokens(text, encoding_name="cl100k_base"):
     """
     Counts the number of tokens in a text string using the specified tiktoken encoding.

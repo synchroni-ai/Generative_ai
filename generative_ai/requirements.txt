@@ -8,3 +8,7 @@ boto3
 dnspython
 werkzeug
 tzdata 
+celery
+redis
+passlib[bcrypt]
+python-jose[cryptography]
