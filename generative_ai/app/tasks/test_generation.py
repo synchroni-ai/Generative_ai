@@ -1,13 +1,12 @@
-from celery import Celery
+# tasks/test_generation.py
+from app.tasks.celery_worker import celery_app
 from pymongo import MongoClient
 from bson import ObjectId
-from test_case_generator.generation.test_case_generator import generate_test_cases
+from app.test_case_generator.generation.test_case_generator import generate_test_cases
 import os
 from dotenv import load_dotenv
 
 load_dotenv()
-
-celery_app = Celery("tasks", broker=os.getenv("CELERY_BROKER_URL"))
 
 MONGO_URI = os.getenv("MONGO_URI")
 API_KEYS = {
@@ -28,7 +27,6 @@ def run_test_generation(self, config_id: str):
 
     result = generate_test_cases(config, MONGO_URI, API_KEYS)
 
-    # Store metadata for job tracking
     client["test_case_db"]["jobs"].insert_one(
         {
             "job_id": self.request.id,

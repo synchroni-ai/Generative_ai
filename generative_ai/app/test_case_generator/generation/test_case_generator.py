@@ -124,20 +124,26 @@ def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
     return full_result
 
 
-# from bson import ObjectId
+if __name__ == "__main__":
+    from bson import ObjectId
+    from pymongo import MongoClient
 
-# # Set your config ID
-# CONFIG_ID = "683ad3297254e6bbf82d4f03"
+    load_dotenv()
+    MONGO_URI = os.getenv("MONGO_URI")
+    TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    API_KEYS = {"together_ai": TOGETHER_API_KEY, "openai": OPENAI_API_KEY or ""}
 
-# # Fetch full config document
-# client = MongoClient(MONGO_URI)
-# config_doc = client["generative_ai"]["configurations"].find_one(
-#     {"_id": ObjectId(CONFIG_ID)}
-# )
+    # Replace with your actual config ID to test
+    config_id = "your_config_id_here"
 
-# if not config_doc:
-#     print(f"❌ Config with ID {CONFIG_ID} not found.")
-# else:
-#     result = generate_test_cases(config_doc, MONGO_URI, API_KEYS)
-#     print("✅ Test case generation complete.")
-#     print(result)
+    client = MongoClient(MONGO_URI)
+    config_doc = client["generative_ai"]["configurations"].find_one(
+        {"_id": ObjectId(config_id)}
+    )
+
+    if not config_doc:
+        print(f"❌ Config {config_id} not found.")
+    else:
+        result = generate_test_cases(config_doc, MONGO_URI, API_KEYS)
+        print(result)
