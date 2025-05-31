@@ -51,7 +51,7 @@ def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
     """
     client = MongoClient(mongo_uri)
     doc_db = client["generative_ai"]["documents"]
-    result_db = client["test_case_db"]["grouped_results"]
+    result_db = client["generative_ai"]["test_case_grouped_results"]
 
     document_ids = config.get("documents", [])
     inner_config = config.get("config", {})
