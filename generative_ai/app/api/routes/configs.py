@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.models import ConfigModel
+from app.models import ConfigModel, MultiDocumentConfigModel
 from app.services.config_service import save_config, get_config_by_document_id
 from app.db.mongodb import get_db
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from bson import ObjectId
 
 router = APIRouter()
 
@@ -26,4 +27,29 @@ async def get_document_config(
     config = await get_config_by_document_id(document_id, db)
     if not config:
         raise HTTPException(status_code=404, detail="Config not found")
+    return {"config": config}
+
+
+@router.post("/configs")
+async def save_multi_document_config(
+    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    config_doc = {
+        "documents": [ObjectId(doc_id) for doc_id in config_data.documents],
+        "config": config_data.config.dict(),
+        "created_by": config_data.created_by,
+        "created_at": config_data.created_at,
+    }
+    result = await db["configurations"].insert_one(config_doc)
+    return {"message": "Configuration saved", "config_id": str(result.inserted_id)}
+
+
+@router.get("/configs/{config_id}")
+async def get_config_by_id(config_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+    config = await db["configurations"].find_one({"_id": ObjectId(config_id)})
+    if not config:
+        raise HTTPException(status_code=404, detail="Config not found")
+
+    config["_id"] = str(config["_id"])
+    config["documents"] = [str(doc_id) for doc_id in config["documents"]]
     return {"config": config}

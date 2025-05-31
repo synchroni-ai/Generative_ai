@@ -1,6 +1,6 @@
 # app/models.py
 
-from typing import Optional, Literal
+from typing import Optional, Literal, List
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -20,13 +20,30 @@ class User(Document):
 
 
 class ConfigModel(BaseModel):
-    config_id: Optional[str] = Field(default_factory=lambda: str(uuid4()))
-    llm_model: str
+    llm_model: Literal["Mistral", "GPT-4"]
     temperature: float
-    subtype: Literal["functional", "non-functional"]
-    use_case: str
+
+    use_case: List[Literal["test case generation", "functional design", "wireframes"]]
+    subtypes: List[
+        Literal[
+            "functional",
+            "non-functional",
+            "performance",
+            "security",
+            "boundary",
+            "compliance",
+        ]
+    ]
+
     created_at: Optional[datetime] = Field(default_factory=get_ist_now)
     updated_at: Optional[datetime] = Field(default_factory=get_ist_now)
+
+
+class MultiDocumentConfigModel(BaseModel):
+    documents: List[str]  # list of document IDs
+    config: ConfigModel  # your existing config model
+    created_by: Optional[str] = None
+    created_at: Optional[datetime] = Field(default_factory=get_ist_now)
 
 
 class Dataspace(Document):

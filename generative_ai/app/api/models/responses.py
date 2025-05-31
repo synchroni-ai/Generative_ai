@@ -1,7 +1,7 @@
 # app/api/models/responses.py
 
 import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Literal
 from pydantic import BaseModel, Field  # Import Field for aliases
 from beanie import PydanticObjectId  # Needed if you include _id
 from app.models import ConfigModel
@@ -89,22 +89,27 @@ class BatchUploadResponse(BaseModel):  # <--- BatchUploadResponse
 class DocumentConfigDetailsResponse(
     BaseModel
 ):  # <--- This is likely the model you need for config responses
-    llm_model: str
+    llm_model: Literal["Mistral", "GPT-4"]
     temperature: float
-    # subtype could be a string or Literal here, depending on desired validation
-    subtype: str  # Use str if you just want to pass the string value through
-    use_case: str
-    # Include timestamps for the config itself if needed in the response
+    use_case: List[Literal["test case generation", "functional design", "wireframes"]]
+    subtypes: List[
+        Literal[
+            "functional",
+            "non-functional",
+            "performance",
+            "security",
+            "boundary",
+            "compliance",
+        ]
+    ]
     created_at: Optional[datetime.datetime] = None
     updated_at: Optional[datetime.datetime] = None
-    # Add other config fields here
 
 
 # Sub-model for timestamps in the GET /documents/{document_id} response
 class DocumentTimestampsResponse(BaseModel):
     uploaded_at: datetime.datetime
     processed_at: Optional[datetime.datetime] = None
-    # Optionally include last_configured here if needed in the response
     # last_configured: Optional[datetime.datetime] = None
 
     class Config:
