@@ -192,7 +192,7 @@ import uuid
 
 import base64
  
-app = FastAPI()
+# app = FastAPI()
  
 # MongoDB setup
 
@@ -203,8 +203,11 @@ db = client.document_tags_db
 tags_collection = db.tags
  
 # 🔁 Endpoint 1: Original multipart/form-data upload
+# --- API Routers ---
+api_v1_router = APIRouter(prefix="/api/v1")
 
-@app.post("/process-document")
+# --- Data Space Endpoints ---
+@api_v1_router.post("/process-document")
 
 async def process_document(file: UploadFile = File(...), filename: str = Form(...)):
 
@@ -237,7 +240,7 @@ async def process_document(file: UploadFile = File(...), filename: str = Form(..
  
 # 🆕 Endpoint 2: Base64 + JSON (Power Automate-friendly)
 
-@app.post("/process-document-base64")
+@api_v1_router.post("/process-document-base64")
 
 async def process_document_base64(payload: dict = Body(...)):
 
@@ -278,7 +281,7 @@ async def process_document_base64(payload: dict = Body(...)):
  
 # 📄 Endpoint 3: Retrieve tags by document ID
 
-@app.get("/get-tags/{doc_id}")
+@api_v1_router.get("/get-tags/{doc_id}")
 
 def get_tags(doc_id: str):
 
@@ -318,11 +321,6 @@ def generate_tags(file_bytes):
 
     return [kw[0] for kw in keywords[:5]]
 
- 
-# --- API Routers ---
-api_v1_router = APIRouter(prefix="/api/v1")
-
-# --- Data Space Endpoints ---
 @api_v1_router.post(
     "/data-spaces/create-and-upload/",
     response_model=BatchUploadResponse,
