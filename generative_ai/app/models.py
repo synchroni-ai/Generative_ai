@@ -1,6 +1,6 @@
 # app/models.py
 
-from typing import Optional, Literal, List
+from typing import Optional, Literal, List, Dict, Any,Union
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -8,7 +8,10 @@ from app.core.config import get_ist_now  # Your timezone helper
 from uuid import uuid4
 from enum import Enum
 
-
+class VersionInfo(BaseModel):
+    version: int
+    test_case_count: int
+    generation_timestamp: datetime
 # Add User model for authentication
 class User(Document):
     username: str = Field(unique=True, index=True)
@@ -84,3 +87,29 @@ class DocumentStatusEnum(str, Enum):
     PROCESSING = "processing"  # Corresponds to API status 0
     PROCESSED = "processed"  # Corresponds to API status 1
     ERROR = "error"  # Corresponds to API status -2
+
+
+class TestResult(BaseModel):
+    config_id: str
+    llm_model: Optional[str]
+    temperature: Optional[float]
+    use_case: Optional[Union[str, List[str]]]  # Allow either string or list
+    generated_at: Optional[datetime]
+    results: Dict[str, Any]
+    status: str
+    summary: Dict[str, Any]
+
+class CSVTestResult(BaseModel):
+    document_name: Optional[str] = None
+    TCID: Optional[str] = None
+    Test_type: Optional[str] = None
+    Title: Optional[str] = None
+    Description: Optional[str] = None
+    Precondition: Optional[str] = None
+    Steps: Optional[str] = None
+    Action: Optional[str] = None
+    Data: Optional[str] = None
+    Result: Optional[str] = None
+    Test_Nature: Optional[str] = None
+    Test_priority: Optional[str] = None
+

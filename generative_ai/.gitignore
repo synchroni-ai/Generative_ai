@@ -42,6 +42,7 @@ pip-wheel-metadata/
 venv/
 ENV/
 env/
+chay/
  
 # === macOS ===
 *.DS_Store

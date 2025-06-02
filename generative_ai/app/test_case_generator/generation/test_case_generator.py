@@ -24,6 +24,10 @@ PROMPT_MAP = {
     "non-functional": load_prompt("non_functional"),
 }
 
+# Load prompt for summarizing the document
+SUMMARIZATION_PROMPT = load_prompt("summarization")
+
+
 load_dotenv()
 
 
@@ -32,6 +36,15 @@ TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Optional
 
 API_KEYS = {"together_ai": TOGETHER_API_KEY, "openai": OPENAI_API_KEY or ""}
+
+MAX_SUMMARY_LENGTH = 1500  # Set your desired maximum summary length in tokens
+
+
+def summarize_document(doc_text: str, api_key: str) -> str:
+    """Summarizes the given document text using Mistral."""
+    prompt = SUMMARIZATION_PROMPT.format(document_text=doc_text)
+    summary = call_mistral(prompt, api_key)  # Mistral summarization
+    return summary
 
 
 def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
@@ -83,6 +96,12 @@ def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
             continue
 
         doc_text = fetch_document_text_from_s3_url(doc["s3_url"])
+
+        # Summarize document if the model is OpenAI.  Always summarize.
+        summary = summarize_document(doc_text, api_keys["together_ai"])  # Use Mistral for summarization
+        print(f"Summary: {summary}") #Print the summary
+        doc_text = summary #Update doc_text with summary
+
         doc_results = {}
         all_subtypes_results = []
 

@@ -12,3 +12,4 @@ celery
 redis
 passlib[bcrypt]
 python-jose[cryptography]
+openai==0.28
