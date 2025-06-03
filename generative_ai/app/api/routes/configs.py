@@ -32,7 +32,7 @@ async def get_document_config(
 
 @router.post("/configs")
 async def save_multi_document_config(
-    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
+    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     config_doc = {
         "documents": [ObjectId(doc_id) for doc_id in config_data.documents],
@@ -41,14 +41,20 @@ async def save_multi_document_config(
         "created_at": config_data.created_at,
     }
     result = await db["configurations"].insert_one(config_doc)
-    return {"message": "Configuration saved", "config_id": str(result.inserted_id)}
+
+    return {
+        "message": "Configuration saved",
+        "config_id": str(result.inserted_id),
+        "created_at": config_data.created_at,
+    }
+
 
 
 @router.get("/configs/{config_id}")
 async def get_config_by_id(
     config_id: str,
     db: AsyncIOMotorDatabase = Depends(get_db),
-    current_user: User = Depends(deps.get_current_user) # Authentication added
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     Gets a configuration by its ID. Requires authentication.
@@ -56,14 +62,14 @@ async def get_config_by_id(
     config = await db["configurations"].find_one({"_id": ObjectId(config_id)})
     if not config:
         raise HTTPException(status_code=404, detail="Config not found")
- 
-    # Optional: Add authorization here to restrict viewing to the creator or authorized users
-    # For example:
-    # if str(config.get("created_by")) != str(current_user.id):
-    #     raise HTTPException(status_code=403, detail="Not authorized to view this config")
- 
+
+    # Remove fields you don't want to expose
+    config.pop("created_by", None)
+    config.pop("created_at", None)
+
+    # Convert ObjectId fields to strings
     config["_id"] = str(config["_id"])
-    config["documents"] = [str(doc_id) for doc_id in config["documents"]]
+    config["documents"] = [str(doc_id) for doc_id in config.get("documents", [])]
+
     print(f"User {current_user.username} (ID: {current_user.id}) retrieved config by ID: {config_id}")
     return {"config": config}
- 
