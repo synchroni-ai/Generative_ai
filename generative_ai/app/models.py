@@ -1,12 +1,20 @@
-# app/models.py
-
+# app/models.py_
+import os
 from typing import Optional, Literal, List, Dict, Any,Union
 from beanie import Document, PydanticObjectId
 from pydantic import BaseModel, Field
 from datetime import datetime
-from app.core.config import get_ist_now  # Your timezone helper
+from app.core.config import get_ist_now
 from uuid import uuid4
 from enum import Enum
+from dotenv import load_dotenv
+import sys
+from datetime import datetime
+from pydantic import Field
+import pytz
+load_dotenv()
+def get_ist_now():
+    return datetime.now(pytz.timezone("Asia/Kolkata"))
 
 class VersionInfo(BaseModel):
     version: int
@@ -19,7 +27,8 @@ class User(Document):
     created_at: datetime = Field(default_factory=get_ist_now)
 
     class Settings:
-        name = "users"  # MongoDB collection name
+        name = os.getenv("USERS_COLLECTION_NAME")
+
 
 
 class ConfigModel(BaseModel):
@@ -52,32 +61,29 @@ class MultiDocumentConfigModel(BaseModel):
 class Dataspace(Document):
     name: str
     description: Optional[str] = None
-    # Use the User model type hint for created_by if you want Beanie relations (optional for basic auth)
-    # created_by: Optional[User] = Link(...) # Example with linking
-    # For now, keep it as PydanticObjectId referencing the user _id
-    created_by: Optional[PydanticObjectId] = None  # This will store the user's _id
+    created_by: Optional[PydanticObjectId] = None
     created_at: datetime = Field(default_factory=get_ist_now)
+    updated_at: Optional[datetime] = None  # Add this line
     category: Optional[str] = None
     sub_category: Optional[str] = None
 
     class Settings:
-        name = "dataspaces"
+        name = os.getenv("USER_DATASPACES_COLLECTION_NAME")  # Use correct env variable
 
 
-class Document(Document):
+
+class Document(Document):  # make sure you're using Beanie's Document
     file_name: str
     dataspace_id: PydanticObjectId
-    # Use the User model type hint for uploaded_by if you want Beanie relations (optional)
-    # uploaded_by: Optional[User] = Link(...) # Example with linking
-    # For now, keep it as PydasticObjectId referencing the user _id
-    uploaded_by: Optional[PydanticObjectId] = None  # This will store the user's _id
+    uploaded_by: Optional[PydanticObjectId] = None
     uploaded_at: datetime = Field(default_factory=get_ist_now)
+    updated_at: Optional[datetime] = None  # ✅ Add this line
     s3_url: str
     status: str = "uploaded"
-    config: Optional[ConfigModel] = None  # Embedded ConfigModel here
+    config: Optional[ConfigModel] = None
 
     class Settings:
-        name = "documents"
+        name = os.getenv("DOCUMENT_COLLECTION_NAME")
 
 
 class DocumentStatusEnum(str, Enum):
@@ -113,3 +119,12 @@ class CSVTestResult(BaseModel):
     Test_Nature: Optional[str] = None
     Test_priority: Optional[str] = None
 
+class DataspaceUpdate(Dataspace):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    category: Optional[str] = None
+    sub_category: Optional[str] = None
+
+    class Settings:
+        keep_nulls = False
+        use_revision = False

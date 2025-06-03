@@ -4,6 +4,8 @@ import uuid
 import datetime
 from typing import List, Optional, Any, Dict
 from werkzeug.utils import secure_filename
+from app.models import Document, User, DocumentStatusEnum
+from app.api.deps import get_current_user, get_db
 
 # Import Form for non-file form data fields, and Path for clarity
 from fastapi import (
@@ -49,7 +51,6 @@ from app.api.models.responses import (
     DocumentTimestampsResponse,
     BatchDeleteResponse,
     DeletedDocumentSummary,
-    # ConfigModel, # This is the model from app.models, no need to re-import from responses
     BatchUploadResponse,
     UploadedDocumentResponse,
     UploadErrorResponse,
@@ -409,152 +410,72 @@ class DocumentUpdate(BaseModel):
 # --- UPDATE (Replace Document File) ---
 # This endpoint now accepts a file upload as part of the body (multipart/form-data)
 @router.put("/documents/{document_id}", response_model=Document)
-async def replace_document_file(  # Renamed function for clarity
-    document_id: PydanticObjectId,  # Get the document ID from the path
-    new_file: UploadFile = File(
-        ..., description="The new file to replace the existing document"
-    ),  # <-- ACCEPT FILE UPLOAD
-    # If you wanted to update other simple fields too, you could add them here with Form(...)
-    # e.g., new_description: Optional[str] = Form(None, description="Optional new description")
-    current_user: User = Depends(deps.get_current_user),  # Authentication dependency
-    document: Document = Depends(
-        get_document_by_id
-    ),  # Get the existing document via local dependency
-    db: AgnosticDatabase = Depends(deps.get_db),  # DB connection
+async def replace_document_file(
+    document_id: PydanticObjectId,
+    new_file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+    document: Document = Depends(get_document_by_id),
+    db: AgnosticDatabase = Depends(get_db),
 ):
-    """
-    Replaces the file content of an existing document and updates its metadata. Requires authentication.
-    Only the creator of the document's dataspace can perform this replacement.
-    """
+    from app.api.deps import get_dataspace_by_id  # Import inside if circular
 
-    # --- AUTHORIZATION CHECK: ONLY DATASPACE CREATOR CAN REPLACE DOCUMENT ---
     try:
-        # Fetch the parent dataspace using the document's dataspace_id
-        parent_dataspace = await deps.get_dataspace_by_id(document.dataspace_id, db)
-
-        # Check if the current user's ID matches the dataspace creator's ID
+        parent_dataspace = await get_dataspace_by_id(document.dataspace_id, db)
         if parent_dataspace.created_by != current_user.id:
-            # Ensure the file stream is closed if authorization fails early
-            try:
-                await new_file.close()
-            except Exception:
-                pass  # Ignore errors closing stream if auth fails
+            await new_file.close()
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You do not have permission to replace documents in this dataspace.",
             )
-
     except HTTPException as http_e:
-        # Re-raise 404 if parent dataspace not found (implies invalid document state)
-        # Ensure the file stream is closed
-        try:
-            await new_file.close()
-        except Exception:
-            pass
+        await new_file.close()
         raise http_e
     except Exception as e:
-        print(f"Error checking dataspace permissions for document {document.id}: {e}")
-        try:
-            await new_file.close()
-        except Exception:
-            pass
+        await new_file.close()
+        print(f"Error checking dataspace permissions: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error checking permissions for dataspace.",
         )
-    # --- END AUTHORIZATION CHECK ---
-
-    # --- PROCESS NEW FILE UPLOAD AND UPDATE DOCUMENT RECORD ---
-    if not new_file.filename:
-        try:
-            await new_file.close()
-        except Exception:
-            pass
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No new file name provided."
-        )
 
     new_original_filename = secure_filename(new_file.filename)
     if not new_original_filename:
-        try:
-            await new_file.close()
-        except Exception:
-            pass
+        await new_file.close()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid new filename provided after sanitization.",
+            detail="Invalid filename.",
         )
 
-    # Generate a NEW unique key for the new S3 upload
-    # Use the document_id in the key to link the S3 object to the document record consistently
-    # This is just one strategy; you could also use a new UUID if preferred.
     new_s3_key = f"dataspaces/{document.dataspace_id}/documents/{document_id}_{new_original_filename}"
-
-    old_s3_url = (
-        document.s3_url
-    )  # Store the old URL before updating the document object
+    old_s3_url = document.s3_url
 
     try:
-        # 1. Upload the new file to S3
-        # The service function handles S3 errors and closing the file stream on success/fail
         new_s3_url = await upload_file_to_s3(new_file, new_s3_key)
-        print(
-            f"Successfully uploaded new S3 file for document {document_id} to {new_s3_url}"
-        )
 
-        # 2. Update the existing document object's fields in memory
-        document.file_name = new_original_filename  # Update filename to match new file
-        document.s3_url = new_s3_url  # Update S3 URL to the new file
-        document.uploaded_at = get_ist_now()  # Update timestamp
-        document.uploaded_by = current_user.id  # Update uploader to the current user
-        document.status = DocumentStatusEnum.UPLOADED  # Reset status as content is new
+        # ✅ Update document fields
+        document.file_name = new_original_filename
+        document.s3_url = new_s3_url
+        document.uploaded_at = get_ist_now()
+        document.uploaded_by = current_user.id
+        document.status = DocumentStatusEnum.UPLOADED
+        document.updated_at = get_ist_now()  # ✅ Set updated timestamp
 
-        # Optional: If you wanted to update other form fields like description:
-        # if new_description is not None:
-        #     document.description = new_description
-
-        # 3. Save the modified document object to the database
-        # Beanie's save() performs the update operation
         await document.save()
-        print(f"Successfully updated document record {document_id} in DB.")
 
-        # 4. Attempt to delete the old file from S3 (do this AFTER the new one is uploaded and DB is updated)
-        if old_s3_url:  # Only try to delete if there was an old URL
+        if old_s3_url:
             try:
                 await delete_file_from_s3(old_s3_url)
-                print(
-                    f"Successfully deleted old S3 file for document {document_id}: {old_s3_url}"
-                )
-            except HTTPException as s3_http_e:
-                print(
-                    f"Warning: Failed to delete OLD S3 file for document {document.id}: {s3_http_e.detail} (DB and new file updated)."
-                )
-                # Log the warning, but don't fail the request if the new file is up and DB is updated.
             except Exception as s3_e:
-                print(
-                    f"Warning: An unexpected error during OLD S3 deletion for document {document.id}: {s3_e} (DB and new file updated)."
-                )
-                # Log the warning
+                print(f"Warning: failed to delete old S3 file: {s3_e}")
 
-        return document  # Return the updated document object
+        return document
 
     except HTTPException as http_e:
-        # Re-raise HTTP exceptions raised by the S3 service during new file upload
-        print(f"Error during NEW S3 upload for document {document_id}: {http_e.detail}")
-        # The S3 service should have already closed the file stream in its finally block
-        raise http_e  # Re-raise the S3 error to the client
-
+        print(f"S3 upload error: {http_e.detail}")
+        raise http_e
     except Exception as e:
-        # Catch any other unexpected errors during the replacement process (e.g., DB save failure)
-        print(f"Error replacing document file for document {document.id}: {e}")
-        # IMPORTANT: If DB save fails but S3 upload succeeded, the new S3 file is orphaned.
-        # Consider adding S3 cleanup logic for the NEW file here or marking for cleanup.
-        # For now, we just raise a generic 500.
-        # Ensure the file stream is closed
-        try:
-            await new_file.close()
-        except Exception:
-            pass
+        await new_file.close()
+        print(f"Error replacing file: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to replace document file: {e}",
@@ -691,7 +612,7 @@ async def batch_delete_documents_in_dataspace(
                     f"Batch Delete: Document {doc_id_str} does not belong to dataspace {dataspace_id}."
                 )
                 continue  # Skip to the next ID
-
+#jhqb3djbhed
             # Optional: Check if the user who uploaded the document is the current user
             # This is different from dataspace creator permission - you decide if you need both layers.
             # if document.uploaded_by != current_user.id:

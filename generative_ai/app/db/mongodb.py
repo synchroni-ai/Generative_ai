@@ -12,18 +12,6 @@ from fastapi import HTTPException, status  # <-- Import HTTPException and status
 
 from app.core.config import MONGO_URI, MONGO_DB_NAME
 
-# Make sure these are imported and accessible
-# from app.models import Dataspace, Document
-# document_models = [Dataspace, Document]
-
-
-# Add other models here as you create them (e.g., User, Config, Job, Result)
-# Make sure ALL Beanie Document models are listed here for init_beanie
-# Example:
-# from app.models import Dataspace, Document, User, Config, Job, Result
-# document_models = [Dataspace, Document, User, Config, Job, Result]
-
-# For this specific fix, ensure Dataspace and Document are imported
 from app.models import Dataspace, Document, User
 
 document_models = [Dataspace, Document, User]

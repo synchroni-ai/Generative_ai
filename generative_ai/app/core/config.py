@@ -17,6 +17,13 @@ def get_ist_now():
     return datetime.datetime.now(IST)
 
 
+# # Add collection names here
+# USERS_COLLECTION_NAME: str = os.getenv('USERS_COLLECTION_NAME','users')
+# DATASPACE_COLLECTION_NAME: str = os.getenv('DATASPACE_COLLECTION_NAME', 'dataspaces') 
+# DOCUMENT_COLLECTION_NAME: str = os.getenv('DOCUMENT_COLLECTION_NAME', 'documents') 
+# CONFIG_COLLECTION_NAME: str = os.getenv('DOCUMENT_COLLECTION_NAME', 'configs') 
+# TESTCASES_COLLECTION_NAME: str=os.getenv('TESTCASES_COLLECTION_NAME','testcases')
+
 # --- App Configuration ---
 SECRET_KEY: str = os.getenv("SECRET_KEY", "default_secret_key_if_not_set")
 ALGORITHM: str = os.getenv(

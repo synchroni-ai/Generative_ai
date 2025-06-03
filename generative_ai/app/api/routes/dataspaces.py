@@ -5,25 +5,18 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from beanie import PydanticObjectId
 from pymongo.errors import DuplicateKeyError
 from motor.core import AgnosticDatabase  # Import AgnosticDatabase for type hint
+from datetime import datetime
 
-from app.models import Dataspace, User  # Import Dataspace and User model
+from app.models import Dataspace, User ,DataspaceUpdate # Import Dataspace and User model
 from app.api import deps  # Import dependencies
+import pytz
+from app.models import Dataspace, User
 
 router = APIRouter()
 
+def get_ist_now():
+    return datetime.now(pytz.timezone("Asia/Kolkata"))
 
-class DataspaceUpdate(Dataspace):
-    name: Optional[str] = None
-    description: Optional[str] = None
-    # created_by and created_at are typically not updated via API
-    # created_by: Optional[PydanticObjectId] = None # Remove from update model to prevent accidental overwrite
-    # created_at: Optional[datetime.datetime] = None # Remove from update model
-    category: Optional[str] = None
-    sub_category: Optional[str] = None
-
-    class Settings:
-        keep_nulls = False
-        use_revision = False
 
 
 # --- CREATE ---
@@ -102,23 +95,16 @@ async def get_dataspace(
 # --- UPDATE ---
 @router.put("/{dataspace_id}", response_model=Dataspace)
 async def update_dataspace(
-    dataspace_update: DataspaceUpdate,  # Use the Update model for request body
-    dataspace: Dataspace = Depends(
-        deps.get_dataspace_by_id
-    ),  # Get the existing dataspace via dependency
-    current_user: User = Depends(deps.get_current_user),  # Add auth dependency
-    db: AgnosticDatabase = Depends(deps.get_db),  # Add type hint
+    dataspace_update: DataspaceUpdate,
+    dataspace: Dataspace = Depends(deps.get_dataspace_by_id),
+    current_user: User = Depends(deps.get_current_user),
+    db: AgnosticDatabase = Depends(deps.get_db),
 ):
     """
     Updates an existing dataspace by ID. Requires authentication.
-    (Optional: Add authorization check: if dataspace.created_by != current_user.id raise 403)
     """
-    # Example of basic authorization check:
-    # if dataspace.created_by != current_user.id:
-    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to update this dataspace")
-
     try:
-        # Check for duplicate name ONLY if the name is being updated
+        # Optional: Check for duplicate name if name is being changed
         if (
             dataspace_update.name is not None
             and dataspace_update.name != dataspace.name
@@ -126,47 +112,37 @@ async def update_dataspace(
             existing_dataspace = await Dataspace.find_one(
                 {"name": dataspace_update.name}
             )
-            # Check if a dataspace with the new name exists AND is not the current dataspace
             if existing_dataspace and existing_dataspace.id != dataspace.id:
                 raise HTTPException(
                     status_code=status.HTTP_409_CONFLICT,
                     detail=f"Dataspace with name '{dataspace_update.name}' already exists.",
                 )
 
-        # --- CORRECT LOGIC TO APPLY PARTIAL UPDATES ---
-        # 1. Get the fields that were actually sent in the request body
-        #    model_dump(exclude_unset=True) ensures we only get fields the user explicitly provided
+        # Extract only fields that were actually updated in request
         update_data = dataspace_update.model_dump(exclude_unset=True)
 
-        # 2. Apply the updates to the existing dataspace object in memory
-        #    Iterate through the dictionary and set the attributes on the fetched dataspace document instance
+        # Set those updated fields into the current dataspace object
         for field_name, value in update_data.items():
-            # Use setattr to dynamically set the attribute based on the field name
-            # Beanie will handle type conversion based on the model definition
             setattr(dataspace, field_name, value)
 
-        # 3. Save the modified dataspace object to the database
-        #    Beanie's save() method performs the necessary database update operation
-        await dataspace.save()
-        # ---------------------------------------------
+        # Update the timestamp
+        dataspace.updated_at = get_ist_now()
 
-        # The dataspace object in memory should now reflect the saved changes
-        return dataspace  # Return the updated dataspace object
+        # Save to DB
+        await dataspace.save()
+
+        return dataspace
 
     except DuplicateKeyError:
-        # This catch is mostly for safety, the explicit check above is primary
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=f"Dataspace with name '{dataspace_update.name}' already exists.",
         )
     except Exception as e:
-        # Catch any other exceptions during the process (like database errors)
         print(f"Error updating dataspace {dataspace.id}: {e}")
-        # Re-raise as 500 after logging the error
-        # You might want to remove the 'detail' in a production API to avoid leaking internal errors
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update dataspace: {e}",  # Include error detail for debugging
+            detail=f"Failed to update dataspace: {e}",
         )
 
 
@@ -189,3 +165,4 @@ async def delete_dataspace(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete dataspace: {e}",
         )
+#dataspace
