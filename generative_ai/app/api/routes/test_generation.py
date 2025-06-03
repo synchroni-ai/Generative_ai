@@ -13,7 +13,8 @@ from typing import Optional
 from app.db.mongodb import get_db
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
-from app.models import TestResult
+from app.models import TestResult,User
+from app.api import deps  # Import the shared dependency for user authentication
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -29,19 +30,22 @@ class VersionInfo(BaseModel):
 
 
 @router.post("/generation/run/{config_id}")
-async def run_generation_task(config_id: str):
+async def run_generation_task(config_id: str,current_user: User = Depends(deps.get_current_user)
+ ):
     task = run_test_generation.delay(config_id)
     return {"job_id": task.id, "status": "queued"}
 
 
 @router.get("/generation/status/{job_id}")
-def get_job_status(job_id: str):
+def get_job_status(job_id: str,current_user: User = Depends(deps.get_current_user)
+ ):
     task = run_test_generation.AsyncResult(job_id)
     return {"job_id": job_id, "status": task.status}
 
 
 @router.post("/generation/cancel/{job_id}")
-async def cancel_generation_job(job_id: str):
+async def cancel_generation_job(job_id: str,current_user: User = Depends(deps.get_current_user)
+ ):
     result = AsyncResult(job_id, app=celery_app)
     if not result:
         raise HTTPException(status_code=404, detail="Job not found")
@@ -56,7 +60,8 @@ async def cancel_generation_job(job_id: str):
 
 
 @router.get("/results/{config_id}/versions", response_model=List[VersionInfo])
-async def get_document_versions(config_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_document_versions(config_id: str, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
+ ):
     """
     Retrieves the versions of test case generations for a given config ID.
     """
@@ -199,7 +204,8 @@ async def get_document_versions(config_id: str, db: AsyncIOMotorDatabase = Depen
 async def get_test_results(
     job_id: str,
     subtype: Optional[str] = Query(None, description="Subtype to filter test cases by"),
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
+ 
 ):
     """
     Get test generation results for a job, optionally filtered by subtype.
@@ -245,7 +251,8 @@ async def get_test_results(
 @router.get("/results/documents/{document_id}")
 async def get_document_by_id(
     document_id: str = Path(..., description="The ObjectId of the document"),
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
+ 
 ):
     """
     Retrieves a specific document from the nested `results.documents` field

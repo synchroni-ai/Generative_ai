@@ -1,16 +1,16 @@
 from fastapi import APIRouter, HTTPException, Depends
-from app.models import ConfigModel, MultiDocumentConfigModel
+from app.models import ConfigModel, MultiDocumentConfigModel,User
 from app.services.config_service import save_config, get_config_by_document_id
 from app.db.mongodb import get_db
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
-
+from app.api import deps
 router = APIRouter()
 
 
 @router.post("/documents/{document_id}/config")
 async def save_document_config(
-    document_id: str, config: ConfigModel, db: AsyncIOMotorDatabase = Depends(get_db)
+    document_id: str, config: ConfigModel, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
 ):
     success = await save_config(document_id, config, db)
     if not success:
@@ -22,7 +22,7 @@ async def save_document_config(
 
 @router.get("/documents/{document_id}/config")
 async def get_document_config(
-    document_id: str, db: AsyncIOMotorDatabase = Depends(get_db)
+    document_id: str, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
 ):
     config = await get_config_by_document_id(document_id, db)
     if not config:
@@ -32,7 +32,7 @@ async def get_document_config(
 
 @router.post("/configs")
 async def save_multi_document_config(
-    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db)
+    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
 ):
     config_doc = {
         "documents": [ObjectId(doc_id) for doc_id in config_data.documents],
@@ -45,11 +45,25 @@ async def save_multi_document_config(
 
 
 @router.get("/configs/{config_id}")
-async def get_config_by_id(config_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_config_by_id(
+    config_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user) # Authentication added
+):
+    """
+    Gets a configuration by its ID. Requires authentication.
+    """
     config = await db["configurations"].find_one({"_id": ObjectId(config_id)})
     if not config:
         raise HTTPException(status_code=404, detail="Config not found")
-
+ 
+    # Optional: Add authorization here to restrict viewing to the creator or authorized users
+    # For example:
+    # if str(config.get("created_by")) != str(current_user.id):
+    #     raise HTTPException(status_code=403, detail="Not authorized to view this config")
+ 
     config["_id"] = str(config["_id"])
     config["documents"] = [str(doc_id) for doc_id in config["documents"]]
+    print(f"User {current_user.username} (ID: {current_user.id}) retrieved config by ID: {config_id}")
     return {"config": config}
+ 
