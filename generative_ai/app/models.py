@@ -30,7 +30,7 @@ class ConfigModel(BaseModel):
     subtypes: List[
         Literal[
             "functional",
-            "non-functional",
+            "non_functional",
             "performance",
             "security",
             "boundary",

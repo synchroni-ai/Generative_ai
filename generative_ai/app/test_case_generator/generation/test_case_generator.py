@@ -21,7 +21,7 @@ PROMPT_MAP = {
     "security": load_prompt("security"),
     "performance": load_prompt("performance"),
     "functional": load_prompt("functional"),
-    "non-functional": load_prompt("non_functional"),
+    "non_functional": load_prompt("non_functional"),
 }
 
 # Load prompt for summarizing the document

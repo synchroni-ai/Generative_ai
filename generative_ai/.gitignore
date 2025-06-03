@@ -43,7 +43,7 @@ venv/
 ENV/
 env/
 chay/
- 
+.chay
 # === macOS ===
 *.DS_Store
  
