@@ -32,7 +32,7 @@ async def get_document_config(
 
 @router.post("/configs")
 async def save_multi_document_config(
-    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db)
+    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user),
 ):
     config_doc = {
         "documents": [ObjectId(doc_id) for doc_id in config_data.documents],
@@ -48,6 +48,24 @@ async def save_multi_document_config(
         "created_at": config_data.created_at,
     }
 
+
+
+@router.get("/configs")
+async def list_all_configs(
+    db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Returns a list of all configurations with minimal metadata: config_id and created_at.
+    """
+    configs_cursor = db["configurations"].find({})
+    configs = []
+    async for config in configs_cursor:
+        configs.append({
+            "config_id": str(config["_id"]),
+            "created_at": config.get("created_at")
+        })
+
+    return {"configs": configs}
 
 
 @router.get("/configs/{config_id}")
