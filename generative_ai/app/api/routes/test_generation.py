@@ -283,10 +283,11 @@ from pydantic import BaseModel
 from datetime import datetime
 import logging
 from fastapi import Path
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, status, Query
 from app.tasks.test_generation import run_test_generation
 from celery.result import AsyncResult
 from celery import current_app as celery_app
+from typing import Optional
 
 from app.db.mongodb import get_db
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -389,91 +390,135 @@ async def get_document_versions(config_id: str, db: AsyncIOMotorDatabase = Depen
         )
 
 
-@router.get("/results/{job_id}", response_model=TestResult)
-async def get_test_results(job_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
-    """
-    Retrieves the test case generation results for a given job ID.
-    """
-    logger.info(f"Fetching results for job_id: {job_id}")
-    try:
-        # Query generative_ai.test_case_grouped_results collection
-        job = await db["test_case_grouped_results"].find_one({"job_id": job_id})
+# @router.get("/results/{job_id}", response_model=TestResult)
+# async def get_test_results(job_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+#     """
+#     Retrieves the test case generation results for a given job ID.
+#     """
+#     logger.info(f"Fetching results for job_id: {job_id}")
+#     try:
+#         # Query generative_ai.test_case_grouped_results collection
+#         job = await db["test_case_grouped_results"].find_one({"job_id": job_id})
 
-        if not job:
-            logger.warning(f"No test case generation found for job_id: {job_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No test case generation found for job ID: {job_id}",
-            )
+#         if not job:
+#             logger.warning(f"No test case generation found for job_id: {job_id}")
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail=f"No test case generation found for job ID: {job_id}",
+#             )
 
-        # Convert ObjectId in _id to string if needed (optional)
-        job["_id"] = str(job["_id"])
+#         # Convert ObjectId in _id to string if needed (optional)
+#         job["_id"] = str(job["_id"])
 
-        test_result = TestResult(
-            config_id=job["config_id"],
-            llm_model=job.get("llm_model"),
-            temperature=job.get("temperature"),
-            use_case=job.get("use_case"),
-            generated_at=job.get("generated_at"),
-            results=job.get("results"),
-            status=job["status"],
-            summary=job["summary"],
-        )
+#         test_result = TestResult(
+#             config_id=job["config_id"],
+#             llm_model=job.get("llm_model"),
+#             temperature=job.get("temperature"),
+#             use_case=job.get("use_case"),
+#             generated_at=job.get("generated_at"),
+#             results=job.get("results"),
+#             status=job["status"],
+#             summary=job["summary"],
+#         )
 
-        logger.info(f"Successfully retrieved results for job_id: {job_id}")
-        return test_result
-    except HTTPException as http_exception:
-        raise http_exception
-    except Exception as e:
-        logger.error(f"An error occurred while retrieving results for job_id: {job_id}: {e}", exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {e}",
-        )
+#         logger.info(f"Successfully retrieved results for job_id: {job_id}")
+#         return test_result
+#     except HTTPException as http_exception:
+#         raise http_exception
+#     except Exception as e:
+#         logger.error(f"An error occurred while retrieving results for job_id: {job_id}: {e}", exc_info=True)
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail=f"An error occurred: {e}",
+#         )
+    
+# @router.get("/results/{job_id}", response_model=TestResult)
+# async def get_test_results(job_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+#     """
+#     Retrieves the test case generation results for a given job ID.
+#     """
+#     logger.info(f"Fetching results for job_id: {job_id}")
+#     try:
+#         # Query generative_ai.test_case_grouped_results collection
+#         job = await db["test_case_grouped_results"].find_one({"job_id": job_id})
+
+#         if not job:
+#             logger.warning(f"No test case generation found for job_id: {job_id}")
+#             raise HTTPException(
+#                 status_code=status.HTTP_404_NOT_FOUND,
+#                 detail=f"No test case generation found for job ID: {job_id}",
+#             )
+
+#         # Convert ObjectId in _id to string if needed (optional)
+#         job["_id"] = str(job["_id"])
+
+#         test_result = TestResult(
+#             config_id=job["config_id"],
+#             llm_model=job.get("llm_model"),
+#             temperature=job.get("temperature"),
+#             use_case=job.get("use_case"),
+#             generated_at=job.get("generated_at"),
+#             results=job.get("results"),
+#             status=job["status"],
+#             summary=job["summary"],
+#         )
+
+#         logger.info(f"Successfully retrieved results for job_id: {job_id}")
+#         return test_result
+#     except HTTPException as http_exception:
+#         raise http_exception
+#     except Exception as e:
+#         logger.error(f"An error occurred while retrieving results for job_id: {job_id}: {e}", exc_info=True)
+#         raise HTTPException(
+#             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+#             detail=f"An error occurred: {e}",
+#         )
     
 @router.get("/results/{job_id}", response_model=TestResult)
-async def get_test_results(job_id: str, db: AsyncIOMotorDatabase = Depends(get_db)):
+async def get_test_results(
+    job_id: str,
+    subtype: Optional[str] = Query(None, description="Subtype to filter test cases by"),
+    db: AsyncIOMotorDatabase = Depends(get_db),
+):
     """
-    Retrieves the test case generation results for a given job ID.
+    Get test generation results for a job, optionally filtered by subtype.
     """
-    logger.info(f"Fetching results for job_id: {job_id}")
-    try:
-        # Query generative_ai.test_case_grouped_results collection
-        job = await db["test_case_grouped_results"].find_one({"job_id": job_id})
+    job = await db["test_case_grouped_results"].find_one({"job_id": job_id})
 
-        if not job:
-            logger.warning(f"No test case generation found for job_id: {job_id}")
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"No test case generation found for job ID: {job_id}",
-            )
-
-        # Convert ObjectId in _id to string if needed (optional)
-        job["_id"] = str(job["_id"])
-
-        test_result = TestResult(
-            config_id=job["config_id"],
-            llm_model=job.get("llm_model"),
-            temperature=job.get("temperature"),
-            use_case=job.get("use_case"),
-            generated_at=job.get("generated_at"),
-            results=job.get("results"),
-            status=job["status"],
-            summary=job["summary"],
-        )
-
-        logger.info(f"Successfully retrieved results for job_id: {job_id}")
-        return test_result
-    except HTTPException as http_exception:
-        raise http_exception
-    except Exception as e:
-        logger.error(f"An error occurred while retrieving results for job_id: {job_id}: {e}", exc_info=True)
+    if not job:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An error occurred: {e}",
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No test case generation found for job ID: {job_id}",
         )
-    
 
+    filtered_results = {}
+
+    all_documents = job.get("results", {}).get("documents", {})
+
+    if subtype:
+        # Filter for specific subtype in each document
+        for doc_id, subtypes in all_documents.items():
+            if subtype in subtypes:
+                filtered_results[doc_id] = {
+                    subtype: subtypes[subtype]
+                }
+    else:
+        # No subtype filter; return everything
+        filtered_results = job.get("results")
+
+    # Build response
+    test_result = TestResult(
+        config_id=job["config_id"],
+        llm_model=job.get("llm_model"),
+        temperature=job.get("temperature"),
+        use_case=job.get("use_case"),
+        generated_at=job.get("generated_at"),
+        results=filtered_results,
+        status=job["status"],
+        summary=job.get("summary", {}),
+    )
+
+    return test_result
 
 
 @router.get("/results/documents/{document_id}")
