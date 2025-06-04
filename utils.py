@@ -224,7 +224,7 @@ Return only in the following json format:
         "Document": os.path.basename(document_path),
         "Existing_tag": existing_tag,
         "Suggested_Tag_LLM": tag_json.get("Suggested tags", []),
-        "Suggested_Tag's_Unique_ID": tag_json.get("Tag_Id", []),
+        "Suggested_Tags_Unique_ID": tag_json.get("Tag_Id", []),
         "LLM Reasoning": tag_json.get("reason", {}),
         "Likeliness(1-10)": tag_json.get("likelyness", {}),
         "Additional_Keywords_LLM": tag_json.get("New suggested tags", []),
