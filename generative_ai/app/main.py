@@ -4,7 +4,7 @@ from fastapi import FastAPI
 
 from app.api import api_router  # Import the combined router
 from app.db.mongodb import connect_db, close_db  # Import DB connection functions
-from app.api.routes import documents, configs, test_generation
+from app.api.routes import documents, configs, test_generation,tagging
 
 
 
@@ -30,6 +30,7 @@ app.include_router(api_router, prefix="/api/v1")  # Optional: Add a version pref
 app.include_router(documents.router, prefix="/api")
 app.include_router(configs.router, prefix="/api")
 app.include_router(test_generation.router, prefix="/api")
+app.include_router(tagging.router, prefix="/api")
 
 
 

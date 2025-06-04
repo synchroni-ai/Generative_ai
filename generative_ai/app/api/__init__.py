@@ -8,6 +8,7 @@ from .routes import (
     test_generation,
     auth,
     configs,
+    tagging,
 )  # Import your route files
 
 # Import other route files as you create them
@@ -21,3 +22,4 @@ api_router.include_router(documents.router, tags=["documents"])
 api_router.include_router(test_generation.router, tags=["test_generation"])
 api_router.include_router(configs.router, tags=["Multi-document Configs"])
 api_router.include_router(test_generation.router, tags=["Test Case Generation"])
+api_router.include_router(tagging.router, tags=["Document Tagging"])
