@@ -225,7 +225,7 @@ Return only in the following json format:
         "Existing_tag": existing_tag,
         "Suggested_Tag_LLM": tag_json.get("Suggested tags", []),
         "Suggested_Tag's_Unique_ID": tag_json.get("Tag_Id", []),
-        "LLM's Reasoning": tag_json.get("reason", {}),
+        "LLM Reasoning": tag_json.get("reason", {}),
         "Likeliness(1-10)": tag_json.get("likelyness", {}),
         "Additional_Keywords_LLM": tag_json.get("New suggested tags", []),
         "Reason_for_Tag_Match_Mismatch": reason_json.get("Reason", ""),
