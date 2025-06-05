@@ -199,12 +199,6 @@ async def batch_upload_documents(
     try:
         dataspace = await deps.get_dataspace_by_id(dataspace_id, db)
 
-        # Check if the current user is the creator of the dataspace
-        if dataspace.created_by != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to upload to this dataspace.",
-            )
 
     except HTTPException as e:
         raise e  # Re-raise the 404 or 403 from the dependency
@@ -350,11 +344,11 @@ async def list_dataspace_documents(
         dataspace = await deps.get_dataspace_by_id(dataspace_id, db)
 
         # Check if the current user is the creator of the dataspace
-        if dataspace.created_by != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to view documents in this dataspace.",
-            )
+        # if dataspace.created_by != current_user.id:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_403_FORBIDDEN,
+        #         detail="You do not have permission to view documents in this dataspace.",
+        #     )
 
     except HTTPException:
         raise  # Re-raise the 404 or 403 from the dependency
@@ -430,7 +424,6 @@ async def replace_document_file(  # Renamed function for clarity
 ):
     """
     Replaces the file content of an existing document and updates its metadata. Requires authentication.
-    Only the creator of the document's dataspace can perform this replacement.
     """
 
     # --- AUTHORIZATION CHECK: ONLY DATASPACE CREATOR CAN REPLACE DOCUMENT ---
@@ -438,18 +431,7 @@ async def replace_document_file(  # Renamed function for clarity
         # Fetch the parent dataspace using the document's dataspace_id
         parent_dataspace = await deps.get_dataspace_by_id(document.dataspace_id, db)
 
-        # Check if the current user's ID matches the dataspace creator's ID
-        if parent_dataspace.created_by != current_user.id:
-            # Ensure the file stream is closed if authorization fails early
-            try:
-                await new_file.close()
-            except Exception:
-                pass  # Ignore errors closing stream if auth fails
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to replace documents in this dataspace.",
-            )
-
+#modified
     except HTTPException as http_e:
         # Re-raise 404 if parent dataspace not found (implies invalid document state)
         # Ensure the file stream is closed
@@ -631,7 +613,6 @@ async def batch_delete_documents_in_dataspace(
     """
     Deletes multiple document entries from the database AND their corresponding files from S3,
     scoped to a specific dataspace. Requires Authentication.
-    Only the creator of the dataspace can perform batch deletion.
     """
     total_requested = len(delete_request.document_ids)
     successfully_deleted_count = 0
@@ -643,14 +624,6 @@ async def batch_delete_documents_in_dataspace(
             dataspace_id, db
         )  # Use the dependency from deps
 
-        # --- AUTHORIZATION CHECK: ONLY DATASPACE CREATOR CAN BATCH DELETE ---
-        # Check if the current user's ID matches the dataspace creator's ID
-        if dataspace.created_by != current_user.id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to batch delete documents in this dataspace.",
-            )
-        # --- END AUTHORIZATION CHECK ---
 
     except HTTPException as e:
         # Re-raise the 404 from get_dataspace_by_id or the 403 from our check
