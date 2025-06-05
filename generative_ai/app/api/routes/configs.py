@@ -6,7 +6,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from app.api import deps
 router = APIRouter()
-
+import datetime
 
 @router.post("/documents/{document_id}/config")
 async def save_document_config(
@@ -29,23 +29,41 @@ async def get_document_config(
         raise HTTPException(status_code=404, detail="Config not found")
     return {"config": config}
 
-
+#modified
 @router.post("/configs")
 async def save_multi_document_config(
-    config_data: MultiDocumentConfigModel, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user),
+    config_data: MultiDocumentConfigModel,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
 ):
+    # Validate document IDs
+    valid_document_ids = []
+    for doc_id in config_data.documents:
+        try:
+            obj_id = ObjectId(doc_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid ObjectId format: {doc_id}")
+        
+        document = await db["documents"].find_one({"_id": obj_id})
+        if not document:
+            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+        
+        valid_document_ids.append(obj_id)
+
+    # Proceed to save config with validated document ObjectIds
     config_doc = {
-        "documents": [ObjectId(doc_id) for doc_id in config_data.documents],
+        "documents": valid_document_ids,
         "config": config_data.config.dict(),
         "created_by": config_data.created_by,
-        "created_at": config_data.created_at,
+        "created_at": config_data.created_at or datetime.utcnow(),
     }
+
     result = await db["configurations"].insert_one(config_doc)
 
     return {
         "message": "Configuration saved",
         "config_id": str(result.inserted_id),
-        "created_at": config_data.created_at,
+        "created_at": config_doc["created_at"],
     }
 
 

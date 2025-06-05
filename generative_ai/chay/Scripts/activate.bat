@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=C:\Users\chait\OneDrive\Documents\completed_brd1\Generative_ai\generative_ai\chay
+set VIRTUAL_ENV=C:\Users\chait\OneDrive\Documents\merging\Generative_ai\generative_ai\chay
 
 if not defined PROMPT set PROMPT=$P$G
 

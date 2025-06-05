@@ -4,6 +4,8 @@ __pycache__/
 .DS_Store
 .env
 /tmp/
+chay/
+venv/
 
 test_cases.csv
 test_cases.txt
