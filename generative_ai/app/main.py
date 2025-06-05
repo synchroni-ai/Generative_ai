@@ -7,12 +7,18 @@ from app.db.mongodb import connect_db, close_db  # Import DB connection function
 from app.api.routes import documents, configs, test_generation,tagging
 
 
+from fastapi.middleware.cors import CORSMiddleware
+
+
 
 app = FastAPI(
     title="GenAI Project API",
     description="Endpoints for Dataspace and Document management",
 )
-
+app.add_middleware(
+    CORSMiddleware, allow_origins=["*"], allow_credentials=True,
+    allow_methods=["*"], allow_headers=["*"],
+)
 
 # Add the database connection and disconnection to the startup/shutdown events
 @app.on_event("startup")
