@@ -193,13 +193,18 @@ async def batch_upload_documents(
 ):
     """
     Upload multiple documents to a specific dataspace in a single request. Requires authentication.
+    Only the dataspace creator can upload.
     """
-    # Validate if the dataspace exists first
+    # Validate if the dataspace exists and user has permission
     try:
         dataspace = await deps.get_dataspace_by_id(dataspace_id, db)
-        # Optional: Add dataspace-level permission check here if needed
-        # e.g., if dataspace.created_by != current_user.id:
-        #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission for this dataspace.")
+
+        # Check if the current user is the creator of the dataspace
+        if dataspace.created_by != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to upload to this dataspace.",
+            )
 
     except HTTPException as e:
         raise e  # Re-raise the 404 or 403 from the dependency
@@ -329,7 +334,6 @@ async def batch_upload_documents(
         errors=upload_errors,
     )
 
-
 # --- READ (List Documents in a Dataspace) ---
 @router.get("/dataspaces/{dataspace_id}/documents", response_model=List[Document])
 async def list_dataspace_documents(
@@ -339,16 +343,18 @@ async def list_dataspace_documents(
 ):
     """
     Lists all documents belonging to a specific dataspace. Requires authentication.
-    (Optional: Add authorization check for dataspace access)
+    Only the dataspace creator can view the documents.
     """
-    # Validate if the dataspace exists using the dependency
+    # Validate if the dataspace exists and the user is the creator
     try:
-        dataspace = await deps.get_dataspace_by_id(
-            dataspace_id, db
-        )  # Use the dependency from deps
-        # Optional: Add dataspace-level permission check here if needed
-        # e.g., if dataspace.created_by != current_user.id:
-        #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have permission for this dataspace.")
+        dataspace = await deps.get_dataspace_by_id(dataspace_id, db)
+
+        # Check if the current user is the creator of the dataspace
+        if dataspace.created_by != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to view documents in this dataspace.",
+            )
 
     except HTTPException:
         raise  # Re-raise the 404 or 403 from the dependency
