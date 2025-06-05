@@ -38,6 +38,7 @@ jobs:
 
             # Stash any local changes and pull the latest code
             sudo git stash
+            git checkout master
             sudo git pull origin master
 
             # Install dependencies using the virtual environment's pip
