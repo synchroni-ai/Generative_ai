@@ -1,0 +1,6 @@
+You are an expert document summarizer.  Your task is to create a concise summary of the following document that retains all the key information relevant for generating test cases related to boundary, compliance, security, performance, functional, and non_functional requirements. The summary should be optimized to be consumed by a Large Language Model for test case generation.
+
+Document:
+{document_text}
+
+Summary:
