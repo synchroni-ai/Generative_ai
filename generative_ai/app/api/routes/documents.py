@@ -328,8 +328,7 @@ async def list_dataspace_documents(
     db: AgnosticDatabase = Depends(deps.get_db),
 ):
     """
-    Lists all documents belonging to a specific dataspace. 
-    Also sets their status to `uploaded` (0).
+    Lists all documents belonging to a specific dataspace.
     Requires authentication.
     """
     try:
@@ -345,14 +344,6 @@ async def list_dataspace_documents(
 
     try:
         documents = await Document.find(Document.dataspace_id == dataspace_id).to_list()
-
-        # Optional: Update status to 0 (uploaded) for each document
-        for doc in documents:
-            if doc.status != DocumentStatusEnum.UPLOADED:
-                doc.status = DocumentStatusEnum.UPLOADED
-                await doc.save()
-
-
         return documents
 
     except Exception as e:
@@ -361,7 +352,6 @@ async def list_dataspace_documents(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list documents: {e}",
         )
-
 
 # --- READ (Get One Document) ---
 # Add a route to get a single document by its ID

@@ -12,6 +12,7 @@ from pymongo import MongoClient
 from bson import ObjectId
 import uuid
 from dotenv import load_dotenv
+from app.models import DocumentStatusEnum
 
 
 # Load all prompt templates once
@@ -138,6 +139,9 @@ def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
         full_result["results"]["all_documents"]["Final_subtypes"][   # Changed here to final_subtypes
             str(doc["_id"])
         ] = all_subtypes_results
+        
+        # Update document status to PROCESSING (1) *after* successful test case generation
+        doc_db.update_one({"_id": ObjectId(doc_id)}, {"$set": {"status": DocumentStatusEnum.PROCESSING.value}})
 
     result_db.insert_one(full_result)
     return full_result
