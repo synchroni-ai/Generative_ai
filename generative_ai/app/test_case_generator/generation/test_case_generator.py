@@ -85,7 +85,7 @@ def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
         "generated_at": generated_at,
         "results": {
             "documents": {},
-            "all_documents": {s: {} for s in subtypes} | {"all_subtypes": {}},
+            "all_documents": {s: {} for s in subtypes} | {"Final_subtypes": {}},  # Changed here
         },
     }
 
@@ -134,8 +134,8 @@ def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
             "all_subtypes": all_subtypes_results,
         }
 
-        # Store under global all_subtypes
-        full_result["results"]["all_documents"]["all_subtypes"][
+        # Store under global Final_subtypes (renamed from all_subtypes)
+        full_result["results"]["all_documents"]["Final_subtypes"][   # Changed here
             str(doc["_id"])
         ] = all_subtypes_results
 

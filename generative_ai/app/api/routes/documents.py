@@ -323,45 +323,40 @@ async def batch_upload_documents(
 # --- READ (List Documents in a Dataspace) ---
 @router.get("/dataspaces/{dataspace_id}/documents", response_model=List[Document])
 async def list_dataspace_documents(
-    dataspace_id: PydanticObjectId,  # Gets the dataspace ID from the path
-    current_user: User = Depends(deps.get_current_user),  # <-- ADD AUTH DEPENDENCY
-    db: AgnosticDatabase = Depends(deps.get_db),  # Add type hint
+    dataspace_id: PydanticObjectId,
+    current_user: User = Depends(deps.get_current_user),
+    db: AgnosticDatabase = Depends(deps.get_db),
 ):
     """
-    Lists all documents belonging to a specific dataspace. Requires authentication.
-    Only the dataspace creator can view the documents.
+    Lists all documents belonging to a specific dataspace. 
+    Also sets their status to `uploaded` (0).
+    Requires authentication.
     """
-    # Validate if the dataspace exists and the user is the creator
     try:
         dataspace = await deps.get_dataspace_by_id(dataspace_id, db)
-
-        # Check if the current user is the creator of the dataspace
-        # if dataspace.created_by != current_user.id:
-        #     raise HTTPException(
-        #         status_code=status.HTTP_403_FORBIDDEN,
-        #         detail="You do not have permission to view documents in this dataspace.",
-        #     )
-
     except HTTPException:
-        raise  # Re-raise the 404 or 403 from the dependency
+        raise
     except Exception as e:
-        # Catch any other unexpected DB errors during dataspace validation
         print(f"Error validating dataspace {dataspace_id} for listing documents: {e}")
-        # In a real app, avoid leaking exception details
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error validating dataspace.",
         )
 
     try:
-        # Find all documents where the dataspace_id matches the path parameter
         documents = await Document.find(Document.dataspace_id == dataspace_id).to_list()
-        # Returns a list of Document objects. Pydantic handles serialization.
+
+        # Optional: Update status to 0 (uploaded) for each document
+        for doc in documents:
+            if doc.status != DocumentStatusEnum.UPLOADED:
+                doc.status = DocumentStatusEnum.UPLOADED
+                await doc.save()
+
+
         return documents
 
     except Exception as e:
         print(f"Error listing documents for dataspace {dataspace_id}: {e}")
-        # In a real app, avoid leaking exception details
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list documents: {e}",
