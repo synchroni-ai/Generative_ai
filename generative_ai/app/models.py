@@ -75,6 +75,7 @@ class Document(Document):
     s3_url: str
     status: str = "uploaded"
     config: Optional[ConfigModel] = None  # Embedded ConfigModel here
+    test_case_generation_status: int = Field(default=-1, description="-1: Not Started, 0: In Progress, 1: Completed")
 
     class Settings:
         name = "documents"

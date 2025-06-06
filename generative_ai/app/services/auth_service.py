@@ -1,39 +1,46 @@
+# app/services/auth_service.py
+ 
 from datetime import timedelta
 from typing import Optional
+ 
 from passlib.context import CryptContext
 from jose import JWTError, jwt
 from motor.core import AgnosticDatabase
 from beanie import PydanticObjectId
-
+ 
 from app.core.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES, get_ist_now
 from app.models import User
-
+ 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
+ 
+ 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)
-
-
+ 
+ 
 def hash_password(password: str) -> str:
     return pwd_context.hash(password)
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+ 
+ 
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
     expire = get_ist_now() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def create_refresh_token(data: dict):
+ 
+ 
+def create_refresh_token(data: dict) -> str:
     to_encode = data.copy()
     expire = get_ist_now() + timedelta(minutes=REFRESH_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire, "type": "refresh"})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
+ 
+ 
 async def verify_token(token: str) -> Optional[str]:
+    """
+    Verify that the token is a valid refresh token and return the username (sub).
+    Return None if invalid or not a refresh token.
+    """
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         if payload.get("type") != "refresh":
@@ -41,18 +48,18 @@ async def verify_token(token: str) -> Optional[str]:
         return payload.get("sub")
     except JWTError:
         return None
-
-
+ 
+ 
 async def get_user_by_username(username: str, db: AgnosticDatabase) -> Optional[User]:
     return await User.find_one({"username": username})
-
-
+ 
+ 
 async def create_user(username: str, hashed_password: str, db: AgnosticDatabase) -> User:
     user = User(username=username, hashed_password=hashed_password)
     await user.insert()
     return user
-
-
+ 
+ 
 async def get_user_from_token(token: str, db: AgnosticDatabase) -> Optional[User]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -62,8 +69,8 @@ async def get_user_from_token(token: str, db: AgnosticDatabase) -> Optional[User
         return await get_user_by_username(username, db)
     except JWTError:
         return None
-
-
+ 
+ 
 async def update_user_password(username: str, new_hashed_password: str, db: AgnosticDatabase) -> bool:
     user = await get_user_by_username(username, db)
     if user:
@@ -71,7 +78,33 @@ async def update_user_password(username: str, new_hashed_password: str, db: Agno
         await user.save()
         return True
     return False
-
-
+ 
+ 
 async def get_user_by_id(user_id: PydanticObjectId, db: AgnosticDatabase) -> Optional[User]:
     return await User.get(user_id)
+ 
+ 
+# ------------------
+# Token Blacklist Logic
+# ------------------
+ 
+async def blacklist_token(token: str, db: AgnosticDatabase) -> bool:
+    """
+    Store the refresh token in the blacklist collection.
+    """
+    try:
+        await db["blacklisted_tokens"].insert_one({"token": token})
+        return True
+    except Exception as e:
+        print(f"Error blacklisting token: {e}")
+        return False
+ 
+ 
+async def is_token_blacklisted(token: str, db: AgnosticDatabase) -> bool:
+    """
+    Check if the token is blacklisted.
+    """
+    doc = await db["blacklisted_tokens"].find_one({"token": token})
+    return doc is not None
+ 
+ 
