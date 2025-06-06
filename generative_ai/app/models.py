@@ -65,17 +65,16 @@ class Dataspace(Document):
 
 
 class Document(Document):
+    id: Optional[PydanticObjectId] = Field(default_factory=PydanticObjectId, alias="_id")
     file_name: str
     dataspace_id: PydanticObjectId
-    # Use the User model type hint for uploaded_by if you want Beanie relations (optional)
-    # uploaded_by: Optional[User] = Link(...) # Example with linking
-    # For now, keep it as PydasticObjectId referencing the user _id
-    uploaded_by: Optional[PydanticObjectId] = None  # This will store the user's _id
-    uploaded_at: datetime = Field(default_factory=get_ist_now)
+    uploaded_by: PydanticObjectId
+    uploaded_at: datetime
     s3_url: str
-    status: str = "uploaded"
-    config: Optional[ConfigModel] = None  # Embedded ConfigModel here
-    test_case_generation_status: int = Field(default=-1, description="-1: Not Started, 0: In Progress, 1: Completed")
+    status: str
+    config: Optional[dict] = None
+    test_case_generation_status: int = -1  # Initial value
+    revision_id: Optional[int] = Field(default=0) # For optimistic locking
 
     class Settings:
         name = "documents"
