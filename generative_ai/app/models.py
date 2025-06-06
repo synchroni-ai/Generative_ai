@@ -91,16 +91,24 @@ class DocumentStatusEnum(IntEnum):
     PROCESSED = 2        # Generation complete
     ERROR = -1   
 
+# class TestResult(BaseModel):
+#     config_id: str
+#     llm_model: Optional[str]
+#     temperature: Optional[float]
+#     use_case: Optional[Union[str, List[str]]]  # Allow either string or list
+#     generated_at: Optional[datetime]
+#     results: Dict[str, Any]
+#     status: str
+#     summary: Dict[str, Any]
 class TestResult(BaseModel):
     config_id: str
     llm_model: Optional[str]
     temperature: Optional[float]
-    use_case: Optional[Union[str, List[str]]]  # Allow either string or list
+    use_case: Optional[list]
     generated_at: Optional[datetime]
-    results: Dict[str, Any]
+    results: Dict[str, Any]  # flexible structure, or create a model for documents
     status: str
-    summary: Dict[str, Any]
-
+    summary: Optional[dict] = {}
 class CSVTestResult(BaseModel):
     document_name: Optional[str] = None
     TCID: Optional[str] = None

@@ -200,53 +200,114 @@ async def get_document_versions(config_id: str, db: AsyncIOMotorDatabase = Depen
 #             detail=f"An error occurred: {e}",
 #         )
     
+
+
 @router.get("/results/{job_id}", response_model=TestResult)
 async def get_test_results(
     job_id: str,
     subtype: Optional[str] = Query(None, description="Subtype to filter test cases by"),
-    db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
- 
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
+    current_user: User = Depends(deps.get_current_user),
 ):
     """
     Get test generation results for a job, optionally filtered by subtype.
     """
+    # Fetch the job result document from DB
     job = await db["test_case_grouped_results"].find_one({"job_id": job_id})
-
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"No test case generation found for job ID: {job_id}",
         )
 
-    filtered_results = {}
+    results = job.get("results", {})
 
-    all_documents = job.get("results", {}).get("documents", {})
+    # Prepare document ID mapping to fetch file names
+    document_ids = list(results.get("documents", {}).keys())
+    object_ids = [ObjectId(doc_id) for doc_id in document_ids if ObjectId.is_valid(doc_id)]
+
+    documents_cursor = db["documents"].find(
+        {"_id": {"$in": object_ids}},
+        {"file_name": 1}
+    )
+    document_info = {
+        str(doc["_id"]): doc["file_name"]
+        async for doc in documents_cursor
+    }
+
+    # Insert document names into results["documents"]
+    if "documents" in results:
+        for doc_id, data in results["documents"].items():
+            if isinstance(data, dict):
+                # Add document_name directly under the doc_id, before the subtype.
+                data["document_name"] = document_info.get(doc_id, "Unknown")
+
+    # Insert document names into results["all_documents"] if present
+    if "all_documents" in results:
+        for section, section_docs in results["all_documents"].items():
+            for doc_id, doc_data in section_docs.items():
+                doc_name = document_info.get(doc_id, "Unknown")
+
+                # Handle different data types inside all_documents
+                if isinstance(doc_data, str):
+                    # convert to dict with content + document_name
+                    results["all_documents"][section][doc_id] = {
+                        "content": doc_data,
+                        "document_name": doc_name
+                    }
+                elif isinstance(doc_data, list):
+                    results["all_documents"][section][doc_id] = {
+                        "content": doc_data,
+                        "document_name": doc_name
+                    }
+                elif isinstance(doc_data, dict):
+                    doc_data["document_name"] = doc_name
+
+    # Handle subtype filter if requested
+    filtered_results: Dict[str, Any] = {}
 
     if subtype:
-        # Filter for specific subtype in each document
-        for doc_id, subtypes in all_documents.items():
-            if subtype in subtypes:
-                filtered_results[doc_id] = {
-                    subtype: subtypes[subtype]
+        filtered_results["documents"] = {}
+        for doc_id, data in results.get("documents", {}).items():  # Iterate through original documents
+            if isinstance(data, dict) and subtype in data:
+                filtered_results["documents"][doc_id] = {
+                    "document_name": data.get("document_name", document_info.get(doc_id, "Unknown")), # Move document name inside the ID
+                    subtype: data[subtype],  # subtype data
                 }
-    else:
-        # No subtype filter; return everything
-        filtered_results = job.get("results")
 
-    # Build response
-    test_result = TestResult(
-        config_id=job["config_id"],
-        llm_model=job.get("llm_model"),
-        temperature=job.get("temperature"),
-        use_case=job.get("use_case"),
-        generated_at=job.get("generated_at"),
-        results=filtered_results,
-        status=job["status"],
-        summary=job.get("summary", {}),
-    )
+        if "all_documents" in results:
+             filtered_results["all_documents"] = {}
+             for section, section_docs in results["all_documents"].items():
+                filtered_results["all_documents"][section] = {}
+
+                for doc_id, doc_data in section_docs.items():
+                    if isinstance(doc_data, dict) and doc_data.get("content"):  # Assuming "content" holds the relevant data
+                         filtered_results["all_documents"][section][doc_id] = {
+                             "document_name": doc_data.get("document_name"),
+                             "content": doc_data["content"]
+                         }
+
+
+    else:
+        filtered_results = results
+
+
+    # Construct response model
+    try:
+        test_result = TestResult(
+            config_id=job.get("config_id"),
+            llm_model=job.get("llm_model"),
+            temperature=job.get("temperature"),
+            use_case=job.get("use_case", []),
+            generated_at=job.get("generated_at"),
+            results=filtered_results,
+            status=job.get("status"),
+            summary=job.get("summary", {}),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error building response: {str(e)}")
 
     return test_result
-
 
 @router.get("/results/documents/{document_id}")
 async def get_document_by_id(
