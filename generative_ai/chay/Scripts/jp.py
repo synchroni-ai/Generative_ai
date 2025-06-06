@@ -1,4 +1,4 @@
-#!C:\Users\chait\OneDrive\Documents\merging\Generative_ai\generative_ai\chay\Scripts\python.exe
+#!C:\Users\chait\OneDrive\Documents\logging_brd\Generative_ai\generative_ai\chay\Scripts\python.exe
 
 import sys
 import json
