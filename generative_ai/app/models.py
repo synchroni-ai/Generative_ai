@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 from app.core.config import get_ist_now  # Your timezone helper
 from uuid import uuid4
-from enum import Enum
+from enum import IntEnum
 
 class VersionInfo(BaseModel):
     version: int
@@ -62,7 +62,12 @@ class Dataspace(Document):
 
     class Settings:
         name = "dataspaces"
-
+class DocumentStatusEnum(IntEnum):
+    """Enum for internal document status representation."""
+    UPLOADED = 0         # Initial state
+    PROCESSING = 1       # Generation in progress
+    PROCESSED = 2        # Generation complete
+    ERROR = -1
 
 class Document(Document):
     id: Optional[PydanticObjectId] = Field(default_factory=PydanticObjectId, alias="_id")
@@ -71,23 +76,20 @@ class Document(Document):
     uploaded_by: PydanticObjectId
     uploaded_at: datetime
     s3_url: str
-    status: str
+    status: DocumentStatusEnum = DocumentStatusEnum.UPLOADED
     config: Optional[dict] = None
-    test_case_generation_status: int = -1  # Initial value
-    revision_id: Optional[int] = Field(default=0) # For optimistic locking
 
     class Settings:
         name = "documents"
 
 
-class DocumentStatusEnum(str, Enum):
+
+class DocumentStatusEnum(IntEnum):
     """Enum for internal document status representation."""
-
-    UPLOADED = "uploaded"  # Corresponds to API status -1
-    PROCESSING = "processing"  # Corresponds to API status 0
-    PROCESSED = "processed"  # Corresponds to API status 1
-    ERROR = "error"  # Corresponds to API status -2
-
+    UPLOADED = 0         # Initial state
+    PROCESSING = 1       # Generation in progress
+    PROCESSED = 2        # Generation complete
+    ERROR = -1   
 
 class TestResult(BaseModel):
     config_id: str
