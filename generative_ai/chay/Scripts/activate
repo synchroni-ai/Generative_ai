@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="C:\Users\chait\OneDrive\Documents\logging_brd\Generative_ai\generative_ai\chay"
+VIRTUAL_ENV="C:\Users\chait\OneDrive\Documents\brd_project\Generative_ai\generative_ai\chay"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
