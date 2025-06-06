@@ -135,7 +135,7 @@ def generate_test_cases(config: dict, mongo_uri: str, api_keys: dict):
         }
 
         # Store under global Final_subtypes (renamed from all_subtypes)
-        full_result["results"]["all_documents"]["Final_subtypes"][   # Changed here
+        full_result["results"]["all_documents"]["Final_subtypes"][   # Changed here to final_subtypes
             str(doc["_id"])
         ] = all_subtypes_results
 
