@@ -256,6 +256,13 @@
   color: #252525 !important;
 }
 
+.configuration_SettingsTitle {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin-bottom: 16px !important;
+  color: #252525 !important;
+}
+
 .configuration_itemText {
   font-size: 14px !important;
   font-weight: 400 !important;
@@ -310,4 +317,17 @@
   color: #aaa !important;
   cursor: not-allowed !important;
   border: none !important;
+}
+
+.configuration_summaryLabel {
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  color: #333 !important;
+}
+
+.configuration_chip {
+  background: #f0f0f0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
 }

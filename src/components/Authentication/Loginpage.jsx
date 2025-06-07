@@ -300,43 +300,23 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // const handleLogin = async (e) => {
-  //   e.preventDefault();
-  //   setLoading(true);
-  //   setError("");
-
-  //   try {
-  //     const response = await adminAxios.post("/api/v1/auth/token", {
-  //       username,
-  //       password,
-  //     });
-
-  //     const { access_token } = response.data;
-  //     const expiryTime = new Date().getTime() + 30 * 60 * 1000;
-
-  //     localStorage.setItem("token", access_token);
-  //     localStorage.setItem("tokenExpiry", expiryTime);
-  //     localStorage.setItem("isLoggedIn", "true");
-
-  //     navigate("/dashboard");
-  //   } catch (err) {
-  //     setError("Invalid username or password");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 const handleLogin = async (e) => {
   e.preventDefault();
   setLoading(true);
   setError("");
 
+  const formData = new FormData();
+  formData.append("username", username);
+  formData.append("password", password);
+
   const defaultUsername = "admin";
   const defaultPassword = "admin123";
 
   try {
-    const response = await adminAxios.post("/api/v1/auth/token", {
-      username,
-      password,
+    const response = await adminAxios.post("/api/v1/auth/login", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
     });
 
     const { access_token } = response.data;
@@ -362,6 +342,7 @@ const handleLogin = async (e) => {
     setLoading(false);
   }
 };
+
 
 
 

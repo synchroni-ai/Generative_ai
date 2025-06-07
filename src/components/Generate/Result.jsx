@@ -224,8 +224,6 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import {
   Box,
-  Tabs,
-  Tab,
   Typography,
   Button,
   Table,
@@ -235,54 +233,11 @@ import {
   TableRow,
   Paper,
 } from '@mui/material';
-import { WebsocketAxios } from '../../asessts/axios/index';
-import { adminAxios } from '../../asessts/axios/index';
-import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
 import ExportIcon from "./../../asessts/images/exporticon.png";
-import { Skeleton } from '@mui/material';
 import LinearProgress from '@mui/material/LinearProgress';
 import { saveAs } from 'file-saver';
 import "./Tabs.css";
-// const parseTestCasesFromContent = (content, testType, fileName) => {
-//   const parsed = [];
-//   const entries = content.split(/\n(?=TCID:)/g); // Split at each TCID
 
-//   entries.forEach(raw => {
-//     const fields = {
-//       file_name: fileName,
-//       "TCID": "",
-//       "Test type": testType,
-//       "Title": "",
-//       "Description": "",
-//       "Precondition": "",
-//       "Steps": "",
-//       "Action": "",
-//       "Data": "",
-//       "Result": "",
-//       "Test Nature": "",
-//       "Test priority": ""
-//     };
-
-//     Object.keys(fields).forEach(key => {
-//       if (key === "file_name") return;
-//       const regex = new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z][^:]*?:|\\n*$)`, 'i');
-//       const match = raw.match(regex);
-//       if (match) {
-//         fields[key] = match[1].trim();
-//       }
-//     });
-
-//     // Skip if it's just a heading or doesn't have a valid TCID
-//     if (!fields["TCID"]) return;
-
-//     fields["Type (P / N / in)"] = fields["Test Nature"];
-//     delete fields["Test Nature"];
-
-//     parsed.push(fields);
-//   });
-
-//   return parsed;
-// };
 
 
 const parseTestCasesFromContent = (content, testType, fileName) => {
@@ -358,7 +313,7 @@ const selectedHistoryDocData = [
   },
 ];
 
-const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = [],selectedDocs, generationLoading = false, progress = 0 }) => {
+const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = {},selectedDocs, generationLoading = false, progress = 0 }) => {
   const [activeTab, setActiveTab] = useState('All'); // not index 0
   const [parsedData, setParsedData] = useState([]);
   const [headers, setHeaders] = useState([]);
@@ -375,32 +330,54 @@ const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId,
   }, [selectedSubTypes]);
 
   useEffect(() => {
-    console.log("Selected SubTypes:", selectedSubTypes);
   }, [selectedSubTypes]);
 
- useEffect(() => {
-  const groupedByFile = {}; // { file_name: [testcases] }
+useEffect(() => {
+ if (
+  !results ||
+  typeof results !== "object"
+) {
+  console.warn("⚠️ Invalid results structure:", results);
+  return;
+}
 
-  results.forEach(fileResult => {
-    const fileName = fileResult.file_name;
-    const testCaseTypes = fileResult.test_cases || {};
+const finalSubtypeMap =
+  results.all_documents?.Final_subtypes ||  // normal API format
+  results.results?.all_documents?.Final_subtypes || // history API format
+  null;
 
-    const seenTCIDs = new Set(); // 🧠 Track seen TCIDs per file
+if (!finalSubtypeMap || typeof finalSubtypeMap !== 'object') {
+  console.warn("⚠️ Final_subtypes not found in results:", results);
+  return;
+}
 
-    Object.entries(testCaseTypes).forEach(([type, tc]) => {
-      if (tc.content) {
-        const parsedRows = parseTestCasesFromContent(tc.content, type, fileName);
+  const groupedByFile = {};
+  
+  Object.entries(finalSubtypeMap).forEach(([fileId, fileData]) => {
+    if (!fileData || typeof fileData !== "object") return;
 
-        const uniqueRows = parsedRows.filter(row => {
-          const tcid = row.TCID?.trim();
-          if (!tcid || seenTCIDs.has(tcid)) return false;
-          seenTCIDs.add(tcid);
-          return true;
-        });
+    const fileName =
+      fileData.document_name ||
+      selectedDocs?.find(doc => doc._id === fileId)?.name ||
+      `File-${fileId}`;
 
-        if (!groupedByFile[fileName]) groupedByFile[fileName] = [];
-        groupedByFile[fileName].push(...uniqueRows);
-      }
+    const contentArray = fileData.content || [];
+    const seenTCIDs = new Set(); // Per file
+
+    contentArray.forEach(content => {
+      if (!content || typeof content !== "string") return;
+
+      const parsedRows = parseTestCasesFromContent(content, "functional", fileName);
+
+      const uniqueRows = parsedRows.filter(row => {
+        const tcid = row.TCID?.trim();
+        if (!tcid || seenTCIDs.has(tcid)) return false;
+        seenTCIDs.add(tcid);
+        return true;
+      });
+
+      if (!groupedByFile[fileName]) groupedByFile[fileName] = [];
+      groupedByFile[fileName].push(...uniqueRows);
     });
   });
 
@@ -408,134 +385,22 @@ const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId,
   setParsedData(groupedByFile);
 
   const firstGroup = Object.values(groupedByFile)[0] || [];
-  const headers = firstGroup.length ? Object.keys(firstGroup[0]) : [];
-
-  setHeaders(headers);
+  const dynamicHeaders = firstGroup.length ? Object.keys(firstGroup[0]) : [];
+  setHeaders(dynamicHeaders);
   setLoading(false);
-}, [results]);
+}, [results, selectedDocs]);
 
 
 
 
-  // useEffect(() => {
-  //   let pollingTimeout = null;
 
-  //   const fetchTestCasesFromAPI = async () => {
-  //     try {
-  //       const response = await adminAxios.get(`/get-test-cases/${fileId}`);
-  //       const resultData = response.data;
+const handleTabClick = (label) => {
+  setActiveTab(label);
+};
+const handleTabChange = (event, newValue) => {
+  setActiveTab(newValue);
+};
 
-  //       // ⏳ Keep polling until status_code is 1
-  //       if (resultData.status_code === 0) {
-  //         console.log("⏳ Status code 0: Retrying in 5 seconds...");
-  //         pollingTimeout = setTimeout(fetchTestCasesFromAPI, 5000);
-  //         return;
-  //       }
-
-  //       // ✅ Only process when status_code is 1
-  //       console.log("✅ Status code 1: Final result received");
-
-  //       setLoading(true);
-  //       setError(false);
-  //       setDocumentId(null);
-  //       setParsedData([]);
-  //       setHeaders([]);
-
-  //       if (resultData.test_cases?.length > 0) {
-  //         const rows = resultData.test_cases;
-  //         const headers = Object.keys(rows[0]);
-  //         setAllTestCases(rows);
-  //         setParsedData(filterByTab(rows, activeTab));
-  //         setHeaders(headers);
-  //       }
-
-  //       if (resultData.document_id) {
-  //         setDocumentId(resultData.document_id);
-  //       }
-
-  //       if (resultData.combined_test_case_document?._id) {
-  //         setDocumentId(resultData.combined_test_case_document._id);
-  //       }
-
-  //       setLoading(false);
-  //     } catch (err) {
-  //       console.error("❌ Error fetching test cases from REST API:", err);
-  //       setError(true);
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   if (taskId) {
-  //     // 🔁 WebSocket logic
-  //     setLoading(true);
-  //     setError(false);
-  //     setDocumentId(null);
-  //     setParsedData([]);
-  //     setHeaders([]);
-
-  //     const socketUrl = `${WebsocketAxios}/task_status/${taskId}?token=${token}`;
-  //     socketRef.current = new WebSocket(socketUrl);
-
-  //     socketRef.current.onopen = () => {
-  //       console.log("✅ WebSocket connected");
-  //       setError(false);
-  //     };
-
-  //     socketRef.current.onmessage = (event) => {
-  //       const data = JSON.parse(event.data);
-  //       console.log("📨 WebSocket message received:", data);
-
-  //       if (data.status === "SUCCESS" && data.result?.test_cases?.length > 0) {
-  //         const rows = data.result.test_cases;
-  //         const headers = Object.keys(rows[0]);
-
-  //         setAllTestCases(rows);
-  //         setParsedData(filterByTab(rows, activeTab));
-  //         setHeaders(headers);
-
-  //         if (data.result?.document_id) {
-  //           setDocumentId(data.result.document_id);
-  //         }
-
-  //         setLoading(false);
-  //       }
-  //     };
-
-  //     socketRef.current.onerror = (event) => {
-  //       console.error("🛑 WebSocket error:", event);
-  //       setError(true);
-  //       setLoading(false);
-  //     };
-
-  //     socketRef.current.onclose = () => {
-  //       console.log("🔌 WebSocket connection closed");
-  //     };
-
-  //     return () => {
-  //       socketRef.current?.close();
-  //     };
-  //   } else if (fileId) {
-  //     // ✅ Start polling if fileId is available
-  //     fetchTestCasesFromAPI();
-  //   }
-
-  //   return () => {
-  //     // Cleanup any scheduled polling
-  //     if (pollingTimeout) {
-  //       clearTimeout(pollingTimeout);
-  //     }
-  //   };
-  // }, [taskId, fileId]);
-
-
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setParsedData(filterByTab(allTestCases, newValue));
-  };
-  const handleTabClick = (label) => {
-    setActiveTab(label);
-    setParsedData(filterByTab(allTestCases, label));
-  };
 
 
 
@@ -555,66 +420,14 @@ const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId,
 };
 
 
-
-
-  // useEffect(() => {
-  //   const fetchTestCaseSummary = async () => {
-  //     try {
-  //       const res = await adminAxios.get(`/test-case-summary/${fileId}`);
-  //       const summary = res.data;
-
-  //       setTestCaseCounts({
-  //         All: summary.total_test_cases,
-  //         ...summary.counts_by_type
-  //       });
-  //     } catch (err) {
-  //       console.error("❌ Error fetching test case summary:", err);
-  //     }
-  //   };
-
-  //   if (fileId) {
-  //     fetchTestCaseSummary();
-  //   }
-  // }, [fileId]);
-
-
-// const exportCSV = async () => {
-//   try {
-//     // Join selectedDocs for file_ids
-//     const fileIdsParam = selectedDocs.join(',');
-//     // Join selectedSubTypes for types (make sure to lowercase them)
-//     const typesParam = selectedSubTypes.map(type => type.toLowerCase()).join(',');
-
-//     const url = `/api/v1/documents/download-testcases?file_ids=${fileIdsParam}&types=${typesParam}&mode=csv`;
-
-//     const response = await adminAxios.get(url, {
-//       responseType: 'blob',
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-
-//     const blob = new Blob([response.data], { type: 'application/zip' });
-//     const downloadUrl = window.URL.createObjectURL(blob);
-//     const link = document.createElement('a');
-//     link.href = downloadUrl;
-//     link.setAttribute('download', 'test_cases_bundle.zip');
-//     document.body.appendChild(link);
-//     link.click();
-//     link.remove();
-//   } catch (error) {
-//     console.error("❌ Error downloading test cases ZIP:", error);
-//   }
-// };
-
-
 const exportCSV = () => {
   try {
     const allRows = [];
     const headersSet = new Set();
 
-    // Flatten all test cases and collect unique headers (excluding "file_name")
-    Object.values(allTestCases).forEach(testCases => {
+    const visibleData = filterByTab(allTestCases, activeTab);
+
+    Object.values(visibleData).forEach(testCases => {
       testCases.forEach(row => {
         allRows.push(row);
         Object.keys(row).forEach(h => {
@@ -625,24 +438,30 @@ const exportCSV = () => {
 
     const headers = Array.from(headersSet);
 
-    const csvContent = [
-      headers.join(','), // Header row
-      ...allRows.map(row =>
-        headers.map(h => {
-          const cell = row[h] || '';
-          const safeCell = typeof cell === 'string' ? `"${cell.replace(/"/g, '""')}"` : cell;
-          return safeCell;
-        }).join(',')
-      )
-    ].join('\n');
+    const csvRows = allRows.map(row =>
+      headers.map(h => {
+        let cell = row[h] || '';
+        if (typeof cell === 'string') {
+          cell = cell.replace(/"/g, '""'); // Escape quotes
+          cell = `"${cell.replace(/\r?\n/g, '\r\n')}"`; // Wrap and normalize line breaks
+        }
+        return cell;
+      }).join(',')
+    );
+
+    const csvContent = [headers.join(','), ...csvRows].join('\r\n');
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, 'All_Test_Cases.csv');
+
+    const fileName = activeTab === 'All'
+      ? 'All_Test_Cases.csv'
+      : `${activeTab}_Test_Cases.csv`;
+
+    saveAs(blob, fileName);
   } catch (error) {
     console.error("❌ Error generating CSV:", error);
   }
 };
-
 
 
 
@@ -757,131 +576,47 @@ useEffect(() => {
         </Button>
       </Box>
 
-      {/* Tabs */}
-      {/* <Box display="flex" alignItems="center" justifyContent="space-between" ml={3}>
-        <Tabs
-          value={activeTab}
-          onChange={handleTabChange}
-          textColor="inherit"
-          TabIndicatorProps={{
-            style: {
-              backgroundColor: '#000080',
-              height: '2px',
-            },
-          }}
-        >
-          {tabLabels.map((label, index) => (
-            <Tab
-              key={label}
-              disableRipple
-              label={
-                <Typography
-                  sx={{
-                    fontWeight: 400,
-                    textTransform: 'none',
-                    fontSize: 14,
-                    color: activeTab === index ? '#000080' : '',
-                  }}
-                >
-                  {label}
-                </Typography>
-              }
-            />
-          ))}
-        </Tabs>
-      </Box> */}
-      <Box className="custom-tab-container" ml={3}>
-        {tabLabels.map((label) => {
-              const key = label.toLowerCase();
-           const count = testCaseCounts[key] || 0;
-          const isActive = activeTab === label;
+    
+    {!selectedHistoryDoc && (
+  <Box className="custom-tab-container" ml={3}>
+    {tabLabels.map((label) => {
+      const key = label.toLowerCase();
+      const count = testCaseCounts[key] || 0;
+      const isActive = activeTab === label;
 
-          return (
-            <div
-              key={label}
-              className={`custom-tab-item ${isActive ? 'active' : ''}`}
-              onClick={() => handleTabClick(label)}
-            >
-              <div className="custom-tab-label">{label}</div>
-              <div className={`custom-tab-badge-wrapper ${isActive ? 'active' : ''}`}>
-                <div className="custom-tab-badge">{String(count).padStart(2, '0')}</div>
-              </div>
-            </div>
-          );
-        })}
-      </Box>
+      return (
+        <div
+          key={label}
+          className={`custom-tab-item ${isActive ? 'active' : ''}`}
+          onClick={() => handleTabClick(label)}
+        >
+          <div className="custom-tab-label">{label}</div>
+          <div className={`custom-tab-badge-wrapper ${isActive ? 'active' : ''}`}>
+            <div className="custom-tab-badge">{String(count).padStart(2, '0')}</div>
+          </div>
+        </div>
+      );
+    })}
+  </Box>
+)}
 
 
 
       {/* Conditional Heading */}
-      {selectedHistoryDoc && (
-        <Typography fontWeight={600} fontSize={16} mb={2} mt={3} ml={2.5}>
-          TestScripts_Execution_Report_Doc
-        </Typography>
-      )}
-
-      {/* Table */}
-      {/* <Paper elevation={0} sx={{ mt: 3, borderRadius: 3, overflowX: 'auto', ml: 2.5, border: "1px solid #e6e6e6" }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              {fromHistory ? (
-                <>
-                  <TableCell sx={{ fontWeight: 600 }}>Test case ID</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Date</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Test case</TableCell>
-                  <TableCell sx={{ fontWeight: 600 }}>Tags</TableCell>
-                </>
-              ) : (
-                headers.map((header) => (
-                  <TableCell key={header} sx={{ fontWeight: 600 }}>
-                    {header}
-                  </TableCell>
-                ))
-              )}
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-           {!selectedHistoryDoc && Object.entries(parsedData).map(([fileName, testCases], docIndex) => (
-  <Box key={docIndex} mb={4}>
-    <Typography fontWeight={600} fontSize={18} mt={3} mb={2} ml={1}>
-      {fileName}
-    </Typography>
-    <Paper elevation={0} sx={{ borderRadius: 3, overflowX: 'auto', border: "1px solid #e6e6e6" }}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            {headers.map((header) => (
-              <TableCell key={header} sx={{ fontWeight: 600 }}>{header}</TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {testCases.map((row, rowIndex) => (
-            <TableRow key={rowIndex}>
-              {headers.map((header) => (
-                <TableCell key={header}>
-                  {typeof row[header] === 'string' && row[header].includes('\n')
-                    ? row[header].split('\n').map((line, i) => <div key={i}>{line}</div>)
-                    : row[header]}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </Paper>
+     {/* {selectedHistoryDoc && (
+  <Box ml={2.5} mb={2} mt={3}>
+    <Typography fontWeight={600} fontSize={16}>{selectedHistoryDoc.name}</Typography>
+    {selectedHistoryDoc.time && (
+      <Typography fontSize={12} color="text.secondary">
+        Generated at {selectedHistoryDoc.time}
+      </Typography>
+    )}
   </Box>
-))}
+)} */}
 
 
-          </TableBody>
-        </Table>
-      </Paper> */}
 
-
-      {!selectedHistoryDoc && Object.entries(parsedData).map(([fileName, testCases], docIndex) => (
+{Object.entries(filterByTab(allTestCases, activeTab)).map(([fileName, testCases], docIndex) => (
         <Box key={docIndex} mb={4} ml={3}>
           <Typography fontWeight={600} fontSize={18} mt={3} mb={2} ml={1}>
             {fileName}

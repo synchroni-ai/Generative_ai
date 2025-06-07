@@ -88,65 +88,29 @@ const getVisiblePages = () => {
     setAnchorEl(null);
   };
 
-  const parseFormattedText = (text) => {
-      if (!text || typeof text !== 'string') return null; // <-- Prevent error if undefined/null
-    const lines = text.split("\n");
-    const elements = [];
-    let listItems = [];
-    const flushList = () => {
-      if (listItems.length > 0) {
-        elements.push(
-          <ul key={`list-${elements.length}`} style={{ paddingLeft: "1.5rem", marginTop: 4 }}>
-            {listItems.map((item, idx) => (
-              <li key={idx}>{renderBoldText(item)}</li>
-            ))}
-          </ul>
-        );
-        listItems = [];
-      }
-    };
-    const renderBoldText = (line) =>
-      line.split(/(\*\*.*?\*\*)/g).map((part, index) =>
-        part.startsWith("**") && part.endsWith("**") ? (
-          <strong key={index} >{part.slice(2, -2)}</strong>
-        ) : (
-          <React.Fragment key={index}>{part}</React.Fragment>
-        )
-      );
-
-    lines.forEach((line, index) => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith("* ")) {
-        listItems.push(trimmed.slice(2));
-      } else {
-        flushList();
-        if (trimmed !== "") {
-          elements.push(
-            <p key={index} style={{ marginBottom: "0.6rem" }}>
-              {renderBoldText(trimmed)}
-            </p>
-          );
-        }
-      }
-    });
-    flushList();
-    return elements;
-  };
+ 
 const fetchDocuments = async () => {
   setLoading(true);
   try {
-    const response = await adminAxios.get("/api/v1/data-spaces/");
+    const token = localStorage.getItem("token");
+
+    const response = await adminAxios.get("/api/v1/dataspaces", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
     const mappedDocs = response.data.map((space, index) => ({
-      _id: space.data_space_id,
+      _id: space._id,
       name: space.name,
       description: space.description,
       category: space.category,
       sub_category: space.sub_category,
       created_at: space.created_at,
       document_count: space.document_count,
-    }));
+    })).reverse();
+
     setDocuments(mappedDocs);
-    // console.log("Fetched data spaces:", mappedDocs);
   } catch (error) {
     console.error("Error fetching data spaces:", error);
   } finally {
@@ -154,58 +118,23 @@ const fetchDocuments = async () => {
   }
 };
 
+const handleGenerateClick = (doc) => {
 
-const handleGenerateClick = async (doc) => {
-  if (generateLoading) return;
-
-  try {
-    setGenerateLoading(true);
-    setSelectedDocumentName(doc.file_name);
-
-    const formData = new FormData();
-    formData.append("data_space_id", doc._id);
-    formData.append("model_name", "Openai");
-
-    // Step 1: POST to trigger test case generation
-    const response = await adminAxios.post(
-      "/api/v1/documents/batch-generate-test-cases/",
-      formData,
-      { headers: { "Content-Type": "multipart/form-data" } }
-    );
-
-    const generationId = response.data.generation_id;
-    const taskId = response.data.task_id;
-
-    // Step 2: GET generation status
-    const statusRes = await adminAxios.get(
-      `/api/v1/documents/generation-status/?data_space_id=${doc._id}`
-    );
-
-    console.log("✅ Generation status:", statusRes.data);
-
-    // Step 3: Navigate to configurator
-    navigate("/uiux-configurator", {
-      state: {
-        doc,
-        task_id: taskId,
-        data_space_id: doc._id,
-        generation_id: generationId,
-        status: statusRes.data, // optional: pass the generation status
+  navigate("/uiux-configurator", {
+    state: {
+      data_space_id: doc._id,
+      doc: {
+        name: doc.name,
+        description: doc.description,
       },
-    });
-
-  } catch (error) {
-    console.error("❌ Error:", error);
-  } finally {
-    setGenerateLoading(false);
-  }
+    },
+  });
 };
+
 
   useEffect(() => {
     fetchDocuments();
   }, []);
-
-
 
   return (
    <Box sx={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
@@ -295,7 +224,7 @@ const handleGenerateClick = async (doc) => {
     <TableCell sx={{ fontWeight: "bold" }}>Data Space Name</TableCell>
     <TableCell sx={{ fontWeight: "bold" }}>Category</TableCell>
     <TableCell sx={{ fontWeight: "bold" }}>Subcategory</TableCell>
-    <TableCell sx={{ fontWeight: "bold" }}>Documents</TableCell>
+    {/* <TableCell sx={{ fontWeight: "bold" }}>Documents</TableCell> */}
     <TableCell sx={{ fontWeight: "bold" }}>Created At</TableCell>
     <TableCell sx={{ fontWeight: "bold" }}>Actions</TableCell>
   </TableRow>
@@ -311,7 +240,7 @@ const handleGenerateClick = async (doc) => {
       <TableCell><Skeleton variant="rectangular" width="80%" height={20} /></TableCell>
       <TableCell><Skeleton variant="rectangular" width="60%" height={20} /></TableCell>
       <TableCell><Skeleton variant="rectangular" width="60%" height={20} /></TableCell>
-      <TableCell><Skeleton variant="text" width={30} /></TableCell>
+      {/* <TableCell><Skeleton variant="text" width={30} /></TableCell> */}
       <TableCell><Skeleton variant="rectangular" width="60%" height={20} /></TableCell>
       <TableCell><Skeleton variant="rectangular" width={30} height={20} /></TableCell>
     </TableRow>
@@ -339,7 +268,7 @@ const handleGenerateClick = async (doc) => {
             <TableCell className="documentlist_header">Data Space Name</TableCell>
             <TableCell className="documentlist_header">Category</TableCell>
             <TableCell className="documentlist_header">Subcategory</TableCell>
-            <TableCell className="documentlist_header">Documents</TableCell>
+            {/* <TableCell className="documentlist_header">Documents</TableCell> */}
             <TableCell className="documentlist_header">Created At</TableCell>
             <TableCell className="documentlist_header">Actions</TableCell>
           </TableRow>
@@ -374,7 +303,7 @@ const handleGenerateClick = async (doc) => {
 
                 <TableCell className="documentlist_dimmedText">{doc.category}</TableCell>
                 <TableCell className="documentlist_dimmedText">{doc.sub_category}</TableCell>
-                <TableCell className="documentlist_dimmedText">{doc.document_count}</TableCell>
+                {/* <TableCell className="documentlist_dimmedText">{doc.document_count}</TableCell> */}
                 <TableCell className="documentlist_dimmedText">{new Date(doc.created_at).toLocaleDateString()}</TableCell>
                 <TableCell>
                   <IconButton

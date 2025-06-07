@@ -15,6 +15,7 @@ import {
   ExpandMore,
   InsertDriveFile,
 } from '@mui/icons-material';
+import { adminAxios } from '../../asessts/axios/index';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import Cloudicon from "./../../asessts/images/cloudicon.png";
 import Choosefileicon from "./../../asessts/images/choosefile.png";
@@ -28,7 +29,7 @@ const fileIcons = {
   default: <InsertDriveFile sx={{ color: '#757575' }} />,
 };
 
-const NewDocumentModal = ({ open, onClose }) => {
+const NewDocumentModal = ({ open, onClose,dataSpaceId, fetchDocuments  }) => {
     const [file, setFile] = useState(null);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploadProgress, setUploadProgress] = useState([]);
@@ -121,13 +122,45 @@ useEffect(() => {
 }, [uploadProgress]);
 
 
-  const handleUpload = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    //   setOpen(false);
-    }, 1500);
-  };
+ const handleUpload = async () => {
+  if (!dataSpaceId || selectedFiles.length === 0) return;
+
+  setLoading(true);
+
+  const formData = new FormData();
+  formData.append("dataspace_id", dataSpaceId); // 👈 correct key from backend
+
+  selectedFiles.forEach((file) => {
+    formData.append("files", file); // 👈 append each file with the same key for multiple upload support
+  });
+
+  try {
+    const token = localStorage.getItem("token");
+
+    const response = await adminAxios.post("/api/v1/documents/batch-upload", formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    console.log("✅ Upload successful:", response.data);
+
+     // ✅ Refresh document list in parent
+    if (typeof fetchDocuments === "function") {
+      fetchDocuments();
+    }
+    
+    setUploadCompleted(true);
+    handleClose(); // close the modal after upload
+  } catch (error) {
+    console.error("❌ Upload failed:", error.response?.data || error.message);
+    alert("Failed to upload documents. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Modal open={open} onClose={handleClose}>
