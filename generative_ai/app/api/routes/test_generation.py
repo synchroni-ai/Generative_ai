@@ -376,3 +376,37 @@ async def get_document_by_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {e}",
         )
+@router.get("/testcases/{document_id}")
+async def get_test_cases_by_document_id(
+    document_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db)
+):
+    """
+    Fetch all test cases for a specific document ID.
+    """
+    try:
+        obj_id = ObjectId(document_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+    # Search for the document in test_case_grouped_results
+    result = await db["test_case_grouped_results"].find_one({
+        f"results.documents.{document_id}": {"$exists": True}
+    })
+
+    if not result:
+        raise HTTPException(status_code=404, detail="No test cases found for this document")
+
+    test_case_block = result["results"]["documents"][document_id]
+    generated_at = result.get("generated_at")
+    config_id = result.get("config_id")
+    llm_model = result.get("llm_model")
+
+    return {
+        "document_id": document_id,
+        "config_id": config_id,
+        "llm_model": llm_model,
+        "generated_at": generated_at,
+        "test_case_count": len(test_case_block.get("all_subtypes", [])),
+        "test_cases": test_case_block
+    }
