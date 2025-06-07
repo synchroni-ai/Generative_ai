@@ -519,73 +519,88 @@ async def get_test_cases_by_document_ids(
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     """
-    Fetch test cases for one or more document IDs and returns them in a nested JSON structure.
+    Fetch test cases for one or more document IDs and return them in a nested JSON structure.
+    Includes document names fetched from the 'documents' collection.
     """
     if not document_ids:
         raise HTTPException(status_code=400, detail="Please provide at least one document ID")
 
     document_id_list = [doc_id.strip() for doc_id in document_ids.split(",")]
-    all_results = {}  # Dictionary to hold all the final results
+    all_results = {}
 
-    # First, find a document that matches the request (to extract config, llm, and other metadata)
+    # Use the first document ID to fetch metadata like config_id, llm_model, etc.
     representative_result = await db["test_case_grouped_results"].find_one({
         f"results.documents.{document_id_list[0]}": {"$exists": True}
     })
 
     if not representative_result:
-       raise HTTPException(status_code=404, detail=f"No test case found for any of the specified document IDs: {document_id_list}")
+        raise HTTPException(
+            status_code=404,
+            detail=f"No test case found for any of the specified document IDs: {document_id_list}"
+        )
 
-
+    # Extract metadata from the representative result
     config_id = representative_result.get("config_id")
     llm_model = representative_result.get("llm_model")
-    generated_at = representative_result.get("generated_at")
-    temperature = representative_result.get("temperature") #check for value in the db
+    temperature = representative_result.get("temperature")
     use_case = representative_result.get("use_case")
-    results = {} # results dictionary
+    generated_at = representative_result.get("generated_at")
 
+    results = {}
     all_documents_functional = {}
     all_documents_final_subtypes = {}
+
     for document_id in document_id_list:
         try:
-            obj_id = ObjectId(document_id)  # Validate ObjectId
+            obj_id = ObjectId(document_id)
         except Exception:
             raise HTTPException(status_code=400, detail=f"Invalid document ID format: {document_id}")
 
+        # Fetch document name from 'documents' collection
+        doc_data = await db["documents"].find_one({"_id": obj_id})
+        document_name = doc_data.get("file_name", "Unknown") if doc_data else "Unknown"
 
         result = await db["test_case_grouped_results"].find_one({
             f"results.documents.{document_id}": {"$exists": True}
         })
 
-        if not result: #if result not found
-           results[document_id] = f"No test cases found for this document"
-           continue  # skip rest of the processing
+        if not result:
+            results[document_id] = f"No test cases found for this document"
+            continue
 
-        test_case_block = result["results"]["documents"][document_id] #get the blocks
+        test_case_block = result["results"]["documents"][document_id]
 
         all_documents_functional[document_id] = {
-            "content": test_case_block.get("functional"), #fetch the functional parts
-            "document_name": "documentname", #fill it in
+            "content": test_case_block.get("functional"),
+            "document_name": document_name,
         }
 
         all_documents_final_subtypes[document_id] = {
-             "content":  test_case_block.get("all_subtypes"), #get all subtypes for final content
-             "document_name": "documentname",
+            "content": test_case_block.get("all_subtypes"),
+            "document_name": document_name,
         }
-        results[document_id] = test_case_block #save all blocks to results
-        all_results["config_id"] = config_id
-        all_results["llm_model"] = llm_model
-        all_results["temperature"] = temperature
-        all_results["use_case"] = use_case
-        all_results["generated_at"] = generated_at #save all metadata
 
-        #after all of the processing do nested values like final content
-        #and all docuemnts functional
+        results[document_id] = test_case_block
 
-    all_results["results"] = { "documents": results}
-    all_results["results"]["all_documents"] = { "functional": all_documents_functional, "Final_subtypes": all_documents_final_subtypes}
-    all_results["status"] = "completed"  # or "incomplete", "error", etc.
-    all_results["summary"] = {
-            "documents": document_id_list,
-            "subtypes": ["functional"],  # Hardcoded - should be generated dynamically
+    # Assemble the final result
+    all_results["config_id"] = config_id
+    all_results["llm_model"] = llm_model
+    all_results["temperature"] = temperature
+    all_results["use_case"] = use_case
+    all_results["generated_at"] = generated_at
+
+    all_results["results"] = {
+        "documents": results,
+        "all_documents": {
+            "functional": all_documents_functional,
+            "Final_subtypes": all_documents_final_subtypes
+        }
     }
+
+    all_results["status"] = "completed"
+    all_results["summary"] = {
+        "documents": document_id_list,
+        "subtypes": ["functional"]  # You can dynamically extract subtypes if needed
+    }
+
     return all_results
