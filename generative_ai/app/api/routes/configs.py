@@ -109,3 +109,34 @@ async def get_config_by_id(
 
     print(f"User {current_user.username} (ID: {current_user.id}) retrieved config by ID: {config_id}")
     return {"config": config}
+
+@router.get("/history")
+async def get_test_case_history(
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Fetches test case generation history for all documents.
+    """
+    cursor = db["test_case_grouped_results"].find({})
+    history = []
+
+    async for record in cursor:
+        generated_at = record.get("generated_at")
+        documents = record.get("results", {}).get("documents", {})
+
+        for doc_id, doc_result in documents.items():
+            testcases = doc_result.get("all_subtypes", [])
+            test_case_count = len(testcases)
+
+            history.append({
+                "document_id": doc_id,
+                "test_case_count": test_case_count,
+                "testcases": testcases,
+                "generated_at": generated_at,
+            })
+
+    if not history:
+        raise HTTPException(status_code=404, detail="No test case history found.")
+
+    return {"history": history}
