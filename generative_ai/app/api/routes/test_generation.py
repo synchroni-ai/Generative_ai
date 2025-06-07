@@ -468,48 +468,124 @@ async def get_document_by_id(
 #         "documents": response_data
 #     }
 
+# @router.get("/testcases")
+# async def get_test_cases_by_document_ids(
+#     document_ids: Optional[str] = Query(None, description="Comma-separated list of document IDs"),
+#     db: AsyncIOMotorDatabase = Depends(get_db)
+# ):
+#     """
+#     Fetch test cases for one or more document IDs.  If multiple IDs are provided, they should be comma-separated.
+#     """
+#     if not document_ids:
+#         raise HTTPException(status_code=400, detail="Please provide at least one document ID")
+
+#     document_id_list = document_ids.split(",")
+#     test_cases_results = []
+
+#     for document_id in document_id_list:
+#         document_id = document_id.strip()  # Remove any leading/trailing spaces
+#         try:
+#             obj_id = ObjectId(document_id)
+#         except Exception:
+#             raise HTTPException(status_code=400, detail=f"Invalid document ID format: {document_id}")
+
+#         # Search for the document in test_case_grouped_results
+#         result = await db["test_case_grouped_results"].find_one({
+#             f"results.documents.{document_id}": {"$exists": True}
+#         })
+
+#         if not result:
+#             test_cases_results.append({"document_id": document_id, "error": "No test cases found for this document"})
+#             continue  # Move to the next document ID
+
+#         test_case_block = result["results"]["documents"][document_id]
+#         generated_at = result.get("generated_at")
+#         config_id = result.get("config_id")
+#         llm_model = result.get("llm_model")
+
+#         test_cases_results.append({
+#             "document_id": document_id,
+#             "config_id": config_id,
+#             "llm_model": llm_model,
+#             "generated_at": generated_at,
+#             "test_case_count": len(test_case_block.get("all_subtypes", [])),
+#             "test_cases": test_case_block
+#         })
+
+#     return test_cases_results
 @router.get("/testcases")
 async def get_test_cases_by_document_ids(
     document_ids: Optional[str] = Query(None, description="Comma-separated list of document IDs"),
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     """
-    Fetch test cases for one or more document IDs.  If multiple IDs are provided, they should be comma-separated.
+    Fetch test cases for one or more document IDs and returns them in a nested JSON structure.
     """
     if not document_ids:
         raise HTTPException(status_code=400, detail="Please provide at least one document ID")
 
-    document_id_list = document_ids.split(",")
-    test_cases_results = []
+    document_id_list = [doc_id.strip() for doc_id in document_ids.split(",")]
+    all_results = {}  # Dictionary to hold all the final results
 
+    # First, find a document that matches the request (to extract config, llm, and other metadata)
+    representative_result = await db["test_case_grouped_results"].find_one({
+        f"results.documents.{document_id_list[0]}": {"$exists": True}
+    })
+
+    if not representative_result:
+       raise HTTPException(status_code=404, detail=f"No test case found for any of the specified document IDs: {document_id_list}")
+
+
+    config_id = representative_result.get("config_id")
+    llm_model = representative_result.get("llm_model")
+    generated_at = representative_result.get("generated_at")
+    temperature = representative_result.get("temperature") #check for value in the db
+    use_case = representative_result.get("use_case")
+    results = {} # results dictionary
+
+    all_documents_functional = {}
+    all_documents_final_subtypes = {}
     for document_id in document_id_list:
-        document_id = document_id.strip()  # Remove any leading/trailing spaces
         try:
-            obj_id = ObjectId(document_id)
+            obj_id = ObjectId(document_id)  # Validate ObjectId
         except Exception:
             raise HTTPException(status_code=400, detail=f"Invalid document ID format: {document_id}")
 
-        # Search for the document in test_case_grouped_results
+
         result = await db["test_case_grouped_results"].find_one({
             f"results.documents.{document_id}": {"$exists": True}
         })
 
-        if not result:
-            test_cases_results.append({"document_id": document_id, "error": "No test cases found for this document"})
-            continue  # Move to the next document ID
+        if not result: #if result not found
+           results[document_id] = f"No test cases found for this document"
+           continue  # skip rest of the processing
 
-        test_case_block = result["results"]["documents"][document_id]
-        generated_at = result.get("generated_at")
-        config_id = result.get("config_id")
-        llm_model = result.get("llm_model")
+        test_case_block = result["results"]["documents"][document_id] #get the blocks
 
-        test_cases_results.append({
-            "document_id": document_id,
-            "config_id": config_id,
-            "llm_model": llm_model,
-            "generated_at": generated_at,
-            "test_case_count": len(test_case_block.get("all_subtypes", [])),
-            "test_cases": test_case_block
-        })
+        all_documents_functional[document_id] = {
+            "content": test_case_block.get("functional"), #fetch the functional parts
+            "document_name": "documentname", #fill it in
+        }
 
-    return test_cases_results
+        all_documents_final_subtypes[document_id] = {
+             "content":  test_case_block.get("all_subtypes"), #get all subtypes for final content
+             "document_name": "documentname",
+        }
+        results[document_id] = test_case_block #save all blocks to results
+        all_results["config_id"] = config_id
+        all_results["llm_model"] = llm_model
+        all_results["temperature"] = temperature
+        all_results["use_case"] = use_case
+        all_results["generated_at"] = generated_at #save all metadata
+
+        #after all of the processing do nested values like final content
+        #and all docuemnts functional
+
+    all_results["results"] = { "documents": results}
+    all_results["results"]["all_documents"] = { "functional": all_documents_functional, "Final_subtypes": all_documents_final_subtypes}
+    all_results["status"] = "completed"  # or "incomplete", "error", etc.
+    all_results["summary"] = {
+            "documents": document_id_list,
+            "subtypes": ["functional"],  # Hardcoded - should be generated dynamically
+    }
+    return all_results

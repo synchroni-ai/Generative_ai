@@ -7,7 +7,12 @@ from bson import ObjectId
 from app.api import deps
 router = APIRouter()
 import datetime
-
+from datetime import datetime, timedelta
+from typing import Dict
+from typing import List, Dict, Any
+from fastapi import APIRouter, Depends, HTTPException, Query
+import logging
+from typing import Optional, Literal
 @router.post("/documents/{document_id}/config")
 async def save_document_config(
     document_id: str, config: ConfigModel, db: AsyncIOMotorDatabase = Depends(get_db),current_user: User = Depends(deps.get_current_user)
@@ -110,40 +115,201 @@ async def get_config_by_id(
     print(f"User {current_user.username} (ID: {current_user.id}) retrieved config by ID: {config_id}")
     return {"config": config}
 
-@router.get("/history")
-async def get_test_case_history(
+# @router.get("/history")
+# async def get_test_case_history(
+#     db: AsyncIOMotorDatabase = Depends(get_db),
+#     current_user: User = Depends(deps.get_current_user),
+# ):
+#     """
+#     Fetches test case generation history for all documents, including document name.
+#     """
+#     result_cursor = db["test_case_grouped_results"].find({})
+#     document_collection = db["documents"]
+
+#     history = []
+
+#     async for record in result_cursor:
+#         generated_at = record.get("generated_at")
+#         documents = record.get("results", {}).get("documents", {})
+
+#         for doc_id, doc_result in documents.items():
+#             testcases = doc_result.get("all_subtypes", [])
+#             test_case_count = len(testcases)
+
+#             # Fetch document metadata
+#             document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+#             file_name = document_data.get("file_name") if document_data else "Unknown"
+
+#             history.append({
+#                 "document_id": doc_id,
+#                 "document_name": file_name,
+#                 "test_case_count": test_case_count,
+#                 "testcases": testcases,
+#                 "generated_at": generated_at,
+#             })
+
+#     if not history:
+#         raise HTTPException(status_code=404, detail="No test case history found.")
+
+#     return {"history": history}
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+from fastapi.responses import JSONResponse
+
+@router.get("/history/summary")
+async def get_test_case_history_summary(
     db: AsyncIOMotorDatabase = Depends(get_db),
     current_user: User = Depends(deps.get_current_user),
+    time_range: Optional[Literal["today", "yesterday", "last_7_days", "last_month"]] = Query(None, description="Time range to filter by."),
 ):
     """
-    Fetches test case generation history for all documents, including document name.
+    Fetches a summary of test case generation history, filtered by a specified time range.
+    Handles potential data inconsistencies in the 'test_case_grouped_results' collection.
     """
-    result_cursor = db["test_case_grouped_results"].find({})
+
+    query = {}
+    now = datetime.utcnow()
+
+    if time_range == "today":
+        start_of_today = datetime(now.year, now.month, now.day)
+        query["generated_at"] = {"$gte": start_of_today, "$lt": now}
+
+    elif time_range == "yesterday":
+        yesterday = now - timedelta(days=1)
+        start_of_yesterday = datetime(yesterday.year, yesterday.month, yesterday.day)
+        end_of_yesterday = datetime(now.year, now.month, now.day) - timedelta(microseconds=1)
+        query["generated_at"] = {"$gte": start_of_yesterday, "$lt": end_of_yesterday}
+
+    elif time_range == "last_7_days":
+        seven_days_ago = now - timedelta(days=7)
+        query["generated_at"] = {"$gte": seven_days_ago, "$lt": now}
+
+    elif time_range == "last_month":
+        last_month = now.month - 1 if now.month > 1 else 12
+        last_year = now.year - 1 if now.month == 1 else now.year
+        first_day_of_last_month = datetime(last_year, last_month, 1)
+        first_day_of_this_month = datetime(now.year, now.month, 1)
+        query["generated_at"] = {"$gte": first_day_of_last_month, "$lt": first_day_of_this_month}
+
+    elif time_range is not None:
+        raise HTTPException(status_code=400, detail="Invalid time_range value. Must be 'today', 'yesterday', 'last_7_days', or 'last_month'.")
+
+    result_cursor = db["test_case_grouped_results"].find(query)
     document_collection = db["documents"]
 
     history = []
 
     async for record in result_cursor:
         generated_at = record.get("generated_at")
-        documents = record.get("results", {}).get("documents", {})
+        results = record.get("results")
+
+        if not isinstance(results, dict):
+            logger.warning(f"Skipping record with invalid 'results' format (not a dict): {record.get('_id', 'Unknown ID')}")
+            continue
+
+        documents = results.get("documents", {})
+        if not isinstance(documents, dict):
+            logger.warning(f"Skipping record with invalid 'documents' format (not a dict): {record.get('_id', 'Unknown ID')}")
+            continue
 
         for doc_id, doc_result in documents.items():
-            testcases = doc_result.get("all_subtypes", [])
-            test_case_count = len(testcases)
+            try:
+                document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+            except Exception as e:
+                logger.error(f"Error fetching document {doc_id}: {e}")
+                continue
 
-            # Fetch document metadata
-            document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
             file_name = document_data.get("file_name") if document_data else "Unknown"
 
             history.append({
                 "document_id": doc_id,
                 "document_name": file_name,
-                "test_case_count": test_case_count,
-                "testcases": testcases,
                 "generated_at": generated_at,
             })
 
-    if not history:
-        raise HTTPException(status_code=404, detail="No test case history found.")
+    # Fallback only for 'last_month'
+    if time_range == "last_month" and not history:
+        logger.info("No data found for last_month range. Falling back to all available history.")
+        fallback_cursor = db["test_case_grouped_results"].find({})
+        async for record in fallback_cursor:
+            generated_at = record.get("generated_at")
+            results = record.get("results", {})
+            if not isinstance(results, dict):
+                continue
+
+            documents = results.get("documents", {})
+            if not isinstance(documents, dict):
+                continue
+
+            for doc_id, doc_result in documents.items():
+                try:
+                    document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+                except Exception as e:
+                    logger.error(f"Error fetching document {doc_id}: {e}")
+                    continue
+
+                file_name = document_data.get("file_name") if document_data else "Unknown"
+
+                history.append({
+                    "document_id": doc_id,
+                    "document_name": file_name,
+                    "generated_at": generated_at,
+                })
 
     return {"history": history}
+
+
+@router.get("/history/document/{document_id}")
+async def get_test_cases_by_document(
+    document_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_db),
+    current_user: User = Depends(deps.get_current_user),
+):
+    """
+    Fetches detailed test case information for a specific document ID.
+    """
+    try:
+        doc_id = ObjectId(document_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid document_id format. Must be a valid ObjectId string.")
+
+    result = await db["test_case_grouped_results"].find_one({"results.documents." + document_id: {"$exists": True}})
+
+    if not result:
+        raise HTTPException(status_code=404, detail="No test case history found for this document.")
+
+    generated_at = result.get("generated_at")
+    results = result.get("results", {}) #added default for cases if results is not defined
+
+    if not isinstance(results, dict):  # check if results is a dict
+        raise HTTPException(status_code=500, detail="Data Inconsistency: 'results' is not a dictionary.")
+
+    documents = results.get("documents", {})
+
+    if not isinstance(documents, dict):  # check if documents is a dict
+        raise HTTPException(status_code=500, detail="Data Inconsistency: 'documents' is not a dictionary.")
+
+    document_data = documents.get(document_id)
+
+    if not document_data:
+        raise HTTPException(status_code=404, detail="No test case details found for this document in results.")
+
+
+    testcases = document_data.get("all_subtypes", [])
+    test_case_count = len(testcases)
+
+    # Fetch document metadata
+    document_collection = db["documents"]
+    document = await document_collection.find_one({"_id": doc_id})
+    file_name = document.get("file_name") if document else "Unknown"
+
+
+    return {
+        "document_id": document_id,
+        "document_name": file_name,
+        "test_case_count": test_case_count,
+        "testcases": testcases,
+        "generated_at": generated_at,
+    }
