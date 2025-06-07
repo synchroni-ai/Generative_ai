@@ -513,9 +513,220 @@ async def get_document_by_id(
 #         })
 
 #     return test_cases_results
+# @router.get("/testcases")
+# async def get_test_cases_by_document_ids(
+#     document_ids: Optional[str] = Query(None, description="Comma-separated list of document IDs"),
+#     db: AsyncIOMotorDatabase = Depends(get_db)
+# ):
+#     """
+#     Fetch test cases for one or more document IDs and return them in a nested JSON structure.
+#     Includes document names fetched from the 'documents' collection.
+#     """
+#     if not document_ids:
+#         raise HTTPException(status_code=400, detail="Please provide at least one document ID")
+
+#     document_id_list = [doc_id.strip() for doc_id in document_ids.split(",")]
+#     all_results = {}
+
+#     # Use the first document ID to fetch metadata like config_id, llm_model, etc.
+#     representative_result = await db["test_case_grouped_results"].find_one({
+#         f"results.documents.{document_id_list[0]}": {"$exists": True}
+#     })
+
+#     if not representative_result:
+#         raise HTTPException(
+#             status_code=404,
+#             detail=f"No test case found for any of the specified document IDs: {document_id_list}"
+#         )
+
+#     # Extract metadata from the representative result
+#     config_id = representative_result.get("config_id")
+#     llm_model = representative_result.get("llm_model")
+#     temperature = representative_result.get("temperature")
+#     use_case = representative_result.get("use_case")
+#     generated_at = representative_result.get("generated_at")
+
+#     results = {}
+#     all_documents_functional = {}
+#     all_documents_final_subtypes = {}
+
+#     for document_id in document_id_list:
+#         try:
+#             obj_id = ObjectId(document_id)
+#         except Exception:
+#             raise HTTPException(status_code=400, detail=f"Invalid document ID format: {document_id}")
+
+#         # Fetch document name from 'documents' collection
+#         doc_data = await db["documents"].find_one({"_id": obj_id})
+#         document_name = doc_data.get("file_name", "Unknown") if doc_data else "Unknown"
+
+#         result = await db["test_case_grouped_results"].find_one({
+#             f"results.documents.{document_id}": {"$exists": True}
+#         })
+
+#         if not result:
+#             results[document_id] = f"No test cases found for this document"
+#             continue
+
+#         test_case_block = result["results"]["documents"][document_id]
+
+#         all_documents_functional[document_id] = {
+#             "content": test_case_block.get("functional"),
+#             "document_name": document_name,
+#         }
+
+#         all_documents_final_subtypes[document_id] = {
+#             "content": test_case_block.get("all_subtypes"),
+#             "document_name": document_name,
+#         }
+
+#         results[document_id] = test_case_block
+
+#     # Assemble the final result
+#     all_results["config_id"] = config_id
+#     all_results["llm_model"] = llm_model
+#     all_results["temperature"] = temperature
+#     all_results["use_case"] = use_case
+#     all_results["generated_at"] = generated_at
+
+#     all_results["results"] = {
+#         "documents": results,
+#         "all_documents": {
+#             "functional": all_documents_functional,
+#             "Final_subtypes": all_documents_final_subtypes
+#         }
+#     }
+
+#     all_results["status"] = "completed"
+#     all_results["summary"] = {
+#         "documents": document_id_list,
+#         "subtypes": ["functional"]  # You can dynamically extract subtypes if needed
+#     }
+
+#     return all_results
+
+# @router.get("/testcases")
+# async def get_test_cases_by_document_ids(
+#     document_ids: Optional[str] = Query(None, description="Comma-separated list of document IDs"),
+#     subtype: Optional[str] = Query("all", description="Subtype of test cases to filter by"),
+#     db: AsyncIOMotorDatabase = Depends(get_db)
+# ):
+#     """
+#     Fetch test cases for one or more document IDs and return them in a nested JSON structure.
+#     Includes document names fetched from the 'documents' collection.
+#     """
+#     if not document_ids:
+#         raise HTTPException(status_code=400, detail="Please provide at least one document ID")
+
+#     document_id_list = [doc_id.strip() for doc_id in document_ids.split(",")]
+#     all_results = {}
+
+#     # Use the first document ID to fetch metadata like config_id, llm_model, etc.
+#     # try:
+#     #     obj_id = ObjectId(document_id_list[0])
+#     # except Exception:
+#     #     raise HTTPException(status_code=400, detail=f"Invalid document ID format: {document_id_list[0]}")
+
+#     representative_result = await db["test_case_grouped_results"].find_one({
+#         f"results.documents.{document_id_list[0]}": {"$exists": True}
+#     })
+
+#     if not representative_result:
+#         raise HTTPException(
+#             status_code=404,
+#             detail=f"No test case found for any of the specified document IDs: {document_id_list}"
+#         )
+
+#     # Extract metadata from the representative result
+#     config_id = representative_result.get("config_id")
+#     llm_model = representative_result.get("llm_model")
+#     temperature = representative_result.get("temperature")
+#     use_case = representative_result.get("use_case")
+#     generated_at = representative_result.get("generated_at")
+
+#     results = {}
+#     all_documents_functional = {}
+#     all_documents_final_subtypes = {}
+
+#     for document_id in document_id_list:
+#         try:
+#             obj_id = ObjectId(document_id)
+#         except Exception:
+#             raise HTTPException(status_code=400, detail=f"Invalid document ID format: {document_id}")
+
+#         # Fetch document name from 'documents' collection
+#         doc_data = await db["documents"].find_one({"_id": obj_id})
+#         document_name = doc_data.get("file_name", "Unknown") if doc_data else "Unknown"
+
+#         result = await db["test_case_grouped_results"].find_one({
+#             f"results.documents.{document_id}": {"$exists": True}
+#         })
+
+#         if not result:
+#             results[document_id] = f"No test cases found for this document"
+#             continue
+
+#         test_case_block = result["results"]["documents"][document_id]
+
+#         # Populate Final_subtypes based on the selected subtype
+#         all_subtypes_content = []
+
+#         if subtype.lower() == "all":
+#             # If 'all' is selected, include all subtypes
+#             for subtype_key in test_case_block:
+#                 if subtype_key not in ["document_name", "all_subtypes"]:
+#                     all_subtypes_content.append(test_case_block[subtype_key])
+#         else:
+#             # If a specific subtype is selected, include only that subtype if it exists
+#              if subtype in test_case_block:
+#                 all_subtypes_content.append(test_case_block[subtype])
+
+
+#         all_documents_final_subtypes[document_id] = {
+#             "content": all_subtypes_content,
+#             "document_name": document_name,
+#         }
+
+#         if subtype.lower() == "all":
+#             results[document_id] = test_case_block
+#         else:
+#             if subtype in test_case_block:
+#                 test_case_content = test_case_block[subtype]
+#                 all_documents_functional[document_id] = {
+#                     "content": test_case_content,
+#                     "document_name": document_name,
+#                 }
+#                 results[document_id] = {subtype: test_case_content, "document_name": document_name}
+#             else:
+#                 results[document_id] = f"No test cases found for subtype: {subtype}"
+
+#     # Assemble the final result
+#     all_results["config_id"] = config_id
+#     all_results["llm_model"] = llm_model
+#     all_results["temperature"] = temperature
+#     all_results["use_case"] = use_case
+#     all_results["generated_at"] = generated_at
+
+#     all_results["results"] = {
+#         "documents": results,
+#         "all_documents": {
+#             "functional": all_documents_functional,
+#             "Final_subtypes": all_documents_final_subtypes
+#         }
+#     }
+
+#     all_results["status"] = "completed"
+#     all_results["summary"] = {
+#         "documents": document_id_list,
+#         "subtypes": ["functional"] if subtype.lower() != "all" else ["functional", "non_functional", "security", "performance", "boundary", "compliance"]
+#     }
+
+#     return all_results
+
 @router.get("/testcases")
 async def get_test_cases_by_document_ids(
     document_ids: Optional[str] = Query(None, description="Comma-separated list of document IDs"),
+    subtypes: Optional[List[str]] = Query(None, description="List of subtypes of test cases to filter by"),
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     """
@@ -570,17 +781,34 @@ async def get_test_cases_by_document_ids(
 
         test_case_block = result["results"]["documents"][document_id]
 
-        all_documents_functional[document_id] = {
-            "content": test_case_block.get("functional"),
-            "document_name": document_name,
-        }
+        # Handle multiple subtypes
+        combined_subtypes_content = []
+        filtered_results = {}  # Store results only for requested subtypes
+
+        if subtypes is None or "all" in [s.lower() for s in subtypes]:
+            # If no subtypes are specified or "all" is included, include everything
+            for subtype_key in test_case_block:
+                if subtype_key not in ["document_name", "all_subtypes"]:
+                    combined_subtypes_content.append(test_case_block[subtype_key])
+                    filtered_results[subtype_key] = test_case_block[subtype_key]  # Include in filtered results
+        else:
+            # Filter based on the list of subtypes
+            for subtype in subtypes:
+                if subtype in test_case_block:
+                    combined_subtypes_content.append(test_case_block[subtype])
+                    filtered_results[subtype] = test_case_block[subtype]
 
         all_documents_final_subtypes[document_id] = {
-            "content": test_case_block.get("all_subtypes"),
+            "content": combined_subtypes_content,
             "document_name": document_name,
         }
 
-        results[document_id] = test_case_block
+        # Update results with filtered data
+        results[document_id] = filtered_results
+        all_documents_functional[document_id] = {
+            "content": filtered_results,
+            "document_name": document_name,
+        }
 
     # Assemble the final result
     all_results["config_id"] = config_id
@@ -598,9 +826,18 @@ async def get_test_cases_by_document_ids(
     }
 
     all_results["status"] = "completed"
-    all_results["summary"] = {
-        "documents": document_id_list,
-        "subtypes": ["functional"]  # You can dynamically extract subtypes if needed
-    }
+
+    # Update summary with selected subtypes or all
+    if subtypes is None or "all" in [s.lower() for s in subtypes]:
+        all_results["summary"] = {
+            "documents": document_id_list,
+            "subtypes": ["functional", "non_functional", "security", "performance", "boundary", "compliance"]
+        }
+    else:
+         all_results["summary"] = {
+            "documents": document_id_list,
+            "subtypes": subtypes
+        }
+
 
     return all_results
