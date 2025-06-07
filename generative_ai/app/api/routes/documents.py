@@ -319,25 +319,33 @@ async def batch_upload_documents(
         uploaded=uploaded_successfully,
         errors=upload_errors,
     )
- 
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 # --- READ (List Documents in a Dataspace) ---
 @router.get("/dataspaces/{dataspace_id}/documents", response_model=List[Document])
-async def list_dataspace_documents(
+async def list_and_update_dataspace_documents(
     dataspace_id: PydanticObjectId,
+    new_status: Optional[DocumentStatusEnum] = Query(None, description="Optional: Update status of documents to this value"),
     current_user: User = Depends(deps.get_current_user),
     db: AgnosticDatabase = Depends(deps.get_db),
 ):
     """
-    Lists all documents belonging to a specific dataspace. 
-    Also sets their status to `uploaded` (0).
+    Lists all documents belonging to a specific dataspace.
+    Optionally updates the status of all documents to a provided value.
     Requires authentication.
     """
+    logging.debug(f"Received request to list/update documents in dataspace: {dataspace_id}, new_status: {new_status}")
+
     try:
         dataspace = await deps.get_dataspace_by_id(dataspace_id, db)
-    except HTTPException:
-        raise
+        logging.debug(f"Successfully validated dataspace: {dataspace_id}")
+    except HTTPException as e:
+        logging.warning(f"HTTPException while validating dataspace: {e}")
+        raise  # Re-raise the HTTPException
     except Exception as e:
-        print(f"Error validating dataspace {dataspace_id} for listing documents: {e}")
+        logging.error(f"Error validating dataspace {dataspace_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error validating dataspace.",
@@ -345,23 +353,34 @@ async def list_dataspace_documents(
 
     try:
         documents = await Document.find(Document.dataspace_id == dataspace_id).to_list()
+        logging.debug(f"Found {len(documents)} documents")
 
-        # Optional: Update status to 0 (uploaded) for each document
-        for doc in documents:
-            if doc.status != DocumentStatusEnum.UPLOADED:
-                doc.status = DocumentStatusEnum.UPLOADED
-                await doc.save()
+        if new_status is not None:
+            logging.debug(f"Updating status of all documents to {new_status}")
+            for document in documents:
+                logging.debug(f"Updating document: {document.id}, current status: {document.status}")
 
+                document.status = new_status
+                logging.debug(f"New status after assignment: {document.status}")
+
+                try:
+                    await document.save()
+                    logging.debug(f"Document {document.id} saved successfully")
+                except Exception as save_err:
+                    logging.error(f"Error saving document {document.id}: {save_err}") # Log save errors
+                    raise # Re-raise so it can be handled by overall error handling
 
         return documents
 
+    except HTTPException as http_exc:
+        logging.warning(f"HTTPException: {http_exc}")
+        raise http_exc  # Re-raise without modification
     except Exception as e:
-        print(f"Error listing documents for dataspace {dataspace_id}: {e}")
+        logging.exception(f"Error listing/updating documents for dataspace {dataspace_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to list documents: {e}",
+            detail=f"Failed to list/update documents: {e}",
         )
-
 
 # --- READ (Get One Document) ---
 # Add a route to get a single document by its ID
