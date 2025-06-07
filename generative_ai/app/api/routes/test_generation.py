@@ -376,37 +376,140 @@ async def get_document_by_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred: {e}",
         )
-@router.get("/testcases/{document_id}")
-async def get_test_cases_by_document_id(
-    document_id: str,
+# @router.get("/testcases/{document_id}")
+# async def get_test_cases_by_document_id(
+#     document_id: str,
+#     db: AsyncIOMotorDatabase = Depends(get_db)
+# ):
+#     """
+#     Fetch all test cases for a specific document ID.
+#     """
+#     try:
+#         obj_id = ObjectId(document_id)
+#     except Exception:
+#         raise HTTPException(status_code=400, detail="Invalid document ID format")
+
+#     # Search for the document in test_case_grouped_results
+#     result = await db["test_case_grouped_results"].find_one({
+#         f"results.documents.{document_id}": {"$exists": True}
+#     })
+
+#     if not result:
+#         raise HTTPException(status_code=404, detail="No test cases found for this document")
+
+#     test_case_block = result["results"]["documents"][document_id]
+#     generated_at = result.get("generated_at")
+#     config_id = result.get("config_id")
+#     llm_model = result.get("llm_model")
+
+#     return {
+#         "document_id": document_id,
+#         "config_id": config_id,
+#         "llm_model": llm_model,
+#         "generated_at": generated_at,
+#         "test_case_count": len(test_case_block.get("all_subtypes", [])),
+#         "test_cases": test_case_block
+#     }
+# @router.get("/testcases/{document_id}")
+# async def get_test_cases(
+#     document_id: Optional[str] = None,
+#     document_ids: Optional[List[str]] = Query(None, description="List of document IDs"),
+#     db: AsyncIOMotorDatabase = Depends(get_db)
+# ):
+#     """
+#     Fetch test cases for one or multiple document IDs.
+#     If `document_ids` query param is provided, it will fetch for multiple documents.
+#     Otherwise, it will use the path parameter `document_id`.
+#     """
+
+#     # Determine target IDs
+#     target_ids = document_ids if document_ids else ([document_id] if document_id else [])
+
+#     if not target_ids:
+#         raise HTTPException(status_code=400, detail="No document ID(s) provided")
+
+#     # Validate ObjectIds
+#     for doc_id in target_ids:
+#         try:
+#             ObjectId(doc_id)
+#         except Exception:
+#             raise HTTPException(status_code=400, detail=f"Invalid document ID format: {doc_id}")
+
+#     # Fetch results for all provided document IDs
+#     cursor = db["test_case_grouped_results"].find({
+#         "$or": [{f"results.documents.{doc_id}": {"$exists": True}} for doc_id in target_ids]
+#     })
+
+#     matching_results = await cursor.to_list(length=None)
+
+#     if not matching_results:
+#         raise HTTPException(status_code=404, detail="No test cases found for the provided document ID(s)")
+
+#     response_data = []
+
+#     for result in matching_results:
+#         for doc_id in target_ids:
+#             doc_data = result.get("results", {}).get("documents", {}).get(doc_id)
+#             if doc_data:
+#                 response_data.append({
+#                     "document_id": doc_id,
+#                     "config_id": result.get("config_id"),
+#                     "llm_model": result.get("llm_model"),
+#                     "generated_at": result.get("generated_at"),
+#                     "test_case_count": len(doc_data.get("all_subtypes", [])),
+#                     "test_cases": doc_data
+#                 })
+
+#     if not response_data:
+#         raise HTTPException(status_code=404, detail="No test case blocks found in documents")
+
+#     return {
+#         "total_documents_found": len(response_data),
+#         "documents": response_data
+#     }
+
+@router.get("/testcases")
+async def get_test_cases_by_document_ids(
+    document_ids: Optional[str] = Query(None, description="Comma-separated list of document IDs"),
     db: AsyncIOMotorDatabase = Depends(get_db)
 ):
     """
-    Fetch all test cases for a specific document ID.
+    Fetch test cases for one or more document IDs.  If multiple IDs are provided, they should be comma-separated.
     """
-    try:
-        obj_id = ObjectId(document_id)
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid document ID format")
+    if not document_ids:
+        raise HTTPException(status_code=400, detail="Please provide at least one document ID")
 
-    # Search for the document in test_case_grouped_results
-    result = await db["test_case_grouped_results"].find_one({
-        f"results.documents.{document_id}": {"$exists": True}
-    })
+    document_id_list = document_ids.split(",")
+    test_cases_results = []
 
-    if not result:
-        raise HTTPException(status_code=404, detail="No test cases found for this document")
+    for document_id in document_id_list:
+        document_id = document_id.strip()  # Remove any leading/trailing spaces
+        try:
+            obj_id = ObjectId(document_id)
+        except Exception:
+            raise HTTPException(status_code=400, detail=f"Invalid document ID format: {document_id}")
 
-    test_case_block = result["results"]["documents"][document_id]
-    generated_at = result.get("generated_at")
-    config_id = result.get("config_id")
-    llm_model = result.get("llm_model")
+        # Search for the document in test_case_grouped_results
+        result = await db["test_case_grouped_results"].find_one({
+            f"results.documents.{document_id}": {"$exists": True}
+        })
 
-    return {
-        "document_id": document_id,
-        "config_id": config_id,
-        "llm_model": llm_model,
-        "generated_at": generated_at,
-        "test_case_count": len(test_case_block.get("all_subtypes", [])),
-        "test_cases": test_case_block
-    }
+        if not result:
+            test_cases_results.append({"document_id": document_id, "error": "No test cases found for this document"})
+            continue  # Move to the next document ID
+
+        test_case_block = result["results"]["documents"][document_id]
+        generated_at = result.get("generated_at")
+        config_id = result.get("config_id")
+        llm_model = result.get("llm_model")
+
+        test_cases_results.append({
+            "document_id": document_id,
+            "config_id": config_id,
+            "llm_model": llm_model,
+            "generated_at": generated_at,
+            "test_case_count": len(test_case_block.get("all_subtypes", [])),
+            "test_cases": test_case_block
+        })
+
+    return test_cases_results
