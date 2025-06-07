@@ -191,11 +191,11 @@ class Dataspace(Document):
 
 class DocumentStatusEnum(IntEnum):
     """Enum for internal document status representation."""
-
-    UPLOADED = 0  # Initial state
-    PROCESSING = 1  # Generation in progress
-    PROCESSED = 2  # Generation complete
+    UPLOADED = 0         # Initial state
+    PROCESSING = 1       # Generation in progress
+    PROCESSED = 2        # Generation complete
     ERROR = -1
+    COMPLETE = 3
 
 
 class Document(Document):
