@@ -116,12 +116,14 @@ async def get_test_case_history(
     current_user: User = Depends(deps.get_current_user),
 ):
     """
-    Fetches test case generation history for all documents.
+    Fetches test case generation history for all documents, including document name.
     """
-    cursor = db["test_case_grouped_results"].find({})
+    result_cursor = db["test_case_grouped_results"].find({})
+    document_collection = db["documents"]
+
     history = []
 
-    async for record in cursor:
+    async for record in result_cursor:
         generated_at = record.get("generated_at")
         documents = record.get("results", {}).get("documents", {})
 
@@ -129,8 +131,13 @@ async def get_test_case_history(
             testcases = doc_result.get("all_subtypes", [])
             test_case_count = len(testcases)
 
+            # Fetch document metadata
+            document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+            file_name = document_data.get("file_name") if document_data else "Unknown"
+
             history.append({
                 "document_id": doc_id,
+                "document_name": file_name,
                 "test_case_count": test_case_count,
                 "testcases": testcases,
                 "generated_at": generated_at,
