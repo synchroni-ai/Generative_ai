@@ -261,6 +261,59 @@ async def get_test_case_history_summary(
     return {"history": history}
 
 
+# @router.get("/history/document/{document_id}")
+# async def get_test_cases_by_document(
+#     document_id: str,
+#     db: AsyncIOMotorDatabase = Depends(get_db),
+#     current_user: User = Depends(deps.get_current_user),
+# ):
+#     """
+#     Fetches detailed test case information for a specific document ID.
+#     """
+#     try:
+#         doc_id = ObjectId(document_id)
+#     except Exception:
+#         raise HTTPException(status_code=400, detail="Invalid document_id format. Must be a valid ObjectId string.")
+
+#     result = await db["test_case_grouped_results"].find_one({"results.documents." + document_id: {"$exists": True}})
+
+#     if not result:
+#         raise HTTPException(status_code=404, detail="No test case history found for this document.")
+
+#     generated_at = result.get("generated_at")
+#     results = result.get("results", {}) #added default for cases if results is not defined
+
+#     if not isinstance(results, dict):  # check if results is a dict
+#         raise HTTPException(status_code=500, detail="Data Inconsistency: 'results' is not a dictionary.")
+
+#     documents = results.get("documents", {})
+
+#     if not isinstance(documents, dict):  # check if documents is a dict
+#         raise HTTPException(status_code=500, detail="Data Inconsistency: 'documents' is not a dictionary.")
+
+#     document_data = documents.get(document_id)
+
+#     if not document_data:
+#         raise HTTPException(status_code=404, detail="No test case details found for this document in results.")
+
+
+#     testcases = document_data.get("all_subtypes", [])
+#     test_case_count = len(testcases)
+
+#     # Fetch document metadata
+#     document_collection = db["documents"]
+#     document = await document_collection.find_one({"_id": doc_id})
+#     file_name = document.get("file_name") if document else "Unknown"
+
+
+#     return {
+#         "document_id": document_id,
+#         "document_name": file_name,
+#         "test_case_count": test_case_count,
+#         "testcases": testcases,
+#         "generated_at": generated_at,
+#     }
+
 @router.get("/history/document/{document_id}")
 async def get_test_cases_by_document(
     document_id: str,
@@ -268,27 +321,34 @@ async def get_test_cases_by_document(
     current_user: User = Depends(deps.get_current_user),
 ):
     """
-    Fetches detailed test case information for a specific document ID.
+    Fetches detailed test case information for a specific document ID and returns the response
+    in the desired nested format.
     """
     try:
         doc_id = ObjectId(document_id)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid document_id format. Must be a valid ObjectId string.")
 
+    # Fetch data from test_case_grouped_results
     result = await db["test_case_grouped_results"].find_one({"results.documents." + document_id: {"$exists": True}})
 
     if not result:
         raise HTTPException(status_code=404, detail="No test case history found for this document.")
 
+    # Extract relevant information from the result
+    config_id = result.get("config_id")
+    llm_model = result.get("llm_model")
+    temperature = result.get("temperature")
+    use_case = result.get("use_case")
     generated_at = result.get("generated_at")
-    results = result.get("results", {}) #added default for cases if results is not defined
+    results = result.get("results", {})
 
-    if not isinstance(results, dict):  # check if results is a dict
+    if not isinstance(results, dict):
         raise HTTPException(status_code=500, detail="Data Inconsistency: 'results' is not a dictionary.")
 
     documents = results.get("documents", {})
 
-    if not isinstance(documents, dict):  # check if documents is a dict
+    if not isinstance(documents, dict):
         raise HTTPException(status_code=500, detail="Data Inconsistency: 'documents' is not a dictionary.")
 
     document_data = documents.get(document_id)
@@ -296,20 +356,39 @@ async def get_test_cases_by_document(
     if not document_data:
         raise HTTPException(status_code=404, detail="No test case details found for this document in results.")
 
+    # Prepare the response in the specified format
+    response_data = {
+        "config_id": config_id,
+        "llm_model": llm_model,
+        "temperature": temperature,
+        "use_case": use_case,
+        "generated_at": generated_at,
+        "results": {
+            "documents": {
+                document_id: document_data
+            },
+        },
+        "status": "completed",  # Or based on actual status logic
+        "summary": {
+            "documents": [document_id],
+            "subtypes": ["functional"]  # Or dynamically generated based on the actual subtypes
+        }
+    }
 
-    testcases = document_data.get("all_subtypes", [])
-    test_case_count = len(testcases)
-
-    # Fetch document metadata
+    # Fetch document name and add it to the `document_data`
     document_collection = db["documents"]
     document = await document_collection.find_one({"_id": doc_id})
     file_name = document.get("file_name") if document else "Unknown"
 
+    response_data["results"]["documents"][document_id]["document_name"] = file_name
 
-    return {
-        "document_id": document_id,
-        "document_name": file_name,
-        "test_case_count": test_case_count,
-        "testcases": testcases,
-        "generated_at": generated_at,
+
+    #Add all_documents
+    content = document_data.get("functional")
+
+    response_data["results"]["all_documents"] = {
+        "functional" : {document_id:{"content": content, "document_name": file_name}},
+        "Final_subtypes" : {document_id:{"content": document_data.get("all_subtypes"), "document_name": file_name}},
     }
+
+    return response_data
