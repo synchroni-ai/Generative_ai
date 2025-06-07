@@ -12,6 +12,7 @@ from typing import Dict
 from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 import logging
+import pytz
 from typing import Optional, Literal
 @router.post("/documents/{document_id}/config")
 async def save_document_config(
@@ -158,6 +159,107 @@ logger = logging.getLogger(__name__)
 
 from fastapi.responses import JSONResponse
 
+# @router.get("/history/summary")
+# async def get_test_case_history_summary(
+#     db: AsyncIOMotorDatabase = Depends(get_db),
+#     current_user: User = Depends(deps.get_current_user),
+#     time_range: Optional[Literal["today", "yesterday", "last_7_days", "last_month"]] = Query(None, description="Time range to filter by."),
+# ):
+#     """
+#     Fetches a summary of test case generation history, filtered by a specified time range.
+#     Handles potential data inconsistencies in the 'test_case_grouped_results' collection.
+#     """
+
+#     query = {}
+#     now = datetime.utcnow()
+
+#     if time_range == "today":
+#         start_of_today = datetime(now.year, now.month, now.day)
+#         query["generated_at"] = {"$gte": start_of_today, "$lt": now}
+
+#     elif time_range == "yesterday":
+#         yesterday = now - timedelta(days=1)
+#         start_of_yesterday = datetime(yesterday.year, yesterday.month, yesterday.day)
+#         end_of_yesterday = datetime(now.year, now.month, now.day) - timedelta(microseconds=1)
+#         query["generated_at"] = {"$gte": start_of_yesterday, "$lt": end_of_yesterday}
+
+#     elif time_range == "last_7_days":
+#         seven_days_ago = now - timedelta(days=7)
+#         query["generated_at"] = {"$gte": seven_days_ago, "$lt": now}
+
+#     elif time_range == "last_month":
+#         last_month = now.month - 1 if now.month > 1 else 12
+#         last_year = now.year - 1 if now.month == 1 else now.year
+#         first_day_of_last_month = datetime(last_year, last_month, 1)
+#         first_day_of_this_month = datetime(now.year, now.month, 1)
+#         query["generated_at"] = {"$gte": first_day_of_last_month, "$lt": first_day_of_this_month}
+
+#     elif time_range is not None:
+#         raise HTTPException(status_code=400, detail="Invalid time_range value. Must be 'today', 'yesterday', 'last_7_days', or 'last_month'.")
+
+#     result_cursor = db["test_case_grouped_results"].find(query)
+#     document_collection = db["documents"]
+
+#     history = []
+
+#     async for record in result_cursor:
+#         generated_at = record.get("generated_at")
+#         results = record.get("results")
+
+#         if not isinstance(results, dict):
+#             logger.warning(f"Skipping record with invalid 'results' format (not a dict): {record.get('_id', 'Unknown ID')}")
+#             continue
+
+#         documents = results.get("documents", {})
+#         if not isinstance(documents, dict):
+#             logger.warning(f"Skipping record with invalid 'documents' format (not a dict): {record.get('_id', 'Unknown ID')}")
+#             continue
+
+#         for doc_id, doc_result in documents.items():
+#             try:
+#                 document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+#             except Exception as e:
+#                 logger.error(f"Error fetching document {doc_id}: {e}")
+#                 continue
+
+#             file_name = document_data.get("file_name") if document_data else "Unknown"
+
+#             history.append({
+#                 "document_id": doc_id,
+#                 "document_name": file_name,
+#                 "generated_at": generated_at,
+#             })
+
+#     # Fallback only for 'last_month'
+#     if time_range == "last_month" and not history:
+#         logger.info("No data found for last_month range. Falling back to all available history.")
+#         fallback_cursor = db["test_case_grouped_results"].find({})
+#         async for record in fallback_cursor:
+#             generated_at = record.get("generated_at")
+#             results = record.get("results", {})
+#             if not isinstance(results, dict):
+#                 continue
+
+#             documents = results.get("documents", {})
+#             if not isinstance(documents, dict):
+#                 continue
+
+#             for doc_id, doc_result in documents.items():
+#                 try:
+#                     document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+#                 except Exception as e:
+#                     logger.error(f"Error fetching document {doc_id}: {e}")
+#                     continue
+
+#                 file_name = document_data.get("file_name") if document_data else "Unknown"
+
+#                 history.append({
+#                     "document_id": doc_id,
+#                     "document_name": file_name,
+#                     "generated_at": generated_at,
+#                 })
+
+#     return {"history": history}
 @router.get("/history/summary")
 async def get_test_case_history_summary(
     db: AsyncIOMotorDatabase = Depends(get_db),
@@ -169,29 +271,43 @@ async def get_test_case_history_summary(
     Handles potential data inconsistencies in the 'test_case_grouped_results' collection.
     """
 
+    ist = pytz.timezone('Asia/Kolkata')  # Define the IST timezone
+
     query = {}
-    now = datetime.utcnow()
+    now_utc = datetime.utcnow()
+    now_ist = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)  # Convert to IST
 
     if time_range == "today":
-        start_of_today = datetime(now.year, now.month, now.day)
-        query["generated_at"] = {"$gte": start_of_today, "$lt": now}
+        start_of_today_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist)
+        start_of_today_utc = start_of_today_ist.astimezone(pytz.utc)  # Convert to UTC for query
+        query["generated_at"] = {"$gte": start_of_today_utc, "$lt": now_utc}
 
     elif time_range == "yesterday":
-        yesterday = now - timedelta(days=1)
-        start_of_yesterday = datetime(yesterday.year, yesterday.month, yesterday.day)
-        end_of_yesterday = datetime(now.year, now.month, now.day) - timedelta(microseconds=1)
-        query["generated_at"] = {"$gte": start_of_yesterday, "$lt": end_of_yesterday}
+        yesterday_ist = now_ist - timedelta(days=1)
+        start_of_yesterday_ist = datetime(yesterday_ist.year, yesterday_ist.month, yesterday_ist.day, tzinfo=ist)
+        start_of_yesterday_utc = start_of_yesterday_ist.astimezone(pytz.utc) # Convert to UTC for query
+
+        start_of_today_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist)
+        end_of_yesterday_ist = start_of_today_ist - timedelta(microseconds=1)
+        end_of_yesterday_utc = end_of_yesterday_ist.astimezone(pytz.utc) # Convert to UTC
+
+        query["generated_at"] = {"$gte": start_of_yesterday_utc, "$lt": end_of_yesterday_utc}
 
     elif time_range == "last_7_days":
-        seven_days_ago = now - timedelta(days=7)
-        query["generated_at"] = {"$gte": seven_days_ago, "$lt": now}
+        seven_days_ago_ist = now_ist - timedelta(days=7)
+        seven_days_ago_utc = seven_days_ago_ist.astimezone(pytz.utc) # convert ist to utc
+        query["generated_at"] = {"$gte": seven_days_ago_utc, "$lt": now_utc}
 
     elif time_range == "last_month":
-        last_month = now.month - 1 if now.month > 1 else 12
-        last_year = now.year - 1 if now.month == 1 else now.year
-        first_day_of_last_month = datetime(last_year, last_month, 1)
-        first_day_of_this_month = datetime(now.year, now.month, 1)
-        query["generated_at"] = {"$gte": first_day_of_last_month, "$lt": first_day_of_this_month}
+        last_month_ist = now_ist.month - 1 if now_ist.month > 1 else 12
+        last_year_ist = now_ist.year - 1 if now_ist.month == 1 else now_ist.year
+        first_day_of_last_month_ist = datetime(last_year_ist, last_month_ist, 1, tzinfo=ist)
+        first_day_of_last_month_utc = first_day_of_last_month_ist.astimezone(pytz.utc)
+
+        first_day_of_this_month_ist = datetime(now_ist.year, now_ist.month, 1, tzinfo=ist)
+        first_day_of_this_month_utc = first_day_of_this_month_ist.astimezone(pytz.utc)
+
+        query["generated_at"] = {"$gte": first_day_of_last_month_utc, "$lt": first_day_of_this_month_utc}
 
     elif time_range is not None:
         raise HTTPException(status_code=400, detail="Invalid time_range value. Must be 'today', 'yesterday', 'last_7_days', or 'last_month'.")
@@ -202,7 +318,14 @@ async def get_test_case_history_summary(
     history = []
 
     async for record in result_cursor:
-        generated_at = record.get("generated_at")
+        generated_at_utc = record.get("generated_at")
+
+        # Convert generated_at to IST for the response
+        if generated_at_utc:
+            generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+        else:
+            generated_at_ist = None  # Or handle the missing date appropriately
+
         results = record.get("results")
 
         if not isinstance(results, dict):
@@ -226,7 +349,7 @@ async def get_test_case_history_summary(
             history.append({
                 "document_id": doc_id,
                 "document_name": file_name,
-                "generated_at": generated_at,
+                "generated_at": generated_at_ist.isoformat() if generated_at_ist else None,  # Return as ISO string
             })
 
     # Fallback only for 'last_month'
@@ -234,7 +357,16 @@ async def get_test_case_history_summary(
         logger.info("No data found for last_month range. Falling back to all available history.")
         fallback_cursor = db["test_case_grouped_results"].find({})
         async for record in fallback_cursor:
-            generated_at = record.get("generated_at")
+
+            generated_at_utc = record.get("generated_at")
+
+            # Convert generated_at to IST for the response
+            if generated_at_utc:
+                generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+            else:
+                generated_at_ist = None  # Or handle the missing date appropriately
+
+
             results = record.get("results", {})
             if not isinstance(results, dict):
                 continue
@@ -255,11 +387,10 @@ async def get_test_case_history_summary(
                 history.append({
                     "document_id": doc_id,
                     "document_name": file_name,
-                    "generated_at": generated_at,
+                    "generated_at": generated_at_ist.isoformat() if generated_at_ist else None,  # Return as ISO string
                 })
 
     return {"history": history}
-
 
 # @router.get("/history/document/{document_id}")
 # async def get_test_cases_by_document(
@@ -314,6 +445,85 @@ async def get_test_case_history_summary(
 #         "generated_at": generated_at,
 #     }
 
+# @router.get("/history/document/{document_id}")
+# async def get_test_cases_by_document(
+#     document_id: str,
+#     db: AsyncIOMotorDatabase = Depends(get_db),
+#     current_user: User = Depends(deps.get_current_user),
+# ):
+#     """
+#     Fetches detailed test case information for a specific document ID and returns the response
+#     in the desired nested format.
+#     """
+#     try:
+#         doc_id = ObjectId(document_id)
+#     except Exception:
+#         raise HTTPException(status_code=400, detail="Invalid document_id format. Must be a valid ObjectId string.")
+
+#     # Fetch data from test_case_grouped_results
+#     result = await db["test_case_grouped_results"].find_one({"results.documents." + document_id: {"$exists": True}})
+
+#     if not result:
+#         raise HTTPException(status_code=404, detail="No test case history found for this document.")
+
+#     # Extract relevant information from the result
+#     config_id = result.get("config_id")
+#     llm_model = result.get("llm_model")
+#     temperature = result.get("temperature")
+#     use_case = result.get("use_case")
+#     generated_at = result.get("generated_at")
+#     results = result.get("results", {})
+
+#     if not isinstance(results, dict):
+#         raise HTTPException(status_code=500, detail="Data Inconsistency: 'results' is not a dictionary.")
+
+#     documents = results.get("documents", {})
+
+#     if not isinstance(documents, dict):
+#         raise HTTPException(status_code=500, detail="Data Inconsistency: 'documents' is not a dictionary.")
+
+#     document_data = documents.get(document_id)
+
+#     if not document_data:
+#         raise HTTPException(status_code=404, detail="No test case details found for this document in results.")
+
+#     # Prepare the response in the specified format
+#     response_data = {
+#         "config_id": config_id,
+#         "llm_model": llm_model,
+#         "temperature": temperature,
+#         "use_case": use_case,
+#         "generated_at": generated_at,
+#         "results": {
+#             "documents": {
+#                 document_id: document_data
+#             },
+#         },
+#         "status": "completed",  # Or based on actual status logic
+#         "summary": {
+#             "documents": [document_id],
+#             "subtypes": ["functional"]  # Or dynamically generated based on the actual subtypes
+#         }
+#     }
+
+#     # Fetch document name and add it to the `document_data`
+#     document_collection = db["documents"]
+#     document = await document_collection.find_one({"_id": doc_id})
+#     file_name = document.get("file_name") if document else "Unknown"
+
+#     response_data["results"]["documents"][document_id]["document_name"] = file_name
+
+
+#     #Add all_documents
+#     content = document_data.get("functional")
+
+#     response_data["results"]["all_documents"] = {
+#         "functional" : {document_id:{"content": content, "document_name": file_name}},
+#         "Final_subtypes" : {document_id:{"content": document_data.get("all_subtypes"), "document_name": file_name}},
+#     }
+
+#     return response_data
+
 @router.get("/history/document/{document_id}")
 async def get_test_cases_by_document(
     document_id: str,
@@ -324,6 +534,8 @@ async def get_test_cases_by_document(
     Fetches detailed test case information for a specific document ID and returns the response
     in the desired nested format.
     """
+    ist = pytz.timezone('Asia/Kolkata')  # Define the IST timezone
+
     try:
         doc_id = ObjectId(document_id)
     except Exception:
@@ -340,7 +552,14 @@ async def get_test_cases_by_document(
     llm_model = result.get("llm_model")
     temperature = result.get("temperature")
     use_case = result.get("use_case")
-    generated_at = result.get("generated_at")
+    generated_at_utc = result.get("generated_at")  # Get UTC time from DB
+    # Convert generated_at to IST
+    if generated_at_utc:
+        generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+        generated_at_iso = generated_at_ist.isoformat()  # to iso format
+    else:
+        generated_at_iso = None
+
     results = result.get("results", {})
 
     if not isinstance(results, dict):
@@ -362,7 +581,7 @@ async def get_test_cases_by_document(
         "llm_model": llm_model,
         "temperature": temperature,
         "use_case": use_case,
-        "generated_at": generated_at,
+        "generated_at": generated_at_iso,  # Use the IST converted time
         "results": {
             "documents": {
                 document_id: document_data
@@ -382,13 +601,12 @@ async def get_test_cases_by_document(
 
     response_data["results"]["documents"][document_id]["document_name"] = file_name
 
-
-    #Add all_documents
+    # Add all_documents
     content = document_data.get("functional")
 
     response_data["results"]["all_documents"] = {
-        "functional" : {document_id:{"content": content, "document_name": file_name}},
-        "Final_subtypes" : {document_id:{"content": document_data.get("all_subtypes"), "document_name": file_name}},
+        "functional": {document_id: {"content": content, "document_name": file_name}},
+        "Final_subtypes": {document_id: {"content": document_data.get("all_subtypes"), "document_name": file_name}},
     }
 
     return response_data
