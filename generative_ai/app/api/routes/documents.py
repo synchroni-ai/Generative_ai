@@ -934,6 +934,136 @@ from fastapi import Depends
 #         raise HTTPException(status_code=500, detail=str(e))
 
 
+# @router.get("/testcases/by-dataspace/{dataspace_id}")
+# async def get_testcases_by_dataspace(
+#     dataspace_id: str,
+#     db: AsyncIOMotorDatabase = Depends(get_db)
+# ):
+#     try:
+#         dataspace_obj_id = ObjectId(dataspace_id)
+
+#         # 1. Find all documents in the dataspace
+#         document_cursor = db["documents"].find(
+#             {"dataspace_id": dataspace_obj_id},
+#             {"_id": 1, "file_name": 1}
+#         )
+#         documents = await document_cursor.to_list(length=None)
+#         document_ids = [str(doc["_id"]) for doc in documents]
+#         document_name_map = {str(doc["_id"]): doc["file_name"] for doc in documents}
+
+#         if not document_ids:
+#             return {"message": "No documents found in this dataspace.", "results": []}
+
+#         # 2. Fetch test case results.  Crucially filtering at the DB level.
+#         test_case_cursor = db.test_case_grouped_results.find({
+#             "$or": [
+#                 {f"results.documents.{doc_id}": {"$exists": True}}
+#                 for doc_id in document_ids
+#             ]
+#         })
+
+#         test_case_results = await test_case_cursor.to_list(length=None)
+
+#         # 3. Structure the response as required.  This is the complex part.
+#         response_list = []
+#         for tc in test_case_results:
+#             config_id = tc["config_id"]
+#             llm_model = tc.get("llm_model")
+#             generated_at = tc.get("generated_at")
+#             use_case = tc.get("use_case", [])  # Handle missing use_case gracefully
+#             temperature = tc.get("temperature", None)  # Handle missing temperature gracefully
+
+#             results = tc["results"]
+#             documents_data = results["documents"]
+
+#             document_results = {}
+#             all_subtypes_content = {}
+#             final_subtypes_content = {}
+
+#             # Iterate through the documents associated with this test case
+#             for doc_id, subtypes in documents_data.items():
+#                 if doc_id not in document_name_map:
+#                     print(f"Warning: doc_id {doc_id} not found in document list.")
+#                     continue
+
+#                 document_name = document_name_map[doc_id]
+
+#                 # Structure document results
+#                 document_results[doc_id] = {
+#                     subtype: subtypes[subtype] for subtype in subtypes
+#                     if subtype not in ["all_subtypes"]
+#                 }
+#                 document_results[doc_id]["document_name"] = document_name
+
+#                 # All subtypes combined
+#                 all_subtypes_content[doc_id] = {
+#                     "content": "\n".join(subtypes.get("all_subtypes", [])),  # Join all subtypes content
+#                     "document_name": document_name
+#                 }
+
+#                 # Final subtypes (list of subtypes)
+#                 final_subtypes_content[doc_id] = {
+#                     "content": subtypes.get("all_subtypes", []),
+#                     "document_name": document_name
+#                 }
+
+#             # Structure all_documents
+#             all_documents = {}
+#             for subtype in set(st for doc_id, subtypes in documents_data.items() for st in subtypes if st not in ["all_subtypes"]):
+#                 all_documents[subtype] = {
+#                     doc_id: {
+#                         "content": documents_data[doc_id].get(subtype, ""),
+#                         "document_name": document_name_map.get(doc_id, "Unknown Document")
+#                     }
+#                     for doc_id in documents_data if subtype in documents_data[doc_id] and doc_id in document_name_map
+#                 }
+
+#             # Create the Final_subtypes structure
+#             final_subtypes = {}
+
+
+#             # *********************MODIFIED SECTION****************************
+#             # Merge Final_subtypes content across all documents
+#             merged_final_subtypes: Dict[str, Dict[str, List[str]]] = {}
+#             for doc_id, subtypes in documents_data.items():
+#                 if "all_subtypes" in subtypes and doc_id in document_name_map:
+#                     document_name = document_name_map[doc_id]
+#                     if doc_id not in merged_final_subtypes:
+#                         merged_final_subtypes[doc_id] = {
+#                             "content": subtypes.get("all_subtypes", []),
+#                             "document_name": document_name
+#                         }
+#                     else:  #Document id is already present
+#                         merged_final_subtypes[doc_id]["content"].extend(subtypes.get("all_subtypes", []))
+
+#             # *********************END OF MODIFIED SECTION****************************
+
+#             response_item = {
+#                 "config_id": config_id,
+#                 "llm_model": llm_model,
+#                 "temperature": temperature,
+#                 "use_case": use_case,
+#                 "generated_at": generated_at,
+#                 "results": {
+#                     "documents": document_results,
+#                     "all_documents": all_documents,
+#                     "Final_subtypes": final_subtypes
+#                 },
+#                 "final_results": { # ADDED THIS SECTION
+#                     "Final_subtypes": merged_final_subtypes
+#                 },
+#                 "status": "completed",  # You might want to derive this from the data
+#                 "summary": {  # You might need to compute a meaningful summary
+#                     "documents": list(document_results.keys()),
+#                     "subtypes": list(all_documents.keys()) if all_documents else []
+#                 }
+#             }
+#             response_list.append(response_item)
+
+#         return response_list
+
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 @router.get("/testcases/by-dataspace/{dataspace_id}")
 async def get_testcases_by_dataspace(
     dataspace_id: str,
@@ -966,6 +1096,8 @@ async def get_testcases_by_dataspace(
 
         # 3. Structure the response as required.  This is the complex part.
         response_list = []
+        merged_final_subtypes: Dict[str, Dict[str, List[str]]] = {} # Initializing merged_final_subtypes outside the loop
+
         for tc in test_case_results:
             config_id = tc["config_id"]
             llm_model = tc.get("llm_model")
@@ -1024,7 +1156,7 @@ async def get_testcases_by_dataspace(
 
             # *********************MODIFIED SECTION****************************
             # Merge Final_subtypes content across all documents
-            merged_final_subtypes: Dict[str, Dict[str, List[str]]] = {}
+
             for doc_id, subtypes in documents_data.items():
                 if "all_subtypes" in subtypes and doc_id in document_name_map:
                     document_name = document_name_map[doc_id]
@@ -1049,9 +1181,7 @@ async def get_testcases_by_dataspace(
                     "all_documents": all_documents,
                     "Final_subtypes": final_subtypes
                 },
-                "final_results": { # ADDED THIS SECTION
-                    "Final_subtypes": merged_final_subtypes
-                },
+
                 "status": "completed",  # You might want to derive this from the data
                 "summary": {  # You might need to compute a meaningful summary
                     "documents": list(document_results.keys()),
@@ -1060,7 +1190,15 @@ async def get_testcases_by_dataspace(
             }
             response_list.append(response_item)
 
-        return response_list
+        # After the loop, create the final response
+        final_response = {
+            "results": response_list,
+            "final_results": {
+                "Final_subtypes": merged_final_subtypes
+            }
+        }
+
+        return final_response
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
