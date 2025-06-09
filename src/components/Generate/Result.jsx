@@ -281,7 +281,7 @@ const parseTestCasesFromContent = (content, testType, fileName) => {
     // Skip if no TCID or improperly formatted block
     if (!fields["TCID"] || fields["TCID"].toLowerCase().includes("test cases")) return;
 
-    fields["Type (P / N / in)"] = fields["Test Nature"];
+    fields["Type"] = fields["Test Nature"];
     delete fields["Test Nature"];
 
     parsed.push(fields);

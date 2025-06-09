@@ -205,10 +205,22 @@ const triggerTestCaseGeneration = async (configId) => {
 
     // ✅ 1. Handle already generated (status === 3)
     if (docsStatus3.length > 0) {
-      const docIds = docsStatus3.map(doc => doc.file_id).join(',');
-      const res = await adminAxios.get(`/api/v1/testcases?document_ids=${docIds}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+     const docIds = docsStatus3.map(doc => doc.file_id).join(',');
+const transformedSubtypes = selectedSubTypes.map(type =>
+  type.toLowerCase().replace(/-/g, '_')
+);
+
+const res = await adminAxios.get(`/api/v1/testcases`, {
+  headers: { Authorization: `Bearer ${token}` },
+  params: {
+    document_ids: docIds,
+    subtypes: transformedSubtypes
+  },
+  paramsSerializer: {
+    indexes: null
+  }
+});
+
 
       const resultMap = res.data?.results || {};
       Object.assign(allResults, resultMap);
@@ -496,11 +508,11 @@ const isDisabled = false; // Always allow Results tab
             padding: "10px 0px",
             borderRadius: '10px 0 0 10px',
             backgroundColor: 'white',
-            marginTop: "66px"
+            marginTop: "66px",overflowX:"hidden",
           },
         }}
       >
-        <Box sx={{ width: '100%', height: '100%', overflowY: 'auto', }}>
+        <Box sx={{ width: '100%', height: '100%', overflowY:'hidden',overflowX:"hidden",scrollbarWidth:"thin" }}>
           <History onClose={toggleDrawer(false)} onSelectDoc={handleHistoryDocSelect} />
         </Box>
       </Drawer>
