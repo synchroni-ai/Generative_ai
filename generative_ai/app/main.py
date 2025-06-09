@@ -1,5 +1,8 @@
 # app/main.py
+import logging
 
+# Suppress PyMongo DEBUG logs
+logging.getLogger("pymongo").setLevel(logging.WARNING)
 from fastapi import FastAPI
 
 from app.api import api_router  # Import the combined router
