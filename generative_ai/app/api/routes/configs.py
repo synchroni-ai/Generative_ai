@@ -260,54 +260,175 @@ from fastapi.responses import JSONResponse
 #                 })
 
 #     return {"history": history}
+# @router.get("/history/summary")
+# async def get_test_case_history_summary(
+#     db: AsyncIOMotorDatabase = Depends(get_db),
+#     current_user: User = Depends(deps.get_current_user),
+#     time_range: Optional[Literal["today", "yesterday", "last_7_days", "last_month"]] = Query(None, description="Time range to filter by."),
+# ):
+#     """
+#     Fetches a summary of test case generation history, filtered by a specified time range.
+#     Handles potential data inconsistencies in the 'test_case_grouped_results' collection.
+#     """
+
+#     ist = pytz.timezone('Asia/Kolkata')  # Define the IST timezone
+
+#     query = {}
+#     now_utc = datetime.utcnow()
+#     now_ist = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)  # Convert to IST
+
+#     if time_range == "today":
+#         start_of_today_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist)
+#         start_of_today_utc = start_of_today_ist.astimezone(pytz.utc)  # Convert to UTC for query
+#         query["generated_at"] = {"$gte": start_of_today_utc, "$lt": now_utc}
+
+#     elif time_range == "yesterday":
+#         yesterday_ist = now_ist - timedelta(days=1)
+#         start_of_yesterday_ist = datetime(yesterday_ist.year, yesterday_ist.month, yesterday_ist.day, tzinfo=ist)
+#         start_of_yesterday_utc = start_of_yesterday_ist.astimezone(pytz.utc) # Convert to UTC for query
+
+#         start_of_today_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist)
+#         end_of_yesterday_ist = start_of_today_ist - timedelta(microseconds=1)
+#         end_of_yesterday_utc = end_of_yesterday_ist.astimezone(pytz.utc) # Convert to UTC
+
+#         query["generated_at"] = {"$gte": start_of_yesterday_utc, "$lt": end_of_yesterday_utc}
+
+#     elif time_range == "last_7_days":
+#         seven_days_ago_ist = now_ist - timedelta(days=7)
+#         seven_days_ago_utc = seven_days_ago_ist.astimezone(pytz.utc) # convert ist to utc
+#         query["generated_at"] = {"$gte": seven_days_ago_utc, "$lt": now_utc}
+
+#     elif time_range == "last_month":
+#         last_month_ist = now_ist.month - 1 if now_ist.month > 1 else 12
+#         last_year_ist = now_ist.year - 1 if now_ist.month == 1 else now_ist.year
+#         first_day_of_last_month_ist = datetime(last_year_ist, last_month_ist, 1, tzinfo=ist)
+#         first_day_of_last_month_utc = first_day_of_last_month_ist.astimezone(pytz.utc)
+
+#         first_day_of_this_month_ist = datetime(now_ist.year, now_ist.month, 1, tzinfo=ist)
+#         first_day_of_this_month_utc = first_day_of_this_month_ist.astimezone(pytz.utc)
+
+#         query["generated_at"] = {"$gte": first_day_of_last_month_utc, "$lt": first_day_of_this_month_utc}
+
+#     elif time_range is not None:
+#         raise HTTPException(status_code=400, detail="Invalid time_range value. Must be 'today', 'yesterday', 'last_7_days', or 'last_month'.")
+
+#     result_cursor = db["test_case_grouped_results"].find(query)
+#     document_collection = db["documents"]
+
+#     history = []
+
+#     async for record in result_cursor:
+#         generated_at_utc = record.get("generated_at")
+
+#         # Convert generated_at to IST for the response
+#         if generated_at_utc:
+#             generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+#         else:
+#             generated_at_ist = None  # Or handle the missing date appropriately
+
+#         results = record.get("results")
+
+#         if not isinstance(results, dict):
+#             logger.warning(f"Skipping record with invalid 'results' format (not a dict): {record.get('_id', 'Unknown ID')}")
+#             continue
+
+#         documents = results.get("documents", {})
+#         if not isinstance(documents, dict):
+#             logger.warning(f"Skipping record with invalid 'documents' format (not a dict): {record.get('_id', 'Unknown ID')}")
+#             continue
+
+#         for doc_id, doc_result in documents.items():
+#             try:
+#                 document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+#             except Exception as e:
+#                 logger.error(f"Error fetching document {doc_id}: {e}")
+#                 continue
+
+#             file_name = document_data.get("file_name") if document_data else "Unknown"
+
+#             history.append({
+#                 "document_id": doc_id,
+#                 "document_name": file_name,
+#                 "generated_at": generated_at_ist.isoformat() if generated_at_ist else None,  # Return as ISO string
+#             })
+
+#     # Fallback only for 'last_month'
+#     if time_range == "last_month" and not history:
+#         logger.info("No data found for last_month range. Falling back to all available history.")
+#         fallback_cursor = db["test_case_grouped_results"].find({})
+#         async for record in fallback_cursor:
+
+#             generated_at_utc = record.get("generated_at")
+
+#             # Convert generated_at to IST for the response
+#             if generated_at_utc:
+#                 generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+#             else:
+#                 generated_at_ist = None  # Or handle the missing date appropriately
+
+
+#             results = record.get("results", {})
+#             if not isinstance(results, dict):
+#                 continue
+
+#             documents = results.get("documents", {})
+#             if not isinstance(documents, dict):
+#                 continue
+
+#             for doc_id, doc_result in documents.items():
+#                 try:
+#                     document_data = await document_collection.find_one({"_id": ObjectId(doc_id)})
+#                 except Exception as e:
+#                     logger.error(f"Error fetching document {doc_id}: {e}")
+#                     continue
+
+#                 file_name = document_data.get("file_name") if document_data else "Unknown"
+
+#                 history.append({
+#                     "document_id": doc_id,
+#                     "document_name": file_name,
+#                     "generated_at": generated_at_ist.isoformat() if generated_at_ist else None,  # Return as ISO string
+#                 })
+
+#     return {"history": history}
 @router.get("/history/summary")
 async def get_test_case_history_summary(
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
     time_range: Optional[Literal["today", "yesterday", "last_7_days", "last_month"]] = Query(None, description="Time range to filter by."),
 ):
-    """
-    Fetches a summary of test case generation history, filtered by a specified time range.
-    Handles potential data inconsistencies in the 'test_case_grouped_results' collection.
-    """
-
-    ist = pytz.timezone('Asia/Kolkata')  # Define the IST timezone
+    ist = pytz.timezone('Asia/Kolkata')
+    now_utc = datetime.utcnow()
+    now_ist = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)
 
     query = {}
-    now_utc = datetime.utcnow()
-    now_ist = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)  # Convert to IST
 
     if time_range == "today":
-        start_of_today_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist)
-        start_of_today_utc = start_of_today_ist.astimezone(pytz.utc)  # Convert to UTC for query
-        query["generated_at"] = {"$gte": start_of_today_utc, "$lt": now_utc}
+        start_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist)
+        start_utc = start_ist.astimezone(pytz.utc)
+        query["generated_at"] = {"$gte": start_utc, "$lt": now_utc}
 
     elif time_range == "yesterday":
         yesterday_ist = now_ist - timedelta(days=1)
-        start_of_yesterday_ist = datetime(yesterday_ist.year, yesterday_ist.month, yesterday_ist.day, tzinfo=ist)
-        start_of_yesterday_utc = start_of_yesterday_ist.astimezone(pytz.utc) # Convert to UTC for query
-
-        start_of_today_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist)
-        end_of_yesterday_ist = start_of_today_ist - timedelta(microseconds=1)
-        end_of_yesterday_utc = end_of_yesterday_ist.astimezone(pytz.utc) # Convert to UTC
-
-        query["generated_at"] = {"$gte": start_of_yesterday_utc, "$lt": end_of_yesterday_utc}
+        start_ist = datetime(yesterday_ist.year, yesterday_ist.month, yesterday_ist.day, tzinfo=ist)
+        end_ist = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist) - timedelta(microseconds=1)
+        start_utc = start_ist.astimezone(pytz.utc)
+        end_utc = end_ist.astimezone(pytz.utc)
+        query["generated_at"] = {"$gte": start_utc, "$lt": end_utc}
 
     elif time_range == "last_7_days":
-        seven_days_ago_ist = now_ist - timedelta(days=7)
-        seven_days_ago_utc = seven_days_ago_ist.astimezone(pytz.utc) # convert ist to utc
-        query["generated_at"] = {"$gte": seven_days_ago_utc, "$lt": now_utc}
+        start_ist = now_ist - timedelta(days=7)
+        start_utc = start_ist.astimezone(pytz.utc)
+        query["generated_at"] = {"$gte": start_utc, "$lt": now_utc}
 
     elif time_range == "last_month":
-        last_month_ist = now_ist.month - 1 if now_ist.month > 1 else 12
-        last_year_ist = now_ist.year - 1 if now_ist.month == 1 else now_ist.year
-        first_day_of_last_month_ist = datetime(last_year_ist, last_month_ist, 1, tzinfo=ist)
-        first_day_of_last_month_utc = first_day_of_last_month_ist.astimezone(pytz.utc)
-
-        first_day_of_this_month_ist = datetime(now_ist.year, now_ist.month, 1, tzinfo=ist)
-        first_day_of_this_month_utc = first_day_of_this_month_ist.astimezone(pytz.utc)
-
-        query["generated_at"] = {"$gte": first_day_of_last_month_utc, "$lt": first_day_of_this_month_utc}
+        last_month = now_ist.month - 1 or 12
+        last_year = now_ist.year - 1 if last_month == 12 else now_ist.year
+        start_ist = datetime(last_year, last_month, 1, tzinfo=ist)
+        end_ist = datetime(now_ist.year, now_ist.month, 1, tzinfo=ist)
+        start_utc = start_ist.astimezone(pytz.utc)
+        end_utc = end_ist.astimezone(pytz.utc)
+        query["generated_at"] = {"$gte": start_utc, "$lt": end_utc}
 
     elif time_range is not None:
         raise HTTPException(status_code=400, detail="Invalid time_range value. Must be 'today', 'yesterday', 'last_7_days', or 'last_month'.")
@@ -319,22 +440,16 @@ async def get_test_case_history_summary(
 
     async for record in result_cursor:
         generated_at_utc = record.get("generated_at")
-
-        # Convert generated_at to IST for the response
-        if generated_at_utc:
-            generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
-        else:
-            generated_at_ist = None  # Or handle the missing date appropriately
-
+        generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist) if generated_at_utc else None
         results = record.get("results")
 
         if not isinstance(results, dict):
-            logger.warning(f"Skipping record with invalid 'results' format (not a dict): {record.get('_id', 'Unknown ID')}")
+            logger.warning(f"Skipping invalid results format: {record.get('_id')}")
             continue
 
         documents = results.get("documents", {})
         if not isinstance(documents, dict):
-            logger.warning(f"Skipping record with invalid 'documents' format (not a dict): {record.get('_id', 'Unknown ID')}")
+            logger.warning(f"Skipping invalid documents format: {record.get('_id')}")
             continue
 
         for doc_id, doc_result in documents.items():
@@ -349,25 +464,17 @@ async def get_test_case_history_summary(
             history.append({
                 "document_id": doc_id,
                 "document_name": file_name,
-                "generated_at": generated_at_ist.isoformat() if generated_at_ist else None,  # Return as ISO string
+                "generated_at": generated_at_ist.isoformat() if generated_at_ist else None
             })
 
-    # Fallback only for 'last_month'
+    # Fallback for last_month
     if time_range == "last_month" and not history:
-        logger.info("No data found for last_month range. Falling back to all available history.")
         fallback_cursor = db["test_case_grouped_results"].find({})
         async for record in fallback_cursor:
-
             generated_at_utc = record.get("generated_at")
-
-            # Convert generated_at to IST for the response
-            if generated_at_utc:
-                generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
-            else:
-                generated_at_ist = None  # Or handle the missing date appropriately
-
-
+            generated_at_ist = generated_at_utc.replace(tzinfo=pytz.utc).astimezone(ist) if generated_at_utc else None
             results = record.get("results", {})
+
             if not isinstance(results, dict):
                 continue
 
@@ -387,10 +494,133 @@ async def get_test_case_history_summary(
                 history.append({
                     "document_id": doc_id,
                     "document_name": file_name,
-                    "generated_at": generated_at_ist.isoformat() if generated_at_ist else None,  # Return as ISO string
+                    "generated_at": generated_at_ist.isoformat() if generated_at_ist else None
                 })
 
-    return {"history": history}
+    # ✅ Deduplicate by document_id: keep only the latest generated_at
+    latest_docs = {}
+    for item in history:
+        doc_id = item["document_id"]
+        generated_at = item["generated_at"]
+
+        if doc_id not in latest_docs:
+            latest_docs[doc_id] = item
+        else:
+            if generated_at > latest_docs[doc_id]["generated_at"]:
+                latest_docs[doc_id] = item
+
+    deduplicated_history = list(latest_docs.values())
+
+    return {"history": deduplicated_history}
+# @router.get("/history/summary")
+# async def get_test_case_history_summary(
+#     db: AsyncIOMotorDatabase = Depends(get_db),
+#     current_user: User = Depends(deps.get_current_user),
+#     time_range: Optional[Literal["today", "yesterday", "last_7_days", "last_month"]] = Query(
+#         None, description="Time range to filter by."
+#     ),
+# ):
+#     ist = pytz.timezone('Asia/Kolkata')
+#     now_utc = datetime.utcnow()
+#     now_ist = now_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+
+#     query = {}
+#     if time_range == "today":
+#         start = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist).astimezone(pytz.utc)
+#         query["generated_at"] = {"$gte": start, "$lt": now_utc}
+
+#     elif time_range == "yesterday":
+#         start = datetime(now_ist.year, now_ist.month, now_ist.day, tzinfo=ist).astimezone(pytz.utc)
+#         end = start - timedelta(days=1)
+#         query["generated_at"] = {"$gte": end, "$lt": start}
+
+#     elif time_range == "last_7_days":
+#         start = (now_ist - timedelta(days=7)).astimezone(pytz.utc)
+#         query["generated_at"] = {"$gte": start, "$lt": now_utc}
+
+#     elif time_range == "last_month":
+#         last_month = now_ist.month - 1 or 12
+#         last_year = now_ist.year - 1 if now_ist.month == 1 else now_ist.year
+#         start = datetime(last_year, last_month, 1, tzinfo=ist).astimezone(pytz.utc)
+#         end = datetime(now_ist.year, now_ist.month, 1, tzinfo=ist).astimezone(pytz.utc)
+#         query["generated_at"] = {"$gte": start, "$lt": end}
+
+#     elif time_range is not None:
+#         raise HTTPException(status_code=400, detail="Invalid time_range")
+
+#     # Track most recent generation per document_id
+#     latest_history = {}
+#     cursor = db["test_case_grouped_results"].find(query)
+#     doc_collection = db["documents"]
+
+#     async for record in cursor:
+#         gen_at_utc = record.get("generated_at")
+#         if not gen_at_utc:
+#             continue
+#         gen_at_ist = gen_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+
+#         results = record.get("results", {})
+#         documents = results.get("documents", {})
+
+#         for doc_id in documents:
+#             existing = latest_history.get(doc_id)
+#             if not existing or gen_at_ist > existing["generated_at"]:
+#                 try:
+#                     doc = await doc_collection.find_one({"_id": ObjectId(doc_id)})
+#                     file_name = doc.get("file_name") if doc else "Unknown"
+#                 except Exception:
+#                     file_name = "Unknown"
+
+#                 latest_history[doc_id] = {
+#                     "document_id": doc_id,
+#                     "document_name": file_name,
+#                     "generated_at": gen_at_ist
+#                 }
+
+#     # Fallback to all if last_month returns empty
+#     if time_range == "last_month" and not latest_history:
+#         fallback_cursor = db["test_case_grouped_results"].find({})
+#         async for record in fallback_cursor:
+#             gen_at_utc = record.get("generated_at")
+#             if not gen_at_utc:
+#                 continue
+#             gen_at_ist = gen_at_utc.replace(tzinfo=pytz.utc).astimezone(ist)
+
+#             results_list = record.get("results", [])
+#             if not results_list or not isinstance(results_list, list):
+#                 continue
+
+#             first_result = results_list[0]
+#             documents = first_result.get("documents", {})
+
+
+#             for doc_id in documents:
+#                 existing = latest_history.get(doc_id)
+#                 if not existing or gen_at_ist > existing["generated_at"]:
+#                     try:
+#                         doc = await doc_collection.find_one({"_id": ObjectId(doc_id)})
+#                         file_name = doc.get("file_name") if doc else "Unknown"
+#                     except Exception:
+#                         file_name = "Unknown"
+
+#                     latest_history[doc_id] = {
+#                         "document_id": doc_id,
+#                         "document_name": file_name,
+#                         "generated_at": gen_at_ist
+#                     }
+
+#     # Convert to list and sort (optional)
+#     history = [
+#         {
+#             "document_id": d["document_id"],
+#             "document_name": d["document_name"],
+#             "generated_at": d["generated_at"].isoformat()
+#         }
+#         for d in latest_history.values()
+#     ]
+
+#     return {"history": history}
+
 
 # @router.get("/history/document/{document_id}")
 # async def get_test_cases_by_document(
