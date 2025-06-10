@@ -1,20 +1,3 @@
-.header-dashboard {
-    line-height: 120%;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
-    padding: 6px 20px;
-    text-align: center;
-    font-weight: 500;
-    font-size: 14px;
-  }
-  
-  .header-dashboard.active {
-    background-color: rgba(50, 50, 255, 0.1);
-    color: #00008B;
-    border-radius: 20px;
-    padding: "8px 22px";
-  }
-  
 
   .search-container {
     position: relative;
@@ -24,11 +7,10 @@
   .search-container input {
     width: 80%;
     padding: 10px;
-    padding-right: 40px; /* give some space for the icon */
+    padding-right: 40px;
     border-radius: 32px;
     border: 1px solid #ccc;
     outline: none;
-    /* background-color: #f5f5f5; */
   }
   
   .basic-header-search-icon {
@@ -40,3 +22,137 @@
     width: 20px;
   }
   
+
+
+/* Container styling */
+.documentlist_tableContainer {
+  width: 100%;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  border-bottom: none;
+}
+
+/* Header cell */
+.documentlist_header {
+  font-weight: bold !important;
+}
+
+/* Checkbox styling */
+.documentlist_checkbox {
+  color: #c4c4c4;
+}
+.documentlist_checkbox.Mui-checked {
+  color: var(--primary-blue) !important;
+}
+.documentlist_checkbox.MuiCheckbox-indeterminate {
+  color: var(--primary-blue) !important;
+}
+.documentlist_checkbox .MuiSvgIcon-root {
+  border-radius: 4px;
+}
+
+/* Text styling */
+.documentlist_dimmedText {
+  color: #8e8e8e !important;
+}
+
+.css-1dc80h3-MuiTableCell-root {
+        padding: 10px 16px !important;
+}
+
+/* Clickable cell */
+.documentlist_clickableCell {
+  cursor: pointer;
+  color: navy !important;
+}
+
+/* Action button icon */
+.documentlist_actionIcon {
+  padding: 0;
+}
+.documentlist_actionIcon:hover {
+  background-color: transparent;
+}
+
+.documentlist_moreIcon {
+  font-size: 22px !important;
+  color: #8e8e8e;
+}
+
+/* Menu popup */
+.documentlist_menuPaper {
+  background-color: #FBFBFB;
+  border-radius: 5px;
+  padding: 0;
+  min-width: 100px;
+}
+
+/* Menu delete text */
+.documentlist_deleteText {
+  color: #666666;
+}
+
+
+/* documentlist_pagination.css */
+.documentlist_footerContainer {
+  margin-top: 24px;
+}
+
+.documentlist_footerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.documentlist_leftControls {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.documentlist_dropdownContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.documentlist_dropdownLabel {
+  color: #8e8e8e;
+}
+
+.documentlist_rowsPerPageSelect {
+  min-width: 50px;
+  height: 30px;
+  color: #8e8e8e !important;
+  font-size: 0.875rem;
+}
+
+.documentlist_entriesInfo {
+  color: #8e8e8e;
+}
+
+.documentlist_paginationControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.documentlist_paginationItem {
+  padding: 6px 16px;
+  border-radius: 50%;
+  min-width: auto;
+  height: auto;
+  color: #666666 !important;
+}
+
+.documentlist_paginationItem.Mui-selected {
+  background-color: var(--primary-blue) !important;
+  color: #fff !important;
+}
+
+.documentlist_paginationItem:hover {
+  background-color: transparent;
+}

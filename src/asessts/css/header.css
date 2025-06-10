@@ -1,0 +1,109 @@
+/* General AppBar */
+.header_appbar {
+  background-color: #fff !important;
+  box-shadow: none !important;
+  z-index: 1300 !important;
+  border-bottom: 2px solid #f5f5f5;
+  overflow-y: hidden;
+}
+
+/* Toolbar spacing */
+.header_toolbar {
+  display: flex;
+  justify-content: space-between;
+  min-height: auto;
+  background-color: #fff;
+  overflow-y: hidden;
+}
+
+/* Left section: logo */
+.header_logo {
+  height: 33px;
+  margin-left: 10px;
+}
+
+/* Left wrapper for logo and nav */
+.header_leftSection {
+  display: flex;
+  align-items: center;
+  gap: 240px;
+}
+
+/* Nav link container */
+.header_navLinks {
+  display: flex;
+  align-items: center;
+  gap: 48px; /* Matches MUI gap={6} */
+}
+
+/* Base nav link style */
+.header_navLink {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  cursor: pointer;
+  color: #494949;
+}
+
+/* Active tab */
+.header_active {
+  color: var(--primary-blue) !important;
+  font-weight: 600 !important;
+}
+
+/* Disabled nav links */
+.header_disabled {
+  color: #bdbdbd !important;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+
+/* Right section: icons + avatar */
+.header_rightSection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Notification badge styling */
+.header_badge .MuiBadge-dot {
+  top: 4px;
+  right: 4px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid white;
+}
+
+.header_icon{
+    width:20px;
+    height:20px;
+}
+
+/* Divider next to avatar */
+.header_divider {
+  margin: 0 8px;
+  height: 28px;
+  border-color: #ccc;
+  margin-top: 10px;
+}
+
+/* Avatar icon */
+.header_avatar {
+  width: 34px !important;
+  height: 34px !important;
+}
+
+/* Dropdown Menu */
+.header_menu {
+  margin-top: 20px;
+  margin-left: 20px;
+  border-radius: 12px;
+  min-width: 180px;
+  background-color: white;
+  border: 1px solid #f5f5f5;
+  padding: 8px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+
