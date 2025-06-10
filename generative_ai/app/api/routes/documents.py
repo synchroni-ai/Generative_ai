@@ -1067,7 +1067,7 @@ from fastapi import Depends
 @router.get("/testcases/by-dataspace/{dataspace_id}")
 async def get_testcases_by_dataspace(
     dataspace_id: str,
-    db: AsyncIOMotorDatabase = Depends(get_db)
+    db: AsyncIOMotorDatabase = Depends(deps.get_db)
 ):
     try:
         dataspace_obj_id = ObjectId(dataspace_id)
@@ -1096,7 +1096,7 @@ async def get_testcases_by_dataspace(
 
         # 3. Structure the response as required.  This is the complex part.
         response_list = []
-        merged_final_subtypes: Dict[str, Dict[str, List[str]]] = {} # Initializing merged_final_subtypes outside the loop
+        merged_final_subtypes: Dict[str, Dict[str, str]] = {}
 
         for tc in test_case_results:
             config_id = tc["config_id"]
@@ -1150,25 +1150,25 @@ async def get_testcases_by_dataspace(
                     for doc_id in documents_data if subtype in documents_data[doc_id] and doc_id in document_name_map
                 }
 
-            # Create the Final_subtypes structure
-            final_subtypes = {}
-
-
             # *********************MODIFIED SECTION****************************
-            # Merge Final_subtypes content across all documents
-
+            # Create the Final_subtypes structure WITH DEDUPLICATION
             for doc_id, subtypes in documents_data.items():
                 if "all_subtypes" in subtypes and doc_id in document_name_map:
                     document_name = document_name_map[doc_id]
-                    if doc_id not in merged_final_subtypes:
-                        merged_final_subtypes[doc_id] = {
-                            "content": subtypes.get("all_subtypes", []),
-                            "document_name": document_name
-                        }
-                    else:  #Document id is already present
-                        merged_final_subtypes[doc_id]["content"].extend(subtypes.get("all_subtypes", []))
+                    all_subtypes = subtypes.get("all_subtypes", [])
+                    unique_content = []  # Use a list to maintain order
+                    seen = set()
 
-            # *********************END OF MODIFIED SECTION****************************
+                    for item in all_subtypes:
+                        if item not in seen:
+                            unique_content.append(item)
+                            seen.add(item)
+
+                    merged_final_subtypes[doc_id] = {
+                        "content": "\n".join(unique_content),  # Join unique content with newline
+                        "document_name": document_name
+                    }
+
 
             response_item = {
                 "config_id": config_id,
@@ -1179,7 +1179,7 @@ async def get_testcases_by_dataspace(
                 "results": {
                     "documents": document_results,
                     "all_documents": all_documents,
-                    "Final_subtypes": final_subtypes
+                    "Final_subtypes": {}  # No longer used
                 },
 
                 "status": "completed",  # You might want to derive this from the data
