@@ -16,6 +16,8 @@ from rake_nltk import Rake
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import numpy as np
+from fastapi.middleware.cors import CORSMiddleware
+
 
 # Download required NLP assets
 nltk.download("stopwords")
@@ -37,6 +39,17 @@ except OSError:
 
 # App and upload path
 app = FastAPI()
+
+# Enable CORS for frontend access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You can replace "*" with specific origins like ["https://yourdomain.com"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 UPLOAD_DIR = Path("uploads")
 UPLOAD_DIR.mkdir(exist_ok=True)
 
