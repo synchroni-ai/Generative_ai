@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+pdfplumber
+python-docx
+PyMuPDF
+nltk
+spacy
+python-dateutil
+rake-nltk
+sentence-transformers
+scikit-learn
+numpy
+python-multipart
