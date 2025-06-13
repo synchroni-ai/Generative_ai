@@ -47,23 +47,10 @@ border-radius: 12px;
   margin-left: 10px;
 }
 
-.history-document {
-  color: #7c7c7c;
-  font-size: 14px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.history-document.active {
-  color: #1a0dab;
-}
-
-
-
 .history-doc-section {
   padding: 12px 20px;
   overflow-y: auto;
-  max-height: 69vh;
+  max-height: 82vh;
   margin-right: 20px !important;
   scrollbar-width: thin;
 }
@@ -75,39 +62,19 @@ border-radius: 12px;
   margin: 16px 0 8px;
   padding-left: 2px;
 }
-
-.history-document {
-  font-size: 13.5px;
-  color: #555;
-  padding: 6px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.history-document:hover {
-  color: #000080;
-}
-
-.history-document.active {
-  background-color: #e6f0ff;
-  color: #0a66c2;
-  font-weight: 500;
-}
-
 .history-document {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 0;
-  color: #7c7c7c;
+  padding: 6px 8px;
   font-size: 14px;
+  border-radius: 6px;
   cursor: pointer;
+  color: #555; /* Default text color */
 }
 
-.history-document.active {
-  color: #1a0dab;
-  font-weight: 500;
+.history-document:hover {
+  color: #000080; /* Navy blue on hover */
 }
 
 .history-doc-name {

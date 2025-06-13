@@ -4,11 +4,12 @@ import {
   IconButton,
   Box,
   InputBase,
-  Divider,Typography
+  Divider,Typography,Tooltip
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { Search } from 'react-feather'; // Add this at the top
 import { adminAxios } from '../../asessts/axios';
+import { Skeleton } from '@mui/material';
 import dayjs from 'dayjs';
 
 const History = ({ onClose, onSelectDoc }) => {
@@ -17,60 +18,63 @@ const History = ({ onClose, onSelectDoc }) => {
   const [yesterdayDocs, setYesterdayDocs] = useState([]);
   const [previousWeekDocs, setPreviousWeekDocs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+const [loading, setLoading] = useState(true);
+
 
   useEffect(() => {
-    const fetchHistoryDocs = async () => {
-      try {
-        const token = localStorage.getItem("token");
+  const fetchHistoryDocs = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await adminAxios.get('/api/v1/history/summary', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
 
-        const res = await adminAxios.get('/api/v1/history/summary', {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+      const allDocs = res.data.history || [];
 
-        const allDocs = res.data.history || [];
+      const today = dayjs().startOf('day');
+      const yesterday = today.subtract(1, 'day');
+      const weekAgo = today.subtract(7, 'day');
 
-        const today = dayjs().startOf('day');
-        const yesterday = today.subtract(1, 'day');
-        const weekAgo = today.subtract(7, 'day');
+      const todayList = [];
+      const yesterdayList = [];
+      const last7DaysList = [];
 
-        const todayList = [];
-        const yesterdayList = [];
-        const last7DaysList = [];
+      allDocs.forEach(doc => {
+        const docDate = dayjs(doc.generated_at).startOf('day');
+        const docTime = dayjs(doc.generated_at).format('hh:mm A');
+        const docKey = `${doc.document_id}-${doc.generated_at}`;
 
-        allDocs.forEach(doc => {
-          const docDate = dayjs(doc.generated_at).startOf('day');
-          const docTime = dayjs(doc.generated_at).format('hh:mm A');
-          const docKey = `${doc.document_id}-${doc.generated_at}`;
+        const docObj = {
+          id: doc.document_id,
+          name: doc.document_name,
+          date: docDate.format('YYYY-MM-DD'),
+          time: docTime,
+          key: docKey
+        };
 
-          const docObj = {
-            id: doc.document_id,
-            name: doc.document_name,
-            date: docDate.format('YYYY-MM-DD'),
-            time: docTime,
-            key: docKey
-          };
+        if (docDate.isSame(today)) {
+          todayList.push(docObj);
+        } else if (docDate.isSame(yesterday)) {
+          yesterdayList.push(docObj);
+        } else if (docDate.isAfter(weekAgo)) {
+          last7DaysList.push(docObj);
+        }
+      });
 
-          if (docDate.isSame(today)) {
-            todayList.push(docObj);
-          } else if (docDate.isSame(yesterday)) {
-            yesterdayList.push(docObj);
-          } else if (docDate.isAfter(weekAgo)) {
-            last7DaysList.push(docObj);
-          }
-        });
+      setTodayDocs(todayList);
+      setYesterdayDocs(yesterdayList);
+      setPreviousWeekDocs(last7DaysList);
+    } catch (err) {
+      console.error("❌ Failed to fetch history:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setTodayDocs(todayList);
-        setYesterdayDocs(yesterdayList);
-        setPreviousWeekDocs(last7DaysList);
-      } catch (err) {
-        console.error("❌ Failed to fetch history:", err);
-      }
-    };
-
-    fetchHistoryDocs();
-  }, []);
+  fetchHistoryDocs();
+}, []);
 
   const renderDocs = (docs) =>
     docs
@@ -90,7 +94,7 @@ const History = ({ onClose, onSelectDoc }) => {
       ));
 
   return (
-    <Box sx={{ width: "100%",padding:2, overflowX:"hidden" }}>
+    <Box sx={{ width: "100%",padding:"10px 16px", overflowX:"hidden" }}>
       {/* ❌ Close Button */}
     {/* <Box display="flex" justifyContent="space-between" alignItems="center" px={2} py={1}>
   <Box display="flex" alignItems="center" gap={2}>
@@ -114,9 +118,17 @@ const History = ({ onClose, onSelectDoc }) => {
 <Box px={2} py={1}>
   {/* Top Right: Close Button */}
   <Box display="flex" justifyContent="flex-end">
-    <IconButton onClick={onClose}>
-      <CloseIcon />
-    </IconButton>
+ <Tooltip title="Hide History" placement="bottom-end" arrow>
+  <IconButton onClick={onClose} disableRipple>
+    <img
+      src={require('./../../asessts/images/Closesidebar.png')} // adjust path if needed
+      alt="Close"
+      width={22}
+      height={22}
+      style={{ objectFit: 'contain',marginRight:"10px" }}
+    />
+  </IconButton>
+</Tooltip>
   </Box>
 
   {/* Bottom Row: History + Search */}
@@ -140,15 +152,46 @@ const History = ({ onClose, onSelectDoc }) => {
 
       {/* 📄 Document Sections */}
       <div className="history-doc-section">
-        {todayDocs.length > 0 && <div className="history-label">Today</div>}
-        {renderDocs(todayDocs)}
+  {loading ? (
+    <>
+      <div className="history-label">Today</div>
+      {[...Array(2)].map((_, idx) => (
+        <Box key={`today-skeleton-${idx}`} className="history-document">
+          <Skeleton variant="text" width="80%" height={24} />
+          <Skeleton variant="text" width="40%" height={20} />
+        </Box>
+      ))}
 
-        {yesterdayDocs.length > 0 && <div className="history-label">Yesterday</div>}
-        {renderDocs(yesterdayDocs)}
+      <div className="history-label">Yesterday</div>
+      {[...Array(2)].map((_, idx) => (
+        <Box key={`yesterday-skeleton-${idx}`} className="history-document">
+          <Skeleton variant="text" width="80%" height={24} />
+          <Skeleton variant="text" width="40%" height={20} />
+        </Box>
+      ))}
 
-        {previousWeekDocs.length > 0 && <div className="history-label">Previous 7 Days</div>}
-{renderDocs([...previousWeekDocs].reverse())}
-      </div>
+      <div className="history-label">Previous 7 Days</div>
+      {[...Array(2)].map((_, idx) => (
+        <Box key={`week-skeleton-${idx}`} className="history-document">
+          <Skeleton variant="text" width="80%" height={24} />
+          <Skeleton variant="text" width="40%" height={20} />
+        </Box>
+      ))}
+    </>
+  ) : (
+    <>
+      {todayDocs.length > 0 && <div className="history-label">Today</div>}
+      {renderDocs([...todayDocs].reverse())}
+
+      {yesterdayDocs.length > 0 && <div className="history-label">Yesterday</div>}
+      {renderDocs([...yesterdayDocs].reverse())}
+
+      {previousWeekDocs.length > 0 && <div className="history-label">Previous 7 Days</div>}
+      {renderDocs([...previousWeekDocs].reverse())}
+    </>
+  )}
+</div>
+
     </Box>
   );
 };

@@ -68,7 +68,8 @@
 import React, { useState,useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom'; // Make sure this is imported at the top
 import { useLocation } from "react-router-dom";
-import { Box, Typography, IconButton, Drawer } from '@mui/material';  // Import Drawer
+import { Box, Typography, IconButton, Drawer,Tooltip,Button } from '@mui/material';  // Import Drawer
+import { ChevronLeft, ChevronRight } from 'react-feather'; // or any icon lib you prefer
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import historyIcon from "./../../asessts/images/history.png";
 import backarrowicon from "./../../asessts/images/backarrowicon.png";
@@ -99,84 +100,11 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
   const pollingIdRef = useRef(null);
 const [generationLoading, setGenerationLoading] = useState(false);
 const [hasFetchedInitialResults, setHasFetchedInitialResults] = useState(false);
+const [isDefaultResultsFromDataspace, setIsDefaultResultsFromDataspace] = useState(false);
 const [selectedLLM, setSelectedLLM] = useState('');
-const [temperature, setTemperature] = useState(0.5);
+const [temperature, setTemperature] = useState(0.3);
 const [selectedHistoryDocDetails, setSelectedHistoryDocDetails] = useState(null);
-
-
-
-// const triggerTestCaseGeneration = async (configId) => {
-//   if (!configId) return;
-
-//   setGeneratedResults([]);
-//   setActiveTab('Results');
-//   setGenerationLoading(true);
-//   setProgress(0);
-
-//   const startTime = Date.now();
-//   let simulatedProgress = 0;
-
-//   const progressInterval = setInterval(() => {
-//     simulatedProgress = Math.min(simulatedProgress + 1, 95);
-//     setProgress(simulatedProgress);
-//   }, 500);
-
-//   let jobId;
-
-//   try {
-//     // Trigger generation and capture job_id
-//     const response = await adminAxios.post(`/api/v1/generation/run/${configId}`, null, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-
-//     jobId = response.data?.job_id;
-//     if (!jobId) {
-//       throw new Error("Job ID not returned from generation API");
-//     }
-
-//   } catch (err) {
-//     clearInterval(progressInterval);
-//     setGenerationLoading(false);
-//     return;
-//   }
-
-//   // Poll every 3 seconds using jobId
-//   pollingIdRef.current = setInterval(async () => {
-//     try {
-//       const res = await adminAxios.get(`/api/v1/results/${jobId}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-
-//       const status = res.data?.status;
-//       const results = res.data?.results || {};
-
-//       if (status === 'completed') {
-//         clearInterval(pollingIdRef.current);
-//         clearInterval(progressInterval);
-
-//         // Smooth transition to 100%
-//         let quickProgress = simulatedProgress;
-//         const finishInterval = setInterval(() => {
-//           quickProgress += 5;
-//           setProgress(Math.min(quickProgress, 100));
-
-//           if (quickProgress >= 100) {
-//             clearInterval(finishInterval);
-//             const endTime = Date.now();
-//             const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
-//             console.log(`✅ Generation completed in ${elapsedSeconds} seconds`);
-
-//             setGeneratedResults(results);  // or process results if needed
-//             setGenerationLoading(false);
-//           }
-//         }, 50);
-//       }
-//     } catch (err) {
-//     }
-//   }, 3000);
-// };
+const [generateDrawerOpen, setGenerateDrawerOpen] = useState(false);
 
 
 const triggerTestCaseGeneration = async (configId) => {
@@ -185,6 +113,7 @@ const triggerTestCaseGeneration = async (configId) => {
   setSelectedHistoryDoc(null);       // ✅ Reset history mode
   setFromHistory(false);             // ✅ Reset history mode
   setGeneratedResults([]);
+  setIsDefaultResultsFromDataspace(false);  // ✅ Show tabs after generation
   setActiveTab('Results');
   setGenerationLoading(true);
   setProgress(0);
@@ -293,6 +222,42 @@ const res = await adminAxios.get(`/api/v1/testcases`, {
     };
   }, []);
 
+  useEffect(() => {
+  const fetchDefaultResultsByDataSpace = async () => {
+    if (!dataSpaceId) return;
+
+    try {
+      setGenerationLoading(true);
+      const res = await adminAxios.get(`/api/v1/testcases/by-dataspace/${dataSpaceId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
+
+const results = res.data || {};
+      setGeneratedResults(results);
+      setHasFetchedInitialResults(true);
+setIsDefaultResultsFromDataspace(false); // ✅ allow tabs to show after generation
+      // 🆕 Set a flag if response contains message about empty docs
+if (res.data.message === "No documents found in this dataspace.") {
+  setGeneratedResults({ error: res.data.message });
+  setIsDefaultResultsFromDataspace(true);  // ✅ mark it as default/auto
+} else {
+  setGeneratedResults(results);
+  setIsDefaultResultsFromDataspace(true);  // ✅ still auto-fetched
+}
+    } catch (error) {
+      console.error("❌ Failed to fetch test cases by dataspace:", error);
+    } finally {
+      setGenerationLoading(false);
+    }
+  };
+
+  if (!hasFetchedInitialResults && dataSpaceId) {
+    fetchDefaultResultsByDataSpace();
+  }
+}, [dataSpaceId]);
+
 
   const fetchInitialTestCases = async () => {
   try {
@@ -354,170 +319,201 @@ const handleTabSwitch = async (tab) => {
 
 
 
-  return (
-    <Box sx={{ height: '100vh', overflow: 'hidden' }}>
+return (
+  <Box display="flex" height="100vh" width="100vw" overflow="hidden">
+    
+    {/* Sidebar Toggle Button (Fixed Left Edge) */}
+    <Box
+      sx={{
+        position: 'fixed',
+        top: '20px',
+        left: drawerOpen ? '410px' : '5px',
+        zIndex: 1400,
+        transition: 'left 0.3s',
+        overflow: 'hidden'
+      }}
+    >
+      {!drawerOpen && (
+        <Tooltip
+          title="Show History"
+          placement="bottom-end"
+          arrow
+          PopperProps={{
+            modifiers: [
+              {
+                name: 'zIndex',
+                enabled: true,
+                phase: 'beforeWrite',
+                fn: ({ state }) => {
+                  state.styles.popper.zIndex = 1600;
+                }
+              }
+            ]
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={() => setDrawerOpen(true)}
+            sx={{ overflow: 'hidden', ml: 1 }}
+          >
+            <img
+              src={require('./../../asessts/images/Opensidebar.png')}
+              alt="Open Sidebar"
+              width={22}
+              height={22}
+              style={{ objectFit: 'contain' }}
+            />
+          </IconButton>
+        </Tooltip>
+      )}
+    </Box>
+
+    {/* Sidebar: History */}
+    <Box
+      sx={{
+        width: drawerOpen ? '400px' : '0px',
+        transition: 'width 0.3s ease',
+        overflow: 'hidden',
+        borderRight: drawerOpen ? '1px solid #ddd' : 'none',
+      }}
+    >
+      {drawerOpen && (
+        <Box height="100%" overflow="hidden">
+          <History onClose={() => setDrawerOpen(false)} onSelectDoc={handleHistoryDocSelect} />
+        </Box>
+      )}
+    </Box>
+
+    {/* Main Content */}
+    <Box flex={1} sx={{ overflowX: 'hidden', overflowY: 'auto',marginTop:"68px",scrollbarWidth:'thin' }}>
       {/* Header */}
       <Box
         display="flex"
         alignItems="flex-start"
-        borderBottom={"1px solid #8e8e8e"}
+        borderBottom="1px solid #8e8e8e"
         sx={{
           width: "100%",
-          position: "fixed", // or "fixed" if needed
+          position: "fixed",
           top: 0,
-          backgroundColor: "white", // prevent transparency when scrolling
-          zIndex: 1300, // keep above other elements
-          padding: '10px 5px 0px 5px'
+          backgroundColor: "white",
+          zIndex: 1300,
+          pt: '10px',
+          pr: '5px',
+          pb: 0,
+          pl: drawerOpen ? '5px' : '40px',
+          transition: 'padding-left 0.3s ease'
         }}
       >
         <IconButton disableRipple sx={{ mt: '2px', mr: 1, ml: 1 }} onClick={() => navigate(-1)}>
           <img
-            src={backarrowicon} // adjust path as needed
+            src={backarrowicon}
             alt="Back"
             width={20}
             height={20}
             style={{ objectFit: 'contain', backgroundColor: "#f9f9f9", padding: "5px", borderRadius: "50%" }}
-          />        </IconButton>
+          />
+        </IconButton>
         <Box>
-          {/* <Typography fontWeight={600} fontSize={24} mb={1}>
-             Complete UI/UX Project Assets – Wireframes...
-           </Typography> */}
           <Typography fontWeight={600} fontSize={20} mb={0.5}>
             {selectedDoc?.name || "Document"}
           </Typography>
-          <Typography fontSize={12} color="text.secondary" mb={0.5} >
+          <Typography fontSize={12} color="text.secondary" mb={0.5}>
             {selectedDoc?.description || "Gen AI"}
           </Typography>
         </Box>
       </Box>
 
-      {/* <hr /> */}
+      {/* Results Header with Config Button */}
       <Box
-        sx={{
-          marginTop: '68px', // same as header height
-          height: 'calc(100vh - 68px)',
-          overflowY: 'auto',
-          scrollbarWidth: "thin",
-        }}
-      >
+  display="flex"
+  justifyContent="flex-end"
+  alignItems="center"
+  mb={2}
+  sx={{ backgroundColor: "#f5f5f5", padding: "5px 40px" }}
+>
+  <Typography
+  onClick={() => setGenerateDrawerOpen(true)}
+  sx={{
+    textTransform: 'none',
+    fontSize: 14,
+    fontWeight:"600",
+    cursor:"pointer",
+    borderRadius: '8px',
+    px: 2,
+    py: 0.75,
+        color: '#000', // 💡 Set your custom text color here
+    backgroundColor: 'transparent',
+    '&:hover': {
+      backgroundColor: 'transparent',
+    }
+  }}
+>
+  Generate
+</Typography>
 
-        {/* Tabs */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={3} sx={{ backgroundColor: "#f5f5f5", padding: "5px 50px" }}>
-          <Box display="flex">
-  {['Configuration', 'Results'].map((tab) => {
-    const isResultsTab = tab === 'Results';
-    // const isDisabled = isResultsTab && generatedResults.length === 0;
-const isDisabled = false; // Always allow Results tab
-    return (
-      <Box
-        key={tab}
-        px={2}
-        py={1}
-        onClick={() => handleTabSwitch(tab)}
-        sx={{
-          fontSize: 14,
-          fontWeight: 500,
-          color: isDisabled
-            ? '#bdbdbd'
-            : activeTab === tab
-            ? 'var(--primary-blue)'
-            : 'gray',
-          borderBottom: activeTab === tab
-            ? '2px solid var(--primary-blue)'
-            : 'none',
-          cursor: isDisabled ? 'not-allowed' : 'pointer',
-          pointerEvents: isDisabled ? 'none' : 'auto',
-        }}
-      >
-        {tab}
-      </Box>
-    );
-  })}
 </Box>
 
 
-          {/* History Section */}
-          <Box
-            display="flex"
-            alignItems="center"
-            gap={1}
-            sx={{ cursor: 'pointer' }}
-            onClick={toggleDrawer(true)}  // Open drawer on click
-          >
-            <Typography fontSize={14} color="gray">History</Typography>
-            <img src={historyIcon} alt="History Icon" width={20} height={20} />
-          </Box>
-{/* <Box
-  display="flex"
-  alignItems="center"
-  gap={1}
-  sx={{
-    cursor: 'not-allowed',
-    opacity: 0.5,             // visually faded
-    pointerEvents: 'none',   // disables click interaction
-  }}
->
-  <Typography fontSize={14} color="gray">History</Typography>
-  <img src={historyIcon} alt="History Icon" width={20} height={20} />
-</Box> */}
-
-        </Box>
-
-        {/* Body: Conditional Rendering */}
-        {activeTab === 'Configuration' ? 
-       <Configuration
-  selectedDocs={selectedDocs}
-  setSelectedDocs={setSelectedDocs}
-  selectedUseCase={selectedUseCase}
-  setSelectedUseCase={setSelectedUseCase}
-  selectedSubTypes={selectedSubTypes}
-  setSelectedSubTypes={setSelectedSubTypes}
-  onGenerate={triggerTestCaseGeneration} // pass the trigger function
-  dataSpaceId={dataSpaceId}
-  generationId={generationId}
-   selectedLLM={selectedLLM}
-  setSelectedLLM={setSelectedLLM}
-  temperature={temperature}
-  setTemperature={setTemperature}
-/>
-          : <TestCaseTable
-  selectedDocs={selectedDocs}
-  selectedHistoryDoc={selectedHistoryDoc}
-    selectedHistoryDocDetails={selectedHistoryDocDetails}  // ✅ NEW
-  fromHistory={fromHistory}
-  taskId={taskId}
-  token={token}
-  fileId={fileId}
-  selectedSubTypes={selectedSubTypes}
-  results={generatedResults}
-  generationLoading={generationLoading}
-  progress={progress}
-/>
-
-        }</Box>
-      {/* Drawer for History */}
-      <Drawer
-        anchor="right"
-        open={drawerOpen}
-        onClose={toggleDrawer(false)}
-        transitionDuration={{ enter: 1000, exit: 1000 }}
-        PaperProps={{
-          sx: {
-            width: "30%",
-            height: "88%",
-            padding: "10px 0px",
-            borderRadius: '10px 0 0 10px',
-            backgroundColor: 'white',
-            marginTop: "66px",overflowX:"hidden",
-          },
-        }}
-      >
-        <Box sx={{ width: '100%', height: '100%', overflowY:'hidden',overflowX:"hidden",scrollbarWidth:"thin" }}>
-          <History onClose={toggleDrawer(false)} onSelectDoc={handleHistoryDocSelect} />
-        </Box>
-      </Drawer>
+      {/* Results Section */}
+      <Box>
+        <TestCaseTable
+          selectedDocs={selectedDocs}
+          selectedHistoryDoc={selectedHistoryDoc}
+          selectedHistoryDocDetails={selectedHistoryDocDetails}
+          fromHistory={fromHistory}
+          taskId={taskId}
+          token={token}
+          fileId={fileId}
+          selectedSubTypes={selectedSubTypes}
+          results={generatedResults}
+          generationLoading={generationLoading}
+          progress={progress}
+            showTabs={!isDefaultResultsFromDataspace} // 🆕 conditionally show tabs
+        />
+      </Box>
     </Box>
-  );
+
+    {/* Configuration Drawer */}
+    <Drawer
+      anchor="right"
+      open={generateDrawerOpen}
+            transitionDuration={{ enter: 1000, exit: 1000 }}
+      onClose={() => setGenerateDrawerOpen(false)}
+ PaperProps={{
+        sx: {
+          width: '85%',
+          height: "91%",
+          borderRadius: '20px 0px 0px 20px',
+          transition: "transform 2s ease-in-out",
+          transform: "translate(50%, 0%)",
+          padding: "0px 32px",
+          mt: '66px',
+          overflow: "auto",
+          scrollbarWidth: "thin",
+          overflowX: "hidden"
+        },
+      }}    >
+      <Configuration
+        selectedDocs={selectedDocs}
+        setSelectedDocs={setSelectedDocs}
+        selectedUseCase={selectedUseCase}
+        setSelectedUseCase={setSelectedUseCase}
+        selectedSubTypes={selectedSubTypes}
+        setSelectedSubTypes={setSelectedSubTypes}
+        onGenerate={triggerTestCaseGeneration}
+        dataSpaceId={dataSpaceId}
+        generationId={generationId}
+        selectedLLM={selectedLLM}
+        setSelectedLLM={setSelectedLLM}
+        temperature={temperature}
+        setTemperature={setTemperature}
+          onClose={() => setGenerateDrawerOpen(false)}
+      />
+    </Drawer>
+  </Box>
+);
+
+
 };
 
 export default UIUXConfigurator;

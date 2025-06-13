@@ -239,19 +239,17 @@ import { saveAs } from 'file-saver';
 import "./Tabs.css";
 
 
-
 const parseTestCasesFromContent = (content, testType, fileName) => {
   const parsed = [];
 
   // Normalize **label:** to label: (strip Markdown bolds)
   const cleanedContent = content.replace(/\*\*(.*?)\*\*/g, '$1');
 
-  // Split entries based on TCID start
   const entries = cleanedContent
     .split(/\n\s*TCID:/g)
     .filter(Boolean)
-    .map((e) => `TCID:${e.trim()}`)  // Reattach "TCID:" label
-    .filter(e => e.toLowerCase().includes('title:'));  // ✅ Ensure it's an actual test case
+    .map((e) => `TCID:${e.trim()}`) // reattach TCID:
+    .filter(e => e.toLowerCase().includes('title:'));
 
   entries.forEach(raw => {
     const fields = {
@@ -271,14 +269,26 @@ const parseTestCasesFromContent = (content, testType, fileName) => {
 
     Object.keys(fields).forEach(key => {
       if (key === "file_name") return;
+
       const regex = new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z][^:]*?:|\\n*$)`, 'i');
       const match = raw.match(regex);
+
       if (match) {
-        fields[key] = match[1].trim();
+        let value = match[1].trim();
+
+        // Special handling for Test priority
+        if (key === "Test priority") {
+          const normalized = value.toLowerCase();
+          if (normalized.includes("high")) value = "High";
+          else if (normalized.includes("medium")) value = "Medium";
+          else if (normalized.includes("low")) value = "Low";
+          else value = ""; // Discard unknown or junk values
+        }
+
+        fields[key] = value;
       }
     });
 
-    // Skip if no TCID or improperly formatted block
     if (!fields["TCID"] || fields["TCID"].toLowerCase().includes("test cases")) return;
 
     fields["Type"] = fields["Test Nature"];
@@ -292,28 +302,7 @@ const parseTestCasesFromContent = (content, testType, fileName) => {
 
 
 
-const selectedHistoryDocData = [
-  {
-    id: 'FUNC_01',
-    date: '15 May,2025',
-    name: 'AIPlatform_Testing_Reference',
-    tag: '#FunctionalTest',
-  },
-  {
-    id: 'FUNC_01',
-    date: '10 May,2025',
-    name: 'GenAI_Functional_Testing_Document',
-    tag: '#APITest',
-  },
-  {
-    id: 'FUNC_01',
-    date: '02 May,2025',
-    name: 'GenAI_TestCase_Suite',
-    tag: '#InputValidations',
-  },
-];
-
-const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = {},selectedDocs, generationLoading = false, progress = 0 }) => {
+const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId, selectedSubTypes, results = {},selectedDocs, generationLoading = false, progress = 0,  showTabs = true }) => {
   const [activeTab, setActiveTab] = useState('All'); // not index 0
   const [parsedData, setParsedData] = useState([]);
   const [headers, setHeaders] = useState([]);
@@ -333,36 +322,40 @@ const TestCaseTable = ({ selectedHistoryDoc, fromHistory, taskId, token, fileId,
   }, [selectedSubTypes]);
 
 useEffect(() => {
- if (
-  !results ||
-  typeof results !== "object"
-) {
-  console.warn("⚠️ Invalid results structure:", results);
-  return;
-}
+  if (!results || typeof results !== "object") {
+    console.warn("⚠️ Invalid results structure:", results);
+    return;
+  }
 
-const finalSubtypeMap =
-  results.all_documents?.Final_subtypes ||  // normal API format
-  results.results?.all_documents?.Final_subtypes || // history API format
-  null;
+  const finalSubtypeMap =
+    results.final_results?.Final_subtypes ||  // ✅ NEW API format
+    results.all_documents?.Final_subtypes ||  // Normal
+    results.results?.all_documents?.Final_subtypes || // History
+    null;
 
-if (!finalSubtypeMap || typeof finalSubtypeMap !== 'object') {
-  console.warn("⚠️ Final_subtypes not found in results:", results);
-  return;
-}
+  if (!finalSubtypeMap || typeof finalSubtypeMap !== 'object') {
+    console.warn("⚠️ Final_subtypes not found in results:", results);
+    return;
+  }
 
   const groupedByFile = {};
-  
+
   Object.entries(finalSubtypeMap).forEach(([fileId, fileData]) => {
     if (!fileData || typeof fileData !== "object") return;
 
     const fileName =
       fileData.document_name ||
-      selectedDocs?.find(doc => doc._id === fileId)?.name ||
+      selectedDocs?.find(doc => doc._id === fileId || doc.file_id === fileId)?.name ||
       `File-${fileId}`;
 
-    const contentArray = fileData.content || [];
-    const seenTCIDs = new Set(); // Per file
+    // 👉 If "content" is a string (not array), normalize it
+    const contentArray = Array.isArray(fileData.content)
+      ? fileData.content
+      : typeof fileData.content === 'string'
+        ? [fileData.content]
+        : [];
+
+    const seenTCIDs = new Set();
 
     contentArray.forEach(content => {
       if (!content || typeof content !== "string") return;
@@ -389,9 +382,6 @@ if (!finalSubtypeMap || typeof finalSubtypeMap !== 'object') {
   setHeaders(dynamicHeaders);
   setLoading(false);
 }, [results, selectedDocs]);
-
-
-
 
 
 const handleTabClick = (label) => {
@@ -485,7 +475,7 @@ useEffect(() => {
 
 
   return (
-    <Box padding={'0px 32px'} mb={5}>
+    <Box padding={'0px 40px'} mb={5}>
 {generationLoading ? (
 <Box
     width="100%"
@@ -513,7 +503,7 @@ useEffect(() => {
         Test Case Generation in Progress...
       </Typography>
 
-      <Box display="flex" alignItems="center" gap={2} width="100%" maxWidth={500}>
+      <Box display="flex" alignItems="center" gap={2} width="100%" maxWidth={350}>
         <Box flex={1}>
           <LinearProgress
             variant="determinate"
@@ -539,7 +529,7 @@ useEffect(() => {
         </Typography>
       )}
 
-      <Typography mt={2} fontSize={12} color="text.disabled">
+      <Typography mt={2} fontSize={14} color="text.disabled">
         You will see results once all test cases are ready.
       </Typography>
     </Box>
@@ -547,7 +537,27 @@ useEffect(() => {
 
 ) : (
   <>
+  {/* 🆕 Show message if results.error is present */}
+    {results?.error && (
+      <Box
+    display="flex"
+    flexDirection='column'
+    justifyContent="center"
+    alignItems="center"
+    height="calc(90vh - 140px)" // Adjust if you have a header or padding
+  >
+        <Typography variant="h6" color="text.secondary" fontWeight={500}>
+          {results.error}
+        </Typography>
+        <Typography variant="body2" color="text.disabled" mt={1}>
+          Try uploading documents and generating test cases to view results here.
+        </Typography>
+      </Box>
+    )}
+
     {/* 👉 Everything below only renders when not generating */}
+    {!results?.error && (
+    <>
       {/* Export Button Row */}
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <Button
@@ -575,9 +585,8 @@ useEffect(() => {
           />
         </Button>
       </Box>
-
     
-    {!selectedHistoryDoc && (
+{!selectedHistoryDoc && showTabs && (
   <Box className="custom-tab-container" ml={3}>
     {tabLabels.map((label) => {
       const key = label.toLowerCase();
@@ -599,22 +608,6 @@ useEffect(() => {
     })}
   </Box>
 )}
-
-
-
-      {/* Conditional Heading */}
-     {/* {selectedHistoryDoc && (
-  <Box ml={2.5} mb={2} mt={3}>
-    <Typography fontWeight={600} fontSize={16}>{selectedHistoryDoc.name}</Typography>
-    {selectedHistoryDoc.time && (
-      <Typography fontSize={12} color="text.secondary">
-        Generated at {selectedHistoryDoc.time}
-      </Typography>
-    )}
-  </Box>
-)} */}
-
-
 
 {Object.entries(filterByTab(allTestCases, activeTab)).map(([fileName, testCases], docIndex) => (
         <Box key={docIndex} mb={4} ml={3}>
@@ -647,6 +640,8 @@ useEffect(() => {
           </Paper>
         </Box>
       ))}
+      </>
+  )}
 </>
 )}
     </Box>
