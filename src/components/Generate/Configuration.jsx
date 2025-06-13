@@ -451,7 +451,7 @@ import NewDocumentModal from './AddDocumentModal';
 import './configuration.css';
 
 
-const Configuration = ({ selectedDocs, setSelectedDocs, selectedUseCase, setSelectedUseCase, selectedSubTypes, setSelectedSubTypes, onGenerate, dataSpaceId, generationId, selectedLLM, setSelectedLLM, temperature, setTemperature, }) => {
+const Configuration = ({ selectedDocs, setSelectedDocs, selectedUseCase, setSelectedUseCase, selectedSubTypes, setSelectedSubTypes, onGenerate, dataSpaceId, generationId, selectedLLM, setSelectedLLM,selectedOpenAIVersion,setSelectedOpenAIVersion, temperature, setTemperature, }) => {
    const [documentsData, setDocumentsData] = useState([]);
   const [collapsed, setCollapsed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -499,24 +499,20 @@ const fetchDocuments = async () => {
 
   const handleDelete = async () => {
     if (!dataSpaceId || selectedDocs.length === 0) return;
-
     try {
       const token = localStorage.getItem("token");
-
       await adminAxios.delete(`/api/v1/dataspaces/${dataSpaceId}/documents/batch-delete`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json"
         },
         data: {
-document_ids: selectedDocs.map(doc => doc.file_id)
+          document_ids: selectedDocs.map(doc => doc.file_id)
         }
       });
-
-      // Remove deleted docs from state
-      setDocumentsData(prev =>
-        prev.filter(doc => !selectedDocs.includes(doc.file_id))
-      );
+      // ✅ Refresh the document list from backend
+      await fetchDocuments();
+      // ✅ Clear selection
       setSelectedDocs([]);
     } catch (error) {
       console.error("❌ Error deleting documents:", error.response?.data || error.message);
@@ -578,16 +574,24 @@ document_ids: selectedDocs.map(doc => doc.file_id)
 const handleGenerate = async () => {
   if (selectedDocs.length === 0 || selectedSubTypes.length === 0) return;
 
+  // Dynamically prepare the config payload
+  const config = {
+    llm_model: selectedLLM === 'mistral' ? 'Mistral' : 'Openai',
+    temperature: temperature,
+    use_case: ['test case generation'],
+    subtypes: selectedSubTypes.map(type =>
+      type.toLowerCase().replace(/\s|-/g, '_')
+    ),
+  };
+
+  // ✅ Conditionally add llm_version if OpenAI is selected
+  if (selectedLLM === 'openai' && selectedOpenAIVersion) {
+    config.llm_version = selectedOpenAIVersion;
+  }
+
   const payload = {
-documents: selectedDocs.map(doc => doc.file_id),
-    config: {
-      llm_model: selectedLLM === 'mistral' ? 'Mistral' : 'GPT-4',
-      temperature: temperature,
-      use_case: ['test case generation'],
-      subtypes: selectedSubTypes.map(type =>
-        type.toLowerCase().replace(/\s|-/g, '_')
-      ),
-    },
+    documents: selectedDocs.map(doc => doc.file_id),
+    config,
   };
 
   try {
@@ -791,99 +795,126 @@ onChange={() => toggleDocument(doc)}
         )}
 
         {/* Additional Settings */}
-        <Box mt={4}>
-          <Typography className="configuration_subtypeHeading">Additional Settings</Typography>
+       <Box mt={4}>
+  <Typography className="configuration_subtypeHeading">Additional Settings</Typography>
 
-          <Paper elevation={0} className="configuration_subtypeWrapper">
+  <Paper elevation={0} className="configuration_subtypeWrapper">
+    {/* LLM Model Heading */}
+    <Typography className="configuration_SettingsTitle" mb={1}>
+      LLM Model
+    </Typography>
 
-            {/* LLM Model Heading */}
-            <Typography className="configuration_SettingsTitle" mb={1}>
-              LLM Model
-            </Typography>
+    {/* Radio Buttons Row */}
+    <Box display="flex" flexDirection="row" gap={4} alignItems="center" ml={3}>
+      <FormControlLabel
+        control={
+          <Radio
+            checked={selectedLLM === 'mistral'}
+            onChange={() => setSelectedLLM('mistral')}
+            value="mistral"
+            name="llm-model"
+            sx={{
+              p: 0.5,
+              '&.Mui-checked': { color: '#000080' },
+              '& svg': { fontSize: 20 }
+            }}
+          />
+        }
+        label={<Typography fontSize={15}>Mistral</Typography>}
+      />
+      <FormControlLabel
+        control={
+          <Radio
+            checked={selectedLLM === 'openai'}
+            onChange={() => setSelectedLLM('openai')}
+            value="openai"
+            name="llm-model"
+            sx={{
+              p: 0.5,
+              '&.Mui-checked': { color: '#000080' },
+              '& svg': { fontSize: 20 }
+            }}
+          />
+        }
+        label={<Typography fontSize={15}>Open AI</Typography>}
+      />
+    </Box>
 
-            {/* Radio Buttons Row */}
-            <Box display="flex" flexDirection="row" gap={4} alignItems="center" ml={3}>
-              <FormControlLabel
-                control={
-                  <Radio
-                    checked={selectedLLM === 'mistral'}
-                    onChange={() => setSelectedLLM('mistral')}
-                    value="mistral"
-                    name="llm-model"
-                    sx={{
-                      p: 0.5,
-                      '&.Mui-checked': { color: '#000080' },
-                      '& svg': { fontSize: 20 }
-                    }}
-                  />
-                }
-                label={<Typography fontSize={15}>Mistral</Typography>}
-              />
-              <FormControlLabel
-                control={
-                  <Radio
-                    checked={selectedLLM === 'gpt4'}
-                    onChange={() => setSelectedLLM('gpt4')}
-                    value="gpt4"
-                    name="llm-model"
-                    sx={{
-                      p: 0.5,
-                      '&.Mui-checked': { color: '#000080' },
-                      '& svg': { fontSize: 20 }
-                    }}
-                  />
-                }
-                label={<Typography fontSize={15}>GPT-4</Typography>}
-              />
-            </Box>
-
-            {/* Temperature Heading */}
-            <Typography className="configuration_SettingsTitle" mt={3}>
-              Temperature
-            </Typography>
-
-            {/* Slider Row */}
-            <Box display="flex" alignItems="center" gap={2} mt={1} ml={3}>
-              <Slider
-                value={temperature}
-onChange={(e, newVal) => {
-  setTemperature(newVal);
-  setHasTouchedTemperature(true);
-}}
-                min={0}
-                max={1}
-                step={0.1}
-                sx={{
-                  width: 160,
-                  color: '#000080', // default MUI blue, or you can use '#000080'
-                  '& .MuiSlider-thumb': {
-                    width: 20,
-                    height: 20,
-                  },
-                  '&:hover': {
-                    boxShadow: 'none',
-                    background: 'transparent', // removes glow
-                  },
-                }}
-              />
-              <Box
-                sx={{
-                  minWidth: 40,
-                  px: 1,
-                  py: 0.5,
-                  border: '1px solid #ccc',
-                  borderRadius: '8px',
-                  textAlign: 'center',
-                  fontSize: '14px'
-                }}
-              >
-                {temperature}
-              </Box>
-            </Box>
-
-          </Paper>
+    {/* Conditional: Open AI Versions */}
+    {selectedLLM === 'openai' && (
+      <>
+        <Typography className="configuration_SettingsTitle" mt={2}>
+          Versions
+        </Typography>
+        <Box display="flex" flexDirection="row" gap={3} alignItems="center" ml={3} mt={1}>
+          {['Gpt-3.5-Turbo', 'Gpt-4', 'Gpt-4o'].map((version) => (
+            <FormControlLabel
+              key={version}
+              control={
+                <Radio
+                  checked={selectedOpenAIVersion === version}
+                  onChange={() => setSelectedOpenAIVersion(version)}
+                  value={version}
+                  name="openai-version"
+                  sx={{
+                    p: 0.5,
+                    '&.Mui-checked': { color: '#000080' },
+                    '& svg': { fontSize: 18 }
+                  }}
+                />
+              }
+              label={<Typography fontSize={14}>{version}</Typography>}
+            />
+          ))}
         </Box>
+      </>
+    )}
 
+    {/* Temperature Heading */}
+    <Typography className="configuration_SettingsTitle" mt={3}>
+      Temperature
+    </Typography>
+
+    {/* Slider Row */}
+    <Box display="flex" alignItems="center" gap={2} mt={1} ml={3}>
+      <Slider
+        value={temperature}
+        onChange={(e, newVal) => {
+          setTemperature(newVal);
+          setHasTouchedTemperature(true);
+        }}
+        min={0}
+        max={1}
+        step={0.1}
+        sx={{
+          width: 160,
+          color: '#000080',
+          '& .MuiSlider-thumb': {
+            width: 20,
+            height: 20,
+          },
+          '&:hover': {
+            boxShadow: 'none',
+            background: 'transparent',
+          },
+        }}
+      />
+      <Box
+        sx={{
+          minWidth: 40,
+          px: 1,
+          py: 0.5,
+          border: '1px solid #ccc',
+          borderRadius: '8px',
+          textAlign: 'center',
+          fontSize: '14px'
+        }}
+      >
+        {temperature}
+      </Box>
+    </Box>
+  </Paper>
+</Box>
 
       </Box>
 
@@ -937,14 +968,18 @@ onChange={(e, newVal) => {
   <Typography className="configuration_blockTitle">Additional Settings</Typography>
 
   {/* LLM Model Summary - show only if selected */}
-  {selectedLLM && (
-    <Box display="flex" alignItems="center" mt={1} ml={2}>
-      <Typography className="configuration_summaryLabel">LLM Model:</Typography>
-      <Box className="configuration_chip">
-        {selectedLLM.toUpperCase()}
-      </Box>
+ {selectedLLM && (
+  <Box display="flex" alignItems="center" mt={1} ml={2}>
+    <Typography className="configuration_summaryLabel">LLM Model:</Typography>
+    <Box className="configuration_chip">
+      {selectedLLM.toUpperCase()}
+      {selectedLLM === 'openai' && selectedOpenAIVersion && (
+        <> ({selectedOpenAIVersion.toUpperCase()})</>
+      )}
     </Box>
-  )}
+  </Box>
+)}
+
 
   {/* Temperature Summary - show only if user interacted */}
   {hasTouchedTemperature && (
