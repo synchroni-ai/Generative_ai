@@ -36,42 +36,84 @@ async def get_document_config(
     return {"config": config}
 
 #modified
+# @router.post("/configs")
+# async def save_multi_document_config(
+#     config_data: MultiDocumentConfigModel,
+#     db: AsyncIOMotorDatabase = Depends(get_db),
+#     current_user: User = Depends(deps.get_current_user),
+# ):
+#     # Validate document IDs
+#     valid_document_ids = []
+#     for doc_id in config_data.documents:
+#         try:
+#             obj_id = ObjectId(doc_id)
+#         except Exception:
+#             raise HTTPException(status_code=400, detail=f"Invalid ObjectId format: {doc_id}")
+        
+#         document = await db["documents"].find_one({"_id": obj_id})
+#         if not document:
+#             raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
+        
+#         valid_document_ids.append(obj_id)
+
+#     # Proceed to save config with validated document ObjectIds
+#     config_doc = {
+#         "documents": valid_document_ids,
+#         "config": config_data.config.dict(),
+#         "created_by": config_data.created_by,
+#         "created_at": config_data.created_at or datetime.utcnow(),
+#     }
+
+#     result = await db["configurations"].insert_one(config_doc)
+
+#     return {
+#         "message": "Configuration saved",
+#         "config_id": str(result.inserted_id),
+#         "created_at": config_doc["created_at"],
+#     }
 @router.post("/configs")
 async def save_multi_document_config(
     config_data: MultiDocumentConfigModel,
-    db: AsyncIOMotorDatabase = Depends(get_db),
+    db: AsyncIOMotorDatabase = Depends(deps.get_db),
     current_user: User = Depends(deps.get_current_user),
 ):
-    # Validate document IDs
-    valid_document_ids = []
-    for doc_id in config_data.documents:
-        try:
-            obj_id = ObjectId(doc_id)
-        except Exception:
-            raise HTTPException(status_code=400, detail=f"Invalid ObjectId format: {doc_id}")
-        
-        document = await db["documents"].find_one({"_id": obj_id})
-        if not document:
-            raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
-        
-        valid_document_ids.append(obj_id)
+    try:
+        # Validate document IDs
+        valid_document_ids = []
+        for doc_id in config_data.documents:
+            try:
+                obj_id = ObjectId(doc_id)
+            except Exception:
+                raise HTTPException(status_code=400, detail=f"Invalid ObjectId format: {doc_id}")
 
-    # Proceed to save config with validated document ObjectIds
-    config_doc = {
-        "documents": valid_document_ids,
-        "config": config_data.config.dict(),
-        "created_by": config_data.created_by,
-        "created_at": config_data.created_at or datetime.utcnow(),
-    }
+            document = await db["documents"].find_one({"_id": obj_id})
+            if not document:
+                raise HTTPException(status_code=404, detail=f"Document not found: {doc_id}")
 
-    result = await db["configurations"].insert_one(config_doc)
+            valid_document_ids.append(obj_id)
 
-    return {
-        "message": "Configuration saved",
-        "config_id": str(result.inserted_id),
-        "created_at": config_doc["created_at"],
-    }
+        # Proceed to save config with validated document ObjectIds
+        config_doc = {
+            "documents": valid_document_ids,
+            "config": config_data.config.dict(),
+            "created_by": config_data.created_by,
+            "created_at": config_data.created_at or datetime.utcnow(),
+        }
 
+        result = await db["configurations"].insert_one(config_doc)
+
+        return {
+            "message": "Configuration saved",
+            "config_id": str(result.inserted_id),
+            "created_at": config_doc["created_at"],
+        }
+
+    except ValueError as ve:
+        raise HTTPException(status_code=422, detail=str(ve)) # Return 422 for validation errors
+    except HTTPException as he:
+        raise he  # Re-raise HTTPExceptions
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
 
 
 @router.get("/configs")
