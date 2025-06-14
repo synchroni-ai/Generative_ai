@@ -585,9 +585,9 @@ const handleGenerate = async () => {
   };
 
   // ✅ Conditionally add llm_version if OpenAI is selected
-  if (selectedLLM === 'openai' && selectedOpenAIVersion) {
-    config.llm_version = selectedOpenAIVersion;
-  }
+if (selectedLLM === 'openai' && selectedOpenAIVersion) {
+  config.llm_version = selectedOpenAIVersion.toLowerCase().replace(/\s+/g, '-');
+}
 
   const payload = {
     documents: selectedDocs.map(doc => doc.file_id),
