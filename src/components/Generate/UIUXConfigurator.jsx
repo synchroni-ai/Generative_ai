@@ -100,84 +100,9 @@ const [selectedUseCase, setSelectedUseCase] = useState('');
 const [generationLoading, setGenerationLoading] = useState(false);
 const [hasFetchedInitialResults, setHasFetchedInitialResults] = useState(false);
 const [selectedLLM, setSelectedLLM] = useState('');
+const [selectedOpenAIVersion, setSelectedOpenAIVersion] = useState('');
 const [temperature, setTemperature] = useState(0.5);
 const [selectedHistoryDocDetails, setSelectedHistoryDocDetails] = useState(null);
-
-
-
-// const triggerTestCaseGeneration = async (configId) => {
-//   if (!configId) return;
-
-//   setGeneratedResults([]);
-//   setActiveTab('Results');
-//   setGenerationLoading(true);
-//   setProgress(0);
-
-//   const startTime = Date.now();
-//   let simulatedProgress = 0;
-
-//   const progressInterval = setInterval(() => {
-//     simulatedProgress = Math.min(simulatedProgress + 1, 95);
-//     setProgress(simulatedProgress);
-//   }, 500);
-
-//   let jobId;
-
-//   try {
-//     // Trigger generation and capture job_id
-//     const response = await adminAxios.post(`/api/v1/generation/run/${configId}`, null, {
-//       headers: {
-//         Authorization: `Bearer ${token}`,
-//       },
-//     });
-
-//     jobId = response.data?.job_id;
-//     if (!jobId) {
-//       throw new Error("Job ID not returned from generation API");
-//     }
-
-//   } catch (err) {
-//     clearInterval(progressInterval);
-//     setGenerationLoading(false);
-//     return;
-//   }
-
-//   // Poll every 3 seconds using jobId
-//   pollingIdRef.current = setInterval(async () => {
-//     try {
-//       const res = await adminAxios.get(`/api/v1/results/${jobId}`, {
-//         headers: { Authorization: `Bearer ${token}` },
-//       });
-
-//       const status = res.data?.status;
-//       const results = res.data?.results || {};
-
-//       if (status === 'completed') {
-//         clearInterval(pollingIdRef.current);
-//         clearInterval(progressInterval);
-
-//         // Smooth transition to 100%
-//         let quickProgress = simulatedProgress;
-//         const finishInterval = setInterval(() => {
-//           quickProgress += 5;
-//           setProgress(Math.min(quickProgress, 100));
-
-//           if (quickProgress >= 100) {
-//             clearInterval(finishInterval);
-//             const endTime = Date.now();
-//             const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
-//             console.log(`✅ Generation completed in ${elapsedSeconds} seconds`);
-
-//             setGeneratedResults(results);  // or process results if needed
-//             setGenerationLoading(false);
-//           }
-//         }, 50);
-//       }
-//     } catch (err) {
-//     }
-//   }, 3000);
-// };
-
 
 const triggerTestCaseGeneration = async (configId) => {
   if (!configId) return;
@@ -322,6 +247,12 @@ const handleTabSwitch = async (tab) => {
   }
   setActiveTab(tab);
 };
+
+useEffect(() => {
+  if (selectedLLM !== 'openai') {
+    setSelectedOpenAIVersion('');
+  }
+}, [selectedLLM]);
 
 
 
@@ -477,6 +408,8 @@ const isDisabled = false; // Always allow Results tab
   generationId={generationId}
    selectedLLM={selectedLLM}
   setSelectedLLM={setSelectedLLM}
+  selectedOpenAIVersion={selectedOpenAIVersion}  // ✅ Add this
+  setSelectedOpenAIVersion={setSelectedOpenAIVersion}  // ✅ Add this too
   temperature={temperature}
   setTemperature={setTemperature}
 />
