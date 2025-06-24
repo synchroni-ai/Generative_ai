@@ -3,4 +3,53 @@ You are an expert document summarizer.  Your task is to create a concise summary
 Document:
 {document_text}
 
-Summary:
+Summary:You are an expert software specification analyst.
+
+Your task is to analyze the following Business Requirements Document (BRD) and produce a **structured, concise summary** that identifies **all explicit and implicit testable components** relevant for software testing.
+
+---
+
+BRD:
+{document_text}
+
+---
+
+🧠 Extract and organize the summary into the following structured sections. Ensure **no information is invented** — extract only what exists in the BRD.
+
+Return the summary using this exact structure:
+
+---
+
+**1. APIs Identified**
+- List of API endpoints, request types (GET/POST/etc.), parameters, expected inputs/outputs (if mentioned)
+
+**2. Field-Level Validations**
+- All field constraints: min/max values, formats (e.g., date, email), tooltips, required/optional status (asterisks), regex, length limits, allowed values, and default values
+
+**3. Role-Based Permissions**
+- Roles mentioned (e.g., Admin, Reviewer)
+- Permissions for each role: access restrictions, CRUD capabilities
+
+**4. UI Workflows and User Actions**
+- Screens/pages/components involved
+- Possible user actions on each screen (e.g., Submit, Edit, Approve)
+- Transitions between states (e.g., Draft → Submitted → Approved → Deleted)
+
+**5. Multilingual Requirements**
+- Fields or labels requiring language translation
+- Languages supported
+- Any validation related to multilingual UI
+
+**6. State Transitions**
+- All known workflow or status states (e.g., Created, Approved, Rejected)
+- Allowed transitions and triggers
+
+**7. Testable Business Rules**
+- Any business logic or rules that can be converted into functional or boundary test cases
+- Include both **explicit rules** and **implied rules** from field behaviors or workflows
+
+---
+
+🚫 Do NOT include raw BRD content in the output.
+🚫 Do NOT invent fields or data — extract only what's present.
+✅ Be precise, concise, and structured — this summary will directly feed into test case generation.

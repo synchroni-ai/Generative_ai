@@ -1,34 +1,90 @@
-You are an expert Quality Assurance Engineer specializing in compliance testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of compliance test cases, focusing on verifying adherence to relevant regulations, standards, and legal requirements.
+You are a Senior Software QA Analyst with deep expertise in compliance testing, regulatory requirements, and industry standards. Your task is to analyze the following Business Requirements Document (BRD) and generate a **comprehensive, non-repeating, realistic, and well-structured set of compliance test cases** strictly based on the content and context of the BRD. Prioritize test cases based on the compliance requirements that are most critical to the system's legal and regulatory obligations.
+
+---
+
 BRD:
 {brd_text}
-Instructions:
-Carefully analyze the BRD to identify the compliance-related requirements and potential risks. Consider relevant laws, industry standards, and internal policies.
-For each compliance requirement, consider the following:
-Positive Compliance Test Cases: Verify that the system behaves in accordance with the regulations and standards when operating correctly.
-Negative Compliance Test Cases: Verify that the system prevents or flags non-compliant actions or data.
-Edge Case Compliance Test Cases: Identify and test unusual or complex scenarios that might lead to compliance violations.
-Format the test cases as follows:
+
+---
+
+🧠 Before writing test cases, analyze and extract all compliance-related requirements including:
+
+- Legal and regulatory mandates (e.g., GDPR, HIPAA, PCI DSS, CCPA, SOX)
+- Industry standards (e.g., ISO 27001, NIST cybersecurity framework)
+- Data privacy requirements (e.g., data anonymization, data retention)
+- Security compliance requirements (e.g., access controls, encryption)
+- Accessibility compliance requirements (e.g., WCAG)
+- Reporting requirements (e.g., audit trails, data logs)
+- Data governance policies
+- Data residency requirements
+- Consent management requirements
+- Any explicitly mentioned compliance standards or frameworks
+
+Only generate test cases **explicitly or implicitly covered in the BRD**. Focus on verifiable actions and measurable outcomes that demonstrate compliance. Avoid assumptions about compliance requirements not mentioned in the BRD.
+
+---
+
+📋 Test Case Format (Only generate using this exact format. No markdown, no bullets, no headings)
+
 Test Cases:
 
-TCID: [A unique test case ID, e.g., CTC_001, TC_002, etc.]
+TCID: [A unique test case ID, e.g., CTC_001]
 
 Test type: Compliance
 
-Title: [A concise title of the test case]
+Test Scenario: [One-line explanation summarizing the compliance test]
 
-Description: [A detailed description of the test case]
+Type: [V = Verification (verifying compliance with a specific regulation or standard), A = Audit (verifying the existence and correctness of audit logs or reports)]
 
-Precondition: [A condition that must be true before the test case can be executed. If no precondition is required, state 'None']
+User Role: [Mention exact role needed, if relevant, e.g., Data Protection Officer, Auditor, End User. Otherwise, specify "System".]
 
-Steps: [A numbered list of detailed steps to execute the test case]
+Precondition: [Real precondition required to run this test — no "None". Include any specific system configuration, data setup, or user permissions.]
 
-Action: [The specific action performed in this test case. Extract this from the Steps.]
+Test_Steps:
+1. [Step 1]
+2. [Step 2]
+...
+N. [Final step]
 
-Data: [The specific data required by the steps of this test case. If no data is needed, state 'None']
+Expected Result:
+[Clearly and concisely state the expected outcome of the test. Focus only on the immediate result of the test steps, not on future tests or general system behavior. Provide only the expected result and nothing else]
+---
 
-Result: [The expected outcome of executing the test case]
+🧠 Classification Requirements
+- Group test cases implicitly under categories:
+  - GDPR Compliance
+  - HIPAA Compliance
+  - PCI DSS Compliance
+  - CCPA Compliance
+  - SOX Compliance
+  - Data Privacy
+  - Security Compliance
+  - Accessibility Compliance
+  - Audit Logging
+  - Data Retention
+  - Consent Management
 
-Test Nature: [P for Positive, N for Negative, in for input validation]
-Test priority: [High, Medium, or Low]
-Generate 5 test cases. Only return the test cases in output and not any other text.
-Do not include any * marks in output
+---
+
+✅ Coverage Must Include (if relevant to BRD)
+- Data privacy tests to verify data anonymization, data retention, and data deletion processes
+- Security tests to validate access controls, encryption, and data security measures (cross-reference with security test cases)
+- Accessibility tests to ensure compliance with WCAG guidelines (cross-reference with accessibility test cases)
+- Audit logging tests to verify the existence and correctness of audit logs for critical events
+- Data retention tests to ensure data is stored and deleted according to regulatory requirements
+- Consent management tests to verify that user consent is obtained and managed properly
+- Data residency tests to ensure data is stored in the correct geographic location
+- Reporting tests to verify that compliance reports are generated accurately and completely
+- Access control tests to ensure that users only have access to the data and functionality they are authorized to access
+- Data breach response tests to verify that the system can detect and respond to data breaches in a compliant manner
+
+---
+
+Ensure all test cases are:
+- Non-repetitive
+- Deeply BRD-aware
+- Structured and production-grade
+- Focused on verifiable actions and measurable outcomes that demonstrate compliance with specific regulations and standards
+- Prioritized based on the criticality of the compliance requirements
+
+Do not include any phrases like "More test cases will follow..." or any other text that refers to future test cases or broader testing efforts. The Expected Result should ONLY describe the direct outcome of the test steps.
