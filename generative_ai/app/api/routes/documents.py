@@ -846,8 +846,6 @@ async def get_testcases_by_dataspace(
                     for doc_id in documents_data if subtype in documents_data[doc_id] and doc_id in document_name_map
                 }
 
-            # *********************MODIFIED SECTION****************************
-            # Create the Final_subtypes structure WITH DEDUPLICATION
             for doc_id, subtypes in documents_data.items():
                 if "all_subtypes" in subtypes and doc_id in document_name_map:
                     document_name = document_name_map[doc_id]

@@ -11,7 +11,7 @@ from celery.result import AsyncResult
 from celery import current_app as celery_app
 from typing import Optional
 import pprint
-
+from app.services.excel_exporter import flatten_results_to_excel
 from app.db.mongodb import get_db
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
@@ -19,6 +19,7 @@ from app.models import TestResult,User
 from app.api import deps  # Import the shared dependency for user authentication
 from fastapi.responses import StreamingResponse
 from app.services.csv_exporter import flatten_results_to_csv
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -165,8 +166,8 @@ def parse_test_case_block(block: str) -> dict:
 
 
 
-@router.get("/results/{job_id}/csv")
-async def download_test_results_csv(
+@router.get("/results/{job_id}/excel")
+async def download_test_results_excel(
     job_id: str,
     subtype: Optional[str] = Query(None),
     db: AsyncIOMotorDatabase = Depends(get_db),
@@ -211,13 +212,13 @@ async def download_test_results_csv(
 
         normalized_docs[doc_id] = {"all_subtypes": all_subtypes}
 
-    csv_string = flatten_results_to_csv({"documents": normalized_docs})
+    excel_file = flatten_results_to_excel({"documents": normalized_docs})
 
     response = StreamingResponse(
-        iter([csv_string]),
-        media_type="text/csv"
+        excel_file,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    response.headers["Content-Disposition"] = f"attachment; filename=job_{job_id}_results.csv"
+    response.headers["Content-Disposition"] = f"attachment; filename=job_{job_id}_results.xlsx"
     return response
 
 

@@ -6,8 +6,10 @@ __pycache__/
 /tmp/
 chay/
 venv/
-
+g3/
 test_cases.csv
 test_cases.txt
 
 output_files/
+# Ignore Python virtual environment
+generative_ai/g3/Lib/
