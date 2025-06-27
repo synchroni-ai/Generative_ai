@@ -2,6 +2,7 @@ import os
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 import datetime
+from typing import Optional
 
 # Load environment variables from a .env file
 load_dotenv()
@@ -23,12 +24,15 @@ try:
 except Exception:
     REFRESH_TOKEN_EXPIRE_MINUTES = 10080
 
+from typing import Optional  # Keep this at the top of your config.py
+
 # --- MongoDB Configuration ---
-MONGO_URI: str | None = os.getenv("MONGO_URI")
-MONGO_DB_NAME: str | None = os.getenv("MONGO_DB_NAME")
+MONGO_URI: Optional[str] = os.getenv("MONGO_URI")
+MONGO_DB_NAME: Optional[str]= os.getenv("MONGO_DB_NAME")
+
 
 # --- AWS S3 Configuration ---
-AWS_ACCESS_KEY_ID: str | None = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY: str | None = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_REGION_NAME: str | None = os.getenv("AWS_REGION_NAME")
-S3_BUCKET_NAME: str | None = os.getenv("S3_BUCKET_NAME")
+AWS_ACCESS_KEY_ID: Optional[str] = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY: Optional[str] = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION_NAME: Optional[str] = os.getenv("AWS_REGION_NAME")
+S3_BUCKET_NAME: Optional[str] = os.getenv("S3_BUCKET_NAME")

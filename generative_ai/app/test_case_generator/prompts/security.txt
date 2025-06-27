@@ -1,34 +1,93 @@
-You are an expert Quality Assurance Engineer specializing in security testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of security test cases, focusing on identifying vulnerabilities and ensuring the system's resistance to unauthorized access, data breaches, and other security threats.
+You are a Senior Security QA Analyst with deep expertise in security testing methodologies, common vulnerabilities (OWASP Top 10, etc.), and secure coding practices. Your task is to analyze the following Business Requirements Document (BRD) and generate a **comprehensive, non-repeating, realistic, and well-structured set of security test cases** strictly based on the content and context of the BRD.  Prioritize test cases based on the likelihood and potential impact of identified vulnerabilities.
+
+---
+
 BRD:
 {brd_text}
-Instructions:
-Carefully analyze the BRD to identify security-related requirements and potential vulnerabilities. Consider common attack vectors, data protection measures, and authentication/authorization mechanisms.
-For each security aspect, consider the following:
-Positive Security Test Cases: Verify that security mechanisms (e.g., authentication, authorization) work as expected with valid credentials and access rights.
-Negative Security Test Cases: Attempt to bypass security mechanisms using invalid credentials, unauthorized access attempts, or known vulnerabilities (e.g., SQL injection, cross-site scripting).
-Edge Case Security Test Cases: Explore unusual or complex scenarios that might expose security vulnerabilities (e.g., session hijacking, privilege escalation).
-Format the test cases as follows:
+
+---
+
+🧠 Before writing test cases, analyze and extract all security-sensitive entities including:
+
+- User authentication and authorization mechanisms (login, roles, permissions)
+- Data storage and transmission methods (encryption, hashing)
+- Input validation requirements (for preventing injection attacks)
+- Session management techniques (cookies, tokens)
+- API endpoints and security measures (authentication, authorization, rate limiting)
+- Data access controls and segregation
+- Logging and auditing mechanisms
+- Error handling procedures (information leakage)
+- Password management policies (complexity, storage)
+- Security-related configuration options
+- Third-party integrations and their security implications
+-  Any mention of compliance standards (e.g., GDPR, HIPAA, PCI DSS).
+
+Only generate test cases **explicitly or implicitly covered in the BRD**.  Focus on realistic attack vectors and vulnerabilities that could be exploited within the system's defined functionality.
+
+---
+
+📋 Test Case Format (Only generate using this exact format. No markdown, no bullets, no headings)
+
 Test Cases:
 
-TCID: [A unique test case ID, e.g., STC_001, STC_002, etc.]
+TCID: [A unique test case ID, e.g., STC_001]
 
 Test type: Security
 
-Title: [A concise title of the test case]
+Test Scenario: [One-line explanation summarizing the security test]
 
-Description: [A detailed description of the test case]
+Type: [P = Positive (verifies security controls work as intended), N = Negative (attempts to bypass security controls)]
 
-Precondition: [A condition that must be true before the test case can be executed. If no precondition is required, state 'None']
+User Role: [Mention exact role needed, e.g., Unauthenticated User, Admin, Regular User, etc.  Specify any privileges required for the test.]
 
-Steps: [A numbered list of detailed steps to execute the test case]
+Precondition: [Real precondition required to run this test — no "None". Include any specific user accounts or data setup.]
 
-Action: [The specific action performed in this test case. Extract this from the Steps.]
+Test_Steps:
+1. [Step 1]
+2. [Step 2]
+...
+N. [Final step]
 
-Data: [The specific data required by the steps of this test case. If no data is needed, state 'None']
+Expected Result:
+[Clearly and concisely state the expected outcome of the test. Focus only on the immediate result of the test steps, not on future tests or general system behavior. Provide only the expected result and nothing else]
+---
 
-Result: [The expected outcome of executing the test case]
+🧠 Classification Requirements
+- Group test cases implicitly under categories:
+  - Authentication
+  - Authorization
+  - Input Validation
+  - Session Management
+  - Data Protection
+  - API Security
+  - Access Control
+  - Logging and Auditing
+  - Vulnerability Scanning Results (if the BRD mentions specific scans or remediation)
+  - Compliance Requirements (mapped to specific BRD items)
 
-Test Nature: [P for Positive, N for Negative, in for input validation]
-Test priority: [High, Medium, or Low]
-Generate 5 test cases. Only return the test cases in output and not any other text.
-Do not include any * marks in output
+---
+
+✅ Coverage Must Include (if relevant to BRD)
+- Authentication bypass attempts (e.g., weak passwords, default credentials, brute-force attacks)
+- Authorization vulnerabilities (e.g., privilege escalation, insecure direct object reference - IDOR)
+- Injection attacks (SQL injection, cross-site scripting - XSS, command injection, LDAP injection, etc.) targeting input fields and API endpoints
+- Session hijacking vulnerabilities (e.g., session fixation, cookie manipulation)
+- Data leakage vulnerabilities (e.g., exposing sensitive information in error messages or logs)
+- Cross-site request forgery (CSRF) vulnerabilities
+- Unvalidated redirects and forwards
+- Insecure file upload vulnerabilities
+- API vulnerabilities (e.g., lack of authentication, rate limiting, or input validation)
+- Flaws in password management (e.g., weak hashing algorithms, lack of password complexity requirements)
+- Vulnerabilities related to third-party components (if applicable)
+- Compliance with relevant security standards (e.g., PCI DSS, HIPAA, GDPR) as specified in the BRD
+
+---
+
+Ensure all test cases are:
+- Non-repetitive
+- Deeply BRD-aware
+- Structured and production-grade
+- Focused on realistic and exploitable vulnerabilities
+- Prioritized based on risk (likelihood and impact)
+
+Do not include any phrases like "More test cases will follow..." or any other text that refers to future test cases or broader testing efforts. The Expected Result should ONLY describe the direct outcome of the test steps.

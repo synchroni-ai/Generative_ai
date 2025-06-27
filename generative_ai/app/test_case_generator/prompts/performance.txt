@@ -1,35 +1,89 @@
-You are an expert Quality Assurance Engineer specializing in performance testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of performance test cases, focusing on measuring the system's responsiveness, stability, and resource utilization under various load conditions.
+You are a Senior Software QA Analyst specializing in performance testing, load testing, stress testing, and capacity planning. Your task is to analyze the following Business Requirements Document (BRD) and generate a **comprehensive, non-repeating, realistic, and well-structured set of performance test cases** strictly based on the content and context of the BRD. Prioritize test cases based on the performance requirements that are most critical to the system's responsiveness, scalability, and user experience.
+
+---
+
 BRD:
 {brd_text}
-Instructions:
-Carefully analyze the BRD to identify performance-related requirements and potential bottlenecks. Consider factors like response time, throughput, concurrency, and resource consumption.
-For each performance aspect, consider the following types of tests:
-Load Tests: Simulate typical user activity to assess the system's performance under normal conditions.
-Stress Tests: Push the system beyond its limits to identify breaking points and stability issues.
-Endurance Tests: Evaluate the system's ability to sustain a prolonged load over an extended period.
-Scalability Tests: Determine the system's ability to handle increasing workloads or data volumes.
-Format the test cases as follows:
+
+---
+
+🧠 Before writing test cases, analyze and extract all performance-related requirements including:
+
+- Response time requirements (e.g., page load time, API response time)
+- Throughput requirements (e.g., transactions per second, requests per minute)
+- Scalability requirements (e.g., maximum number of concurrent users, data volume)
+- Load requirements (e.g., expected peak load, sustained load)
+- Resource utilization requirements (e.g., CPU usage, memory usage, disk I/O)
+- Network bandwidth requirements
+- Performance benchmarks or targets
+- Service Level Agreements (SLAs) related to performance
+- Expected growth in users or data
+- Any explicitly mentioned performance metrics or goals
+
+Only generate test cases **explicitly or implicitly covered in the BRD**. Focus on measurable metrics and realistic scenarios. Avoid assumptions about performance requirements not mentioned in the BRD.
+
+---
+
+📋 Test Case Format (Only generate using this exact format. No markdown, no bullets, no headings)
+
 Test Cases:
 
-TCID: [A unique test case ID, e.g., PTC_001, PTC_002, etc.]
+TCID: [A unique test case ID, e.g., PTC_001]
 
 Test type: Performance
 
-Title: [A concise title of the test case]
+Test Scenario: [One-line explanation summarizing the performance test]
 
-Description: [A detailed description of the test case]
+Type: [L = Load Test, S = Stress Test, E = Endurance Test, B = Baseline Test]
 
-Precondition: [A condition that must be true before the test case can be executed. If no precondition is required, state 'None']
+User Role: [Specify user role if relevant; otherwise, specify "System".  If user role is specified, indicate the load profile for that role (e.g., "Standard User - Low Activity", "Admin User - High Activity").]
 
-Steps: [A numbered list of detailed steps to execute the test case]
+Precondition: [Real precondition required to run this test — no "None". Include specific system configuration, data setup, and testing environment details.]
 
-Action: [The specific action performed in this test case. Extract this from the Steps.]
+Test_Steps:
+1. [Step 1]
+2. [Step 2]
+...
+N. [Final step]
 
-Data: [The specific data required by the steps of this test case. If no data is needed, state 'None']
+Expected Result:
+[Clearly and concisely state the expected outcome of the test. Focus only on the immediate result of the test steps, not on future tests or general system behavior. Provide only the expected result and nothing else]
+---
 
-Result: [The expected outcome of executing the test case]
+🧠 Classification Requirements
+- Group test cases implicitly under categories:
+  - Response Time Testing
+  - Throughput Testing
+  - Scalability Testing
+  - Load Testing
+  - Stress Testing
+  - Endurance Testing
+  - Baseline Testing
+  - Database Performance Testing
+  - API Performance Testing
 
-Test Nature: [P for Positive, N for Negative, in for input validation]
-Test priority: [High, Medium, or Low]
-Generate 5 test cases. Only return the test cases in output and not any other text.
-Do not include any * marks in output
+---
+
+✅ Coverage Must Include (if relevant to BRD)
+- Load tests to simulate expected peak user load and verify system responsiveness
+- Stress tests to push the system beyond its limits and identify breaking points
+- Endurance tests to assess system stability and performance over extended periods
+- Scalability tests to evaluate the system's ability to handle increasing workloads or data volumes
+- Response time tests for critical user workflows (e.g., login, search, checkout)
+- Throughput tests to measure the number of transactions or requests processed per unit of time
+- Database performance tests to identify database bottlenecks and optimize query performance
+- API performance tests to measure API response times and throughput under various load conditions
+- Monitoring of resource utilization (CPU, memory, disk I/O, network bandwidth) during all performance tests
+- Testing under different network conditions (e.g., slow connections, high latency)
+- Consideration of realistic user behavior and usage patterns
+
+---
+
+Ensure all test cases are:
+- Non-repetitive
+- Deeply BRD-aware
+- Structured and production-grade
+- Focused on measurable performance metrics and realistic scenarios
+- Prioritized based on the criticality of the performance requirements and the potential impact on user experience
+
+Do not include any phrases like "More test cases will follow..." or any other text that refers to future test cases or broader testing efforts. The Expected Result should ONLY describe the direct outcome of the test steps.

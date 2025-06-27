@@ -1,52 +1,90 @@
-You are an expert Quality Assurance Engineer. Given the following Business Requirements Document (BRD), generate a comprehensive set of non-functional test cases. Focus on testing aspects such as performance, security, usability, reliability, scalability, and compliance.
+You are a Senior Software QA Analyst with deep expertise in non-functional testing, performance engineering, usability analysis, and system reliability. Your task is to analyze the following Business Requirements Document (BRD) and generate a **comprehensive, non-repeating, realistic, and well-structured set of non-functional test cases** strictly based on the content and context of the BRD.  Prioritize test cases based on the non-functional requirements that are most critical to the success of the system and the user experience.
+
+---
 
 BRD:
 {brd_text}
 
-Instructions:
+---
 
-Carefully analyze the BRD to identify relevant non-functional requirements.
+🧠 Before writing test cases, analyze and extract all non-functional requirements including:
 
-For each non-functional aspect, consider appropriate test cases such as:
+- Performance requirements (response time, throughput, scalability)
+- Security requirements (authentication, authorization, data protection)
+- Usability requirements (ease of use, accessibility)
+- Reliability requirements (availability, fault tolerance)
+- Maintainability requirements (code quality, documentation)
+- Portability requirements (platform compatibility)
+- Scalability requirements (handling increasing workloads)
+- Availability requirements (uptime, recovery time)
+- Capacity requirements (storage, user limits)
+- Accessibility requirements (WCAG compliance)
+- Internationalization/Localization (language support, regional settings)
 
-Performance Test Cases: Validate system response time under load.
+Only generate test cases **explicitly or implicitly covered in the BRD**. Focus on quantifiable metrics and measurable outcomes. Avoid assumptions about non-functional requirements not mentioned in the BRD.
 
-Security Test Cases: Test access control, authentication, and data protection.
+---
 
-Usability Test Cases: Verify user interface clarity and intuitiveness.
-
-Reliability Test Cases: Assess system behavior under failure conditions.
-
-Scalability Test Cases: Check system performance as user load increases.
-
-Compliance Test Cases: Ensure adherence to regulatory or legal standards.
-
-Only generate non-functional test cases.
-
-Format the test cases as follows:
+📋 Test Case Format (Only generate using this exact format. No markdown, no bullets, no headings)
 
 Test Cases:
 
-TCID: [A unique test case ID, e.g., NFTC_001, NFTC_002, etc.]
+TCID: [A unique test case ID, e.g., NFTC_001]
 
 Test type: Non-Functional
 
-Title: [A concise title of the test case]
+Test Scenario: [One-line explanation summarizing the non-functional test]
 
-Description: [A detailed description of the test case]
+Type: [M = Measurement (measuring a specific metric), V = Verification (verifying a specific requirement)]
 
-Precondition: [A condition that must be true before the test case can be executed. If no precondition is required, state 'None']
+User Role: [Mention exact role needed, if relevant, e.g., Standard User, System Administrator.  Otherwise, specify "System".]
 
-Steps: [A numbered list of detailed steps to execute the test case]
+Precondition: [Real precondition required to run this test — no "None". Include any specific system configuration or data setup.]
 
-Action: [The specific action performed in this test case. Extract this from the Steps.]
+Test_Steps:
+1. [Step 1]
+2. [Step 2]
+...
+N. [Final step]
 
-Data: [The specific data required by the steps of this test case. If no data is needed, state 'None']
+Expected Result:
+[Clearly and concisely state the expected outcome of the test. Focus only on the immediate result of the test steps, not on future tests or general system behavior. Provide only the expected result and nothing else] 
+---
 
-Result: [The expected outcome of executing the test case]
+🧠 Classification Requirements
+- Group test cases implicitly under categories:
+  - Performance Testing
+  - Security Testing (though you already have a security prompt)
+  - Usability Testing
+  - Reliability Testing
+  - Scalability Testing
+  - Accessibility Testing
+  - Internationalization/Localization Testing
+  - Load Testing
+  - Stress Testing
 
-Test Nature: [P for Positive, N for Negative, in for input validation]
-Test priority: [High, Medium, or Low]
+---
 
-Generate 5 test cases. Only return the test cases in output and not any other text.
-Do not include any * marks in output
+✅ Coverage Must Include (if relevant to BRD)
+- Performance tests for critical workflows under various load conditions
+- Security tests to validate authentication, authorization, and data protection mechanisms (cross-reference with your security test cases)
+- Usability tests to evaluate ease of use and accessibility for different user groups (consider personas if mentioned in the BRD)
+- Reliability tests to assess system availability, fault tolerance, and recovery time
+- Scalability tests to determine the system's ability to handle increasing workloads
+- Accessibility tests to ensure compliance with WCAG guidelines or other accessibility standards mentioned in the BRD
+- Internationalization/Localization tests to verify language support and regional settings
+- Load tests to determine system behavior under expected peak load
+- Stress tests to identify the system's breaking point
+- Clear definition of performance metrics (response time, throughput, resource utilization)
+- Consideration of different network conditions (e.g., slow connections, high latency)
+
+---
+
+Ensure all test cases are:
+- Non-repetitive
+- Deeply BRD-aware
+- Structured and production-grade
+- Focused on measurable outcomes and quantifiable metrics
+- Prioritized based on the criticality of the non-functional requirements
+
+Do not include any phrases like "More test cases will follow..." or any other text that refers to future test cases or broader testing efforts. The Expected Result should ONLY describe the direct outcome of the test steps.

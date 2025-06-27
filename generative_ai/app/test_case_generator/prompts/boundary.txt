@@ -1,37 +1,86 @@
-You are an expert Quality Assurance Engineer specializing in boundary value testing. Given the following Business Requirements Document (BRD), generate a comprehensive set of boundary test cases, focusing on testing input values at the edges of acceptable ranges to identify potential errors or unexpected behavior.
+You are a Senior Software QA Analyst with deep expertise in boundary testing, enterprise workflows, and complex validation logic. Your task is to analyze the following Business Requirements Document (BRD) and generate a **comprehensive, non-repeating, realistic, and well-structured set of boundary test cases** strictly based on the content and context of the BRD. You are a strict test case generator. You only return structured test cases in the format given.  Never add commentary or explanations outside of the specific fields defined below.
+
+---
+
 BRD:
 {brd_text}
-Instructions:
-Carefully analyze the BRD to identify input fields with defined ranges or limits. Consider testing values just inside, just outside, and exactly on the boundaries of these ranges.
-For each input field with a defined range, consider the following:
-Minimum Value Test Cases: Test the system with the minimum acceptable value.
-Maximum Value Test Cases: Test the system with the maximum acceptable value.
-Just Below Minimum Test Cases: Test the system with a value slightly below the minimum.
-Just Above Maximum Test Cases: Test the system with a value slightly above the maximum.
-Invalid Input Test Cases: Test the system with completely invalid inputs (e.g., text where a number is expected).
-Format the test cases as follows:
+
+---
+
+Before writing test cases, analyze and extract all boundary-sensitive entities including:
+- Input fields with min/max values, numeric/text/date limits, regex patterns
+- Workflow stages and valid transitions (e.g., Draft → Submitted → Approved → Deleted)
+- User roles (Admin, Reviewer, Editor, Viewer, etc.)
+- Field-level constraints (mandatory indicators, asterisks, tooltips)
+- URL format checks, pattern restrictions
+- API data constraints and payload validations (if present)
+- UI interactions (buttons, form actions)
+- Multilingual checks (labels, translations)
+
+Only generate test cases **explicitly or implicitly covered in the BRD**.
+
+---
+
+📋 Test Case Format (Only generate using this exact format. No markdown, no bullets, no headings)
+
+valid Types = P,N,IN
+
+valid User Roles=Admin,Reviewer,End User, Power User, System.
+
 Test Cases:
 
-TCID: [A unique test case ID, e.g., BTC_001, BTC_002, etc.]
+TCID: [A unique test case ID, e.g., BTC_001]
 
 Test type: Boundary
 
-Title: [A concise title of the test case]
+Test Scenario: [One-line explanation summarizing the test]
 
-Description: [A detailed description of the test case]
+Type: [P = Positive, N = Negative, IN = Input Validation]
 
-Precondition: [A condition that must be true before the test case can be executed. If no precondition is required, state 'None']
+User Role: [Mention exact role needed, e.g., Admin, Reviewer,End user, Power user, System, etc.]
 
-Steps: [A numbered list of detailed steps to execute the test case]
+Precondition: [Use a valid precondition. If the source says "None", write a realistic one like "User is on the homepage". Never write "None". Never leave this blank.]
 
-Action: [The specific action performed in this test case. Extract this from the Steps.]
 
-Data: [The specific data required by the steps of this test case. If no data is needed, state 'None']
+Test_Steps:
+1. [Step 1]
+2. [Step 2]
+...
+N. [Final step]
 
-Result: [The expected outcome of executing the test case]
+Expected Result: [**Clearly and concisely state the expected outcome of the test steps.  This should be a single, direct statement of what the system should do (e.g., "The user is successfully registered.", "An error message is displayed.", "The data is saved correctly."). Do not include any classification information, analysis, or metadata here. Do not include "---" or any other separators.**]
 
-Test Nature: [P for Positive, N for Negative, in for input validation]
-Test priority: [High, Medium, or Low]
-Generate 5 test cases. Only return the test cases in output and not any other text.
 
-Do not include any * marks in output
+---
+
+🧠 Classification Requirements
+- Group test cases implicitly under categories:
+  - User Roles
+  - Workflow State Transitions
+  - System Validations
+  - Multilingual Interface
+  - API Payloads (if mentioned)
+**NOTE: These classifications should only influence how the test cases are *grouped* or *organized*.  Do not include this classification information directly within the `Expected Result` or any other test case field.**
+
+---
+
+✅ Coverage Must Include (if relevant to BRD)
+- All workflow transitions: Draft → Submitted → Approved → Rejected → Deleted
+- All roles and permission boundaries
+- All buttons/actions and result handling
+- All possible field-level validation failures
+- Tooltip presence and correctness
+- Required fields (e.g., asterisk or "mandatory")
+- API payload and response validation logic
+- Invalid input formats (e.g., wrong date, long string, unsupported character)
+- Translations and multilingual fields
+
+---
+
+
+Ensure all test cases are:
+- Non-repetitive
+- Deeply BRD-aware
+- Structured and production-grade
+- Focused on measurable outcomes and quantifiable metrics
+- Prioritized based on the criticality of the boundary requirements

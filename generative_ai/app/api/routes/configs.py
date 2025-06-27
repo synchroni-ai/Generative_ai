@@ -158,7 +158,7 @@ async def get_config_by_id(
     print(f"User {current_user.username} (ID: {current_user.id}) retrieved config by ID: {config_id}")
     return {"config": config}
 
-# @router.get("/history")
+# @router.get("/")
 # async def get_test_case_history(
 #     db: AsyncIOMotorDatabase = Depends(get_db),
 #     current_user: User = Depends(deps.get_current_user),
