@@ -68,10 +68,10 @@ class BatchDeleteRequest(BaseModel):
 def map_status_to_int(status_enum: DocumentStatusEnum) -> int:
     """Maps the internal DocumentStatusEnum to the required integer API status code."""
     status_map = {
-        DocumentStatusEnum.PROCESSED: 1,
+        DocumentStatusEnum.ERROR: -2,       
         DocumentStatusEnum.UPLOADED: -1,
         DocumentStatusEnum.PROCESSING: 0,
-        DocumentStatusEnum.ERROR: -2,
+        DocumentStatusEnum.PROCESSED: 1
     }
     # Use .get() with a default value for robustness against unexpected enum values
     # Ensure the value passed is the Enum member, not its string value, or update the map
