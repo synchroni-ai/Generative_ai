@@ -62,8 +62,18 @@ const end = Math.min((page + 1) * rowsPerPage, totalItems);
 const currentPage = page + 1; // 1-based
 
 const getVisiblePages = () => {
-  return Array.from({ length: totalPages }, (_, i) => i + 1);
+  const visibleWindowSize = 3;
+  const startPage = Math.max(currentPage - 1, 1);
+  const endPage = Math.min(startPage + visibleWindowSize - 1, totalPages);
+
+  const pages = [];
+  for (let i = startPage; i <= endPage; i++) {
+    pages.push(i);
+  }
+
+  return pages;
 };
+
 
   const toggleDrawer = (open) => () => setDrawerOpen(open);
   // const handleUploadClick = () => setModalOpen(true);
