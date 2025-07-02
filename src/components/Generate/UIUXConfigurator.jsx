@@ -103,12 +103,14 @@ const [selectedLLM, setSelectedLLM] = useState('');
 const [selectedOpenAIVersion, setSelectedOpenAIVersion] = useState('');
 const [temperature, setTemperature] = useState(0.5);
 const [selectedHistoryDocDetails, setSelectedHistoryDocDetails] = useState(null);
+const [isDefaultResultsFromDataspace, setIsDefaultResultsFromDataspace] = useState(false);
+
 
 const triggerTestCaseGeneration = async (configId) => {
   if (!configId) return;
-  
-  setSelectedHistoryDoc(null);       // ✅ Reset history mode
-  setFromHistory(false);             // ✅ Reset history mode
+
+  setSelectedHistoryDoc(null);
+  setFromHistory(false);
   setGeneratedResults([]);
   setActiveTab('Results');
   setGenerationLoading(true);
@@ -123,83 +125,47 @@ const triggerTestCaseGeneration = async (configId) => {
   }, 500);
 
   try {
-    const docsStatus3 = selectedDocs.filter(doc => doc.status === 3);
-    const docsStatusNot3 = selectedDocs.filter(doc => [0, 1, 2].includes(doc.status));
+    // ✅ Always trigger generation
+    const genRes = await adminAxios.post(`/api/v1/generation/run/${configId}`, null, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-    const allResults = {};
+    const jobId = genRes.data?.job_id;
+    if (!jobId) throw new Error("Job ID not returned");
 
-    // ✅ 1. Handle already generated (status === 3)
-    if (docsStatus3.length > 0) {
-     const docIds = docsStatus3.map(doc => doc.file_id).join(',');
-const transformedSubtypes = selectedSubTypes.map(type =>
-  type.toLowerCase().replace(/-/g, '_')
-);
+    pollingIdRef.current = setInterval(async () => {
+      try {
+        const pollRes = await adminAxios.get(`/api/v1/results/${jobId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-const res = await adminAxios.get(`/api/v1/testcases`, {
-  headers: { Authorization: `Bearer ${token}` },
-  params: {
-    document_ids: docIds,
-    subtypes: transformedSubtypes
-  },
-  paramsSerializer: {
-    indexes: null
-  }
-});
+        const status = pollRes.data?.status;
+        const results = pollRes.data?.results || {};
 
+        if (status === 'completed') {
+          clearInterval(pollingIdRef.current);
+          clearInterval(progressInterval);
 
-      const resultMap = res.data?.results || {};
-      Object.assign(allResults, resultMap);
-    }
+          let quickProgress = simulatedProgress;
+          const finishInterval = setInterval(() => {
+            quickProgress += 5;
+            setProgress(Math.min(quickProgress, 100));
 
-    // ✅ 2. Handle generation needed (status 0,1,2)
-    if (docsStatusNot3.length > 0) {
-      const genRes = await adminAxios.post(`/api/v1/generation/run/${configId}`, null, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+            if (quickProgress >= 100) {
+              clearInterval(finishInterval);
+              const endTime = Date.now();
+              const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
+              console.log(`✅ Generation completed in ${elapsedSeconds} seconds`);
 
-      const jobId = genRes.data?.job_id;
-      if (!jobId) throw new Error("Job ID not returned");
-
-      pollingIdRef.current = setInterval(async () => {
-        try {
-          const pollRes = await adminAxios.get(`/api/v1/results/${jobId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          const status = pollRes.data?.status;
-          const results = pollRes.data?.results || {};
-
-          if (status === 'completed') {
-            clearInterval(pollingIdRef.current);
-            clearInterval(progressInterval);
-
-            let quickProgress = simulatedProgress;
-            const finishInterval = setInterval(() => {
-              quickProgress += 5;
-              setProgress(Math.min(quickProgress, 100));
-
-              if (quickProgress >= 100) {
-                clearInterval(finishInterval);
-                const endTime = Date.now();
-                const elapsedSeconds = ((endTime - startTime) / 1000).toFixed(2);
-                console.log(`✅ Generation completed in ${elapsedSeconds} seconds`);
-
-                setGeneratedResults({ ...allResults, ...results });
-                setGenerationLoading(false);
-              }
-            }, 50);
-          }
-        } catch (err) {
-          console.error("❌ Polling error:", err);
+              setGeneratedResults(results);
+              setGenerationLoading(false);
+            }
+          }, 50);
         }
-      }, 3000);
-    } else {
-      // Only status 3 docs — no polling needed
-      clearInterval(progressInterval);
-      setProgress(100);
-      setGeneratedResults(allResults);
-      setGenerationLoading(false);
-    }
+      } catch (err) {
+        console.error("❌ Polling error:", err);
+      }
+    }, 3000);
 
   } catch (err) {
     clearInterval(progressInterval);
@@ -207,6 +173,7 @@ const res = await adminAxios.get(`/api/v1/testcases`, {
     console.error("❌ Generation trigger error:", err);
   }
 };
+
 
 
   useEffect(() => {
@@ -218,35 +185,78 @@ const res = await adminAxios.get(`/api/v1/testcases`, {
     };
   }, []);
 
+useEffect(() => {
+  const fetchDefaultResultsByDataSpace = async () => {
+    if (!dataSpaceId) return;
 
-  const fetchInitialTestCases = async () => {
-  try {
-    setGenerationLoading(true);
-    const response = await adminAxios.get(`/api/v1/documents/${fileId}/get-test-cases/`);
+    try {
+      setGenerationLoading(true);
+      const res = await adminAxios.get(`/api/v1/testcases/by-dataspace/${dataSpaceId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      });
 
-    const results = response.data.results || [];
-    setGeneratedResults(results);
-    setHasFetchedInitialResults(true);
-    console.log("✅ Initial results fetched successfully");
-  } catch (err) {
-    console.error("❌ Error fetching initial test cases:", err.response?.data || err.message);
-  } finally {
-    setGenerationLoading(false);
+const results = res.data || {};
+      setGeneratedResults(results);
+      setHasFetchedInitialResults(true);
+setIsDefaultResultsFromDataspace(false); // ✅ allow tabs to show after generation
+      // 🆕 Set a flag if response contains message about empty docs
+if (res.data.message === "No documents found in this dataspace.") {
+  setGeneratedResults({ error: res.data.message });
+  setIsDefaultResultsFromDataspace(true);  // ✅ mark it as default/auto
+} else {
+  setGeneratedResults(results);
+  setIsDefaultResultsFromDataspace(true);  // ✅ still auto-fetched
+}
+    } catch (error) {
+      console.error("❌ Failed to fetch test cases by dataspace:", error);
+    } finally {
+      setGenerationLoading(false);
+    }
+  };
+
+  if (!hasFetchedInitialResults && dataSpaceId) {
+    fetchDefaultResultsByDataSpace();
   }
-};
+}, [dataSpaceId]);
 
 const handleTabSwitch = async (tab) => {
   if (tab === 'Results') {
     setSelectedHistoryDoc(null);
     setFromHistory(false);
 
-    // 🔁 Only fetch if not already generated
-    if (!hasFetchedInitialResults && !generatedResults.length && fileId) {
-      await fetchInitialTestCases(); // uses fileId from state
+    // ✅ Only fetch if not already fetched and we have a valid dataspace ID
+    if (!hasFetchedInitialResults && dataSpaceId) {
+      try {
+        setGenerationLoading(true);
+        const res = await adminAxios.get(`/api/v1/testcases/by-dataspace/${dataSpaceId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        });
+
+        if (res.data?.message === "No documents found in this dataspace.") {
+          setGeneratedResults({ error: res.data.message });
+          setIsDefaultResultsFromDataspace(true);
+        } else {
+          setGeneratedResults(res.data || {});
+          setIsDefaultResultsFromDataspace(true);
+        }
+
+        setHasFetchedInitialResults(true);
+      } catch (error) {
+        console.error("❌ Failed to fetch test cases by dataspace:", error);
+      } finally {
+        setGenerationLoading(false);
+      }
     }
   }
+
   setActiveTab(tab);
 };
+
+
 
 useEffect(() => {
   if (selectedLLM !== 'openai') {
@@ -259,6 +269,7 @@ useEffect(() => {
   const toggleDrawer = (open) => () => {
     setDrawerOpen(open);
   };
+  
  const handleHistoryDocSelect = async (doc) => {
   try {
     const res = await adminAxios.get(`/api/v1/history/document/${doc.id}`, {
