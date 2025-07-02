@@ -561,11 +561,12 @@ const fetchDocuments = async () => {
     setCollapsed(true); // Close Documents accordion
   };
 
-  const toggleSubType = (type) => {
-    setSelectedSubTypes((prev) =>
-      prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
-    );
-  };
+ const toggleSubType = (type) => {
+  setSelectedSubTypes((prev) =>
+    prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]
+  );
+};
+
 
   const pollingIdRef = useRef(null);
 
@@ -579,9 +580,9 @@ const handleGenerate = async () => {
     llm_model: selectedLLM === 'mistral' ? 'Mistral' : 'Openai',
     temperature: temperature,
     use_case: ['test case generation'],
-    subtypes: selectedSubTypes.map(type =>
-      type.toLowerCase().replace(/\s|-/g, '_')
-    ),
+  subtypes: selectedSubTypes
+    ? [selectedSubTypes.toLowerCase().replace(/\s|-/g, '_')]
+    : [],
   };
 
   // ✅ Conditionally add llm_version if OpenAI is selected
@@ -768,31 +769,32 @@ onChange={() => toggleDocument(doc)}
 
         {/* Sub-types */}
         {selectedUseCase && (
-          <>
-            <Typography className="configuration_subtypeHeading">
-              Sub-types
-            </Typography>
+  <>
+    <Typography className="configuration_subtypeHeading">
+      Sub-types
+    </Typography>
 
-            <Paper elevation={0} className="configuration_subtypeWrapper">
-              <Box className="configuration_subtypeGrid">
-                {subTypes.map((type) => (
-                  <Box key={type} className="configuration_subtypeItem">
-                    <Checkbox
-                      size="small"
-                      disableRipple
-                      checked={selectedSubTypes.includes(type)}
-                      onChange={() => toggleSubType(type)}
-                      className={`configuration_checkbox ${selectedSubTypes.includes(type) ? 'checked' : ''}`}
-                    />
-                    <Typography className="configuration_subtypeLabel">
-                      {type}
-                    </Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Paper>
-          </>
-        )}
+    <Paper elevation={0} className="configuration_subtypeWrapper">
+      <Box className="configuration_subtypeGrid">
+        {subTypes.map((type) => (
+          <Box key={type} className="configuration_subtypeItem">
+            <Radio
+              size="small"
+              disableRipple
+              checked={selectedSubTypes === type}
+              onChange={() => setSelectedSubTypes(type)}
+              className={`configuration_checkbox ${selectedSubTypes === type ? 'checked' : ''}`}
+            />
+            <Typography className="configuration_subtypeLabel">
+              {type}
+            </Typography>
+          </Box>
+        ))}
+      </Box>
+    </Paper>
+  </>
+)}
+
 
         {/* Additional Settings */}
        <Box mt={4}>
@@ -946,21 +948,20 @@ onChange={() => toggleDocument(doc)}
           </Box>
 
           {/* Subtypes */}
-          {selectedUseCase && (
-            <>
-              <Divider className="configuration_divider" />
-              <Box className="configuration_block">
-                <Typography className="configuration_blockTitle">Sub-types</Typography>
-                <Box className="configuration_chipGroup">
-                  {selectedSubTypes.map((type, idx) => (
-                    <Box key={idx} className="configuration_chip">
-                      {type}
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-            </>
-          )}
+        {selectedUseCase && selectedSubTypes && (
+  <>
+    <Divider className="configuration_divider" />
+    <Box className="configuration_block">
+      <Typography className="configuration_blockTitle">Sub-types</Typography>
+      <Box className="configuration_chipGroup">
+        <Box className="configuration_chip">
+          {selectedSubTypes}
+        </Box>
+      </Box>
+    </Box>
+  </>
+)}
+
 
           <Divider className="configuration_divider" />
 

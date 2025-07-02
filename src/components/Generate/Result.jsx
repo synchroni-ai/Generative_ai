@@ -239,57 +239,63 @@ import { saveAs } from 'file-saver';
 import "./Tabs.css";
 
 
-
 const parseTestCasesFromContent = (content, testType, fileName) => {
   const parsed = [];
 
-  // Normalize **label:** to label: (strip Markdown bolds)
+  // Normalize **bold** to plain text
   const cleanedContent = content.replace(/\*\*(.*?)\*\*/g, '$1');
 
-  // Split entries based on TCID start
-  const entries = cleanedContent
+  // Remove anything after Classification block
+  const mainContent = cleanedContent.split("Classification:")[0];
+
+  // Split by TCID blocks
+  const entries = mainContent
     .split(/\n\s*TCID:/g)
     .filter(Boolean)
-    .map((e) => `TCID:${e.trim()}`)  // Reattach "TCID:" label
-    .filter(e => e.toLowerCase().includes('title:'));  // ✅ Ensure it's an actual test case
+    .map(e => `TCID:${e.trim()}`)
+    .filter(e => /Test Scenario:/i.test(e)); // Only keep actual test cases
 
   entries.forEach(raw => {
     const fields = {
       file_name: fileName,
       "TCID": "",
-      "Test type": testType,
-      "Title": "",
-      "Description": "",
+      "Test type": testType, // Default override
+      "Title": "",           // from "Test Scenario"
+      "Type": "",            // from "Type"
+      "User Role": "",       // from "User Role"
       "Precondition": "",
-      "Steps": "",
-      "Action": "",
-      "Data": "",
-      "Result": "",
-      "Test Nature": "",
-      "Test priority": ""
+      "Steps": "",           // from "Test_Steps"
+      "Result": ""           // from "Expected Result"
     };
 
-    Object.keys(fields).forEach(key => {
-      if (key === "file_name") return;
-      const regex = new RegExp(`${key}:\\s*([\\s\\S]*?)(?=\\n[A-Z][^:]*?:|\\n*$)`, 'i');
+    // Label-to-field mapping
+    const mappings = {
+      "TCID": "TCID",
+      "Test type": "Test type",
+      "Test Scenario": "Title",
+      "Type": "Type",
+      "User Role": "User Role",
+      "Precondition": "Precondition",
+      "Test_Steps": "Steps",
+      "Expected Result": "Result"
+    };
+
+    Object.entries(mappings).forEach(([label, key]) => {
+      const regex = new RegExp(`${label}:\\s*([\\s\\S]*?)(?=\\n[A-Z_][^:]*?:|\\n*$)`, 'i');
       const match = raw.match(regex);
       if (match) {
         fields[key] = match[1].trim();
       }
     });
 
-    // Skip if no TCID or improperly formatted block
+    // Skip invalid or header-like test case
     if (!fields["TCID"] || fields["TCID"].toLowerCase().includes("test cases")) return;
-
-    fields["Type"] = fields["Test Nature"];
-    delete fields["Test Nature"];
 
     parsed.push(fields);
   });
 
   return parsed;
 };
-
 
 
 const selectedHistoryDocData = [
@@ -342,9 +348,11 @@ useEffect(() => {
 }
 
 const finalSubtypeMap =
-  results.all_documents?.Final_subtypes ||  // normal API format
-  results.results?.all_documents?.Final_subtypes || // history API format
+  results.all_documents?.Final_subtypes ||
+  results.results?.all_documents?.Final_subtypes ||
+  results.final_results?.Final_subtypes || // ✅ newly supported
   null;
+
 
 if (!finalSubtypeMap || typeof finalSubtypeMap !== 'object') {
   console.warn("⚠️ Final_subtypes not found in results:", results);
@@ -361,7 +369,11 @@ if (!finalSubtypeMap || typeof finalSubtypeMap !== 'object') {
       selectedDocs?.find(doc => doc._id === fileId)?.name ||
       `File-${fileId}`;
 
-    const contentArray = fileData.content || [];
+const contentArray = Array.isArray(fileData.content)
+  ? fileData.content
+  : fileData.content
+    ? [fileData.content]
+    : [];
     const seenTCIDs = new Set(); // Per file
 
     contentArray.forEach(content => {
@@ -576,47 +588,21 @@ useEffect(() => {
         </Button>
       </Box>
 
-    
-    {!selectedHistoryDoc && (
-  <Box className="custom-tab-container" ml={3}>
-    {tabLabels.map((label) => {
-      const key = label.toLowerCase();
-      const count = testCaseCounts[key] || 0;
-      const isActive = activeTab === label;
 
-      return (
-        <div
-          key={label}
-          className={`custom-tab-item ${isActive ? 'active' : ''}`}
-          onClick={() => handleTabClick(label)}
-        >
-          <div className="custom-tab-label">{label}</div>
-          <div className={`custom-tab-badge-wrapper ${isActive ? 'active' : ''}`}>
-            <div className="custom-tab-badge">{String(count).padStart(2, '0')}</div>
-          </div>
-        </div>
-      );
-    })}
-  </Box>
-)}
+{Object.keys(filterByTab(allTestCases, activeTab)).length === 0 ? (
+<Box
+  height="60vh" // Adjust as needed to push it toward vertical center
+  display="flex"
+  justifyContent="center"
+  alignItems="center"
+>
+  <Typography variant="h6" color="text.secondary" fontWeight={700}>
+    No test cases generated yet.
+  </Typography>
+</Box>
+) : (
 
-
-
-      {/* Conditional Heading */}
-     {/* {selectedHistoryDoc && (
-  <Box ml={2.5} mb={2} mt={3}>
-    <Typography fontWeight={600} fontSize={16}>{selectedHistoryDoc.name}</Typography>
-    {selectedHistoryDoc.time && (
-      <Typography fontSize={12} color="text.secondary">
-        Generated at {selectedHistoryDoc.time}
-      </Typography>
-    )}
-  </Box>
-)} */}
-
-
-
-{Object.entries(filterByTab(allTestCases, activeTab)).map(([fileName, testCases], docIndex) => (
+Object.entries(filterByTab(allTestCases, activeTab)).map(([fileName, testCases], docIndex) => (
         <Box key={docIndex} mb={4} ml={3}>
           <Typography fontWeight={600} fontSize={18} mt={3} mb={2} ml={1}>
             {fileName}
@@ -646,7 +632,7 @@ useEffect(() => {
             </Table>
           </Paper>
         </Box>
-      ))}
+      )))}
 </>
 )}
     </Box>
